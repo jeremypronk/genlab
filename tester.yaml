@@ -1,0 +1,5 @@
+model: veo3-fast
+prompt: "We race down a steep mountain road in Corsica. On the left of the road is a rocky cliff face. On the right of the road is a steep drop. In the distance are snow capped mountains."
+aspect_ratio: "16:9"
+quality: 720p
+duration: 5

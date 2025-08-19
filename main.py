@@ -1,0 +1,335 @@
+import requests
+import yaml
+import json
+import os
+import time
+import logging
+import sys
+import functools
+import argparse
+from pathlib import Path
+
+def handle_http_exceptions(func):
+    """
+    A decorator that wraps a function with a try-except block for common
+    requests and file handling errors. This makes the decorated function
+    cleaner by separating error handling from the main logic.
+    """
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            # Attempt to execute the decorated function
+            return func(*args, **kwargs)
+        except requests.exceptions.HTTPError as http_err:
+            logging.error(f"HTTP error occurred: {http_err}")
+            # Log the response body if available, as it often contains useful error details.
+            if http_err.response is not None:
+                logging.error(f"Response Body: {http_err.response.text}")
+        except requests.exceptions.RequestException as req_err:
+            logging.error(f"A request error occurred: {req_err}")
+        except Exception as e:
+            logging.error(f"An unexpected error occurred: {e}")
+
+        return None
+
+    return wrapper
+
+class KieAIVideoGen:
+    """
+    """
+    _api_server = "https://api.kie.ai"
+    _base_api_url = f"{_api_server}/api/v1"
+    _upload_url = f"https://kieai.redpandaai.co/api/file-stream-upload"
+
+    def __init__(self, api_key, task_id=None, fullhd=True):
+        self._api_key = api_key
+        self._task_id = task_id
+        self._fullhd = fullhd
+        self._auth_header = {
+            "Authorization": f"Bearer {self._api_key}",
+        }
+        self._json_header = {
+            "Authorization": f"Bearer {self._api_key}",
+            "Content-Type": "application/json"
+        }
+
+    def _api_response(self, response):
+        response_json = response.json()
+        logging.debug(f"API response: {response_json}")
+        if response_json['code'] == 200:
+            logging.debug(f"Request was successful.")
+            return response_json
+        elif response_json['code'] == 400:
+            if self._fullhd: # fullhd returns 400 when it is still processing
+                return response_json
+            logging.error(f"Content violation error, check your prompt and/or input images for content that violates the T&Cs.")
+            exit(-98)
+        elif response_json['code'] == 401:
+            logging.error(f"NO ACCESS PERMISSION!! Check your api key.")
+            exit(-99)
+        elif response_json['code'] == 500 and self._fullhd: # fullhd mode can return 500 early on in the process
+            return response_json
+        else:
+            logging.error(f"Unknown error ({response_json})")
+            exit(-97)
+
+    @handle_http_exceptions
+    def generate_video(self, payload):
+        url = f"{self._base_api_url}/veo/generate"
+
+        response = requests.post(url, json=payload, headers=self._json_header)
+        response.raise_for_status()
+        response_json = self._api_response(response)
+
+        self._task_id = response_json['data']['taskId']
+        logging.info(f"Task ID: {self._task_id}")
+
+        return self._task_id
+
+    @handle_http_exceptions
+    def _check_status(self, ):
+        if self._fullhd:
+            url = f"{self._base_api_url}/veo/get-1080p-video?taskId={self._task_id}"  # wait for the 1080P version
+        else:
+            url = f"{self._base_api_url}/veo/record-info?taskId={self._task_id}" # wait for the default version
+        response = requests.get(url, headers=self._auth_header)
+        response.raise_for_status()
+        response_json = self._api_response(response)
+
+        if self._fullhd:
+            status = 1 if response_json['code'] == 200 else 0
+        else:
+            status = response_json['data']['successFlag']
+        if status == 0:
+            logging.info("Still generating...")
+            return None
+        elif status == 1:
+            logging.info("Generation successful!")
+            return True
+        else:
+            logging.info(f"Generation failed: {response_json['msg']}")
+            return False
+
+    def wait_for_completion(self, retries=10, retry_wait_secs=30):
+        retry=0
+        while retry<retries:
+            result = self._check_status()
+            if result is not None:
+                return result
+            time.sleep(retry_wait_secs)
+            retry += 1
+        return retry<retries
+
+    def _download_video(self, url, output_path):
+        """
+        Downloads a file from a URL to a specified path.
+        Args:
+            url (str): The URL of the file to download.
+            output_path (Path): The path to save the downloaded file.
+        """
+        logging.debug(f"Downloading video from: {url}")
+        try:
+            with requests.get(url, stream=True) as r:
+                r.raise_for_status()
+                total_size = int(r.headers.get('content-length', 0))
+                bytes_downloaded = 0
+                with open(output_path, 'wb') as f:
+                    for chunk in r.iter_content(chunk_size=8192):
+                        f.write(chunk)
+                        bytes_downloaded += len(chunk)
+                        done = int(50 * bytes_downloaded / total_size) if total_size else 0
+                        sys.stdout.write(
+                            f"\r  [{'=' * done}{' ' * (50 - done)}] {bytes_downloaded / 1024 / 1024:.2f} MB")
+                        sys.stdout.flush()
+            sys.stdout.write("\n")
+            logging.debug(f"Video saved successfully to: {output_path}")
+        except requests.exceptions.RequestException as e:
+            sys.stdout.write("\n")
+            logging.error(f"Failed to download video: {e}")
+
+    @handle_http_exceptions
+    def download_video(self, output_path):
+        if self._fullhd:
+            url = f"{self._base_api_url}/veo/get-1080p-video?taskId={self._task_id}"  # 1080P version
+        else:
+            url = f"{self._base_api_url}/veo/record-info?taskId={self._task_id}" # default version
+        response = requests.get(url, headers=self._auth_header)
+        response.raise_for_status()
+        response_json = self._api_response(response)
+        if self._fullhd:
+            video_urls = [response_json['data']['resultUrl']]
+        else:
+            video_urls = response_json['data']['response']['resultUrls']
+
+        for video_url in video_urls:
+            video_name = video_url.split('/')[-1]
+            output_path = Path(output_path).with_suffix(Path(video_name).suffix)
+            logging.info(f"Downloading video: {video_url} --> {output_path}")
+            self._download_video(video_url, output_path)
+
+    @handle_http_exceptions
+    def upload_file(self, file_path: str) -> str | None:
+        if not os.path.exists(file_path):
+            logging.error(f"File not found at path: {file_path}")
+            return None
+
+        files = {
+            'file': (os.path.basename(file_path), open(file_path, 'rb')),
+            'uploadPath': (None, 'images/user-uploads'),
+            'fileName': (None, os.path.basename(file_path))
+        }
+        logging.debug(f"Preparing to upload '{files}'...")
+        response = requests.post(self._upload_url, headers=self._auth_header, files=files)
+        response.raise_for_status()
+        response_data = self._api_response(response)["data"]
+
+        # Extract the URL from the JSON response.
+        self._file_url = response_data.get("downloadUrl")
+        if self._file_url:
+            logging.info(f"File URL: {self._file_url}")
+            return self._file_url
+        else:
+            logging.error("URL not found in API response.")
+            return None
+
+
+# #task_id = generate_video()
+# task_id = '7d3c7366f0169a709f07dd2448541caf'
+# # wait_for_completion(task_id)
+# download_video(task_id)
+# # logging.info('its done baby')
+#upload_file('X:/urf_teaser2/shots/dvr/dvr_0000/XY_00072_.png')
+
+def process_yaml(yaml_path, api_key):
+    logging.info(f"Processing: {yaml_path.name}")
+
+    # check we havent already gen'd this video
+    excluded = {'.yaml', '.yml', '.task'}
+    files = [f for f in Path('.').glob(f"{os.path.basename(yaml_path)}.*") if f.suffix.lower() not in excluded]
+    if len(files) > 0:
+        logging.warning(f"SKIPPING: Output files '{files}' already exist!")
+        return
+
+    # check if a task id exists, then we will connect to the running task
+    task_id = None
+    task_id_path = yaml_path.with_suffix(".task")
+    if task_id_path.exists():
+        with open(task_id_path, 'r') as f:
+            task_id = f.read()
+        logging.info(f"Found existing task to attach to {task_id}.")
+
+    # read the payload from the yaml
+    try:
+        with open(yaml_path, 'r') as f:
+            payload = yaml.safe_load(f)
+        if not isinstance(payload, dict):
+            logging.error(f"SKIPPED: YAML file '{yaml_path.name}' is empty or invalid.")
+            return
+    except (yaml.YAMLError, FileNotFoundError) as e:
+        logging.error(f"SKIPPED: Could not read or parse YAML file '{yaml_path.name}': {e}")
+        return
+
+    # handle custom payload params
+
+
+    # connect to existing task or start a new one
+    if task_id:
+        kie = KieAIVideoGen(api_key, task_id=task_id, fullhd=True)
+    else:
+        assert(False)
+        kie = KieAIVideoGen(api_key, fullhd=True)
+        task_id = kie.generate_video(payload)
+        with open(task_id_path, 'w') as f:
+            f.write(task_id)
+
+    # wait for task to complete
+    if not kie.wait_for_completion(retries=10):
+        logging.error(f"Timed out waiting for completion of {kie._task_id}.")
+        return -1
+
+    # download the video
+    kie.download_video(yaml_path)
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Generate videos from YAML files using the kie.ai API.",
+        formatter_class=argparse.RawTextHelpFormatter,
+        epilog="""
+Example Usage:
+  - Process a single file:
+    ./genlab.py my_video.yaml
+
+  - Process multiple files:
+    ./genlab.py project/vid1.yaml project/vid2.yaml
+
+  - Process all .yaml/.yml files in a directory:
+    ./genlab.py /path/to/yamls/
+"""
+    )
+    parser.add_argument(
+        "paths",
+        metavar="PATH",
+        nargs="+",
+        help="One or more paths to .yaml files or directories containing them."
+    )
+    parser.add_argument(
+        "-d", "--debug",
+        action="store_true",
+        help="Enable debug level logging to show detailed request information."
+    )
+    args = parser.parse_args()
+
+    # Configure logging
+    log_level = logging.DEBUG if args.debug else logging.INFO
+    logging.basicConfig(
+        level=log_level,
+        format='%(asctime)s - %(levelname)s - %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S'
+    )
+
+    try:
+        api_key = os.environ["KIE_API_KEY"]
+    except KeyError:
+        logging.critical("FATAL: KIE_API_KEY environment variable not set.")
+        logging.critical("Please set your API key, e.g., 'export KIE_API_KEY=\"your_key\"'")
+        sys.exit(-50)
+
+    yaml_files = []
+    for path_str in args.paths:
+        path = Path(path_str)
+        if path.is_dir():
+            yaml_files.extend(sorted(path.glob("*.yaml")))
+            yaml_files.extend(sorted(path.glob("*.yml")))
+        elif path.is_file() and path.suffix.lower() in [".yaml", ".yml"]:
+            yaml_files.append(path)
+        else:
+            logging.warning(f"Path '{path_str}' is not a valid file or directory. Ignoring.")
+
+    if not yaml_files:
+        logging.error("No .yaml or .yml files found in the specified paths.")
+        sys.exit(1)
+
+    logging.info(f"Found {len(yaml_files)} YAML file(s) to process.")
+    for yaml_path in yaml_files:
+        process_yaml(yaml_path, api_key)
+
+    # # kie = KieAIVideoGen(api_key, fullhd=True)
+    # # if not kie.upload_file('X:/urf_teaser2/shots/dvr/dvr_0000/XY_00069_.png'):
+    # #     logging.error("Upload failed!")
+    # #     return -10
+    # # payload = {
+    # #     "prompt": "Extreme close up of a rally car driver driving in a rally race. The driver has intense concentration his eyes are fixed straight ahead. Bright flashes of sunlight flash through the cabin as the camera vibrates and shakes due to the extreme speed.",
+    # #     "imageUrls": [kie._file_url],
+    # #     "model": "veo3_fast",
+    # #     "aspectRatio": "16:9",
+    # # }
+    # # kie.generate_video(payload)
+    # kie = KieAIVideoGen(api_key, '59da764ac8edd94bebf63ca214e3f926', fullhd=True)
+    # if not kie.wait_for_completion(retries=10):
+    #     logging.error(f"Timed out waiting for completion of {kie._task_id}.")
+    #     return -1
+    # kie.download_video()
+
+
+if __name__ == "__main__":
+    main()
