@@ -1,6 +1,7 @@
 import requests
 import yaml
 import json
+import datetime
 import os
 import time
 import logging
@@ -193,30 +194,47 @@ class KieAIVideoGen:
             return None
 
 
-# #task_id = generate_video()
-# task_id = '7d3c7366f0169a709f07dd2448541caf'
-# # wait_for_completion(task_id)
-# download_video(task_id)
-# # logging.info('its done baby')
-#upload_file('X:/urf_teaser2/shots/dvr/dvr_0000/XY_00072_.png')
 
-def process_yaml(yaml_path, api_key):
+
+def backup_sidecar_files(file_paths):
+    timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+    for file_path in file_paths:
+        file_path_backup = f"{file_path.stem}_bk{timestamp}{file_path.suffix}"
+        logging.warning(f"RENAMING: Backing up sidecar file '{file_path}' to {file_path_backup}")
+        file_path.rename(file_path_backup)
+
+def process_yaml(yaml_path, api_key, force=False):
     logging.info(f"Processing: {yaml_path.name}")
+
+    # we will backup the sidecar files if forcing
+    sidecar_files_to_backup =  []
 
     # check we havent already gen'd this video
     excluded = {'.yaml', '.yml', '.task'}
-    files = [f for f in Path('.').glob(f"{os.path.basename(yaml_path)}.*") if f.suffix.lower() not in excluded]
-    if len(files) > 0:
-        logging.warning(f"SKIPPING: Output files '{files}' already exist!")
-        return
+    file_paths = [f for f in Path(yaml_path).parent.glob(f"{Path(yaml_path).stem}.*") if f.suffix.lower() not in excluded]
+    logging.debug(f"Found yaml sidecar possible video files: {file_paths}")
+    if len(file_paths) > 0:
+        if force:
+            sidecar_files_to_backup += file_paths
+        else:
+            logging.warning(f"SKIPPING: Output files '{file_paths}' already exist!")
+            return
 
     # check if a task id exists, then we will connect to the running task
     task_id = None
     task_id_path = yaml_path.with_suffix(".task")
     if task_id_path.exists():
-        with open(task_id_path, 'r') as f:
-            task_id = f.read()
-        logging.info(f"Found existing task to attach to {task_id}.")
+        if force:
+            logging.warning(f"Ignoring existing task file {task_id_path}.")
+            sidecar_files_to_backup.append(task_id_path)
+        else:
+            with open(task_id_path, 'r') as f:
+                task_id = f.read()
+            logging.info(f"Found existing task to attach to {task_id}.")
+
+    # backup sidecar files
+    if sidecar_files_to_backup:
+        backup_sidecar_files(sidecar_files_to_backup)
 
     # read the payload from the yaml
     try:
@@ -229,15 +247,28 @@ def process_yaml(yaml_path, api_key):
         logging.error(f"SKIPPED: Could not read or parse YAML file '{yaml_path.name}': {e}")
         return
 
-    # handle custom payload params
-
-
     # connect to existing task or start a new one
     if task_id:
         kie = KieAIVideoGen(api_key, task_id=task_id, fullhd=True)
     else:
-        assert(False)
         kie = KieAIVideoGen(api_key, fullhd=True)
+
+    # handle custom payload params
+
+    # upload images and insert resulting imageurl to the payload
+    if not task_id and 'images' in payload:
+        if isinstance(payload['images'], str):
+            images = [payload['images']]
+
+        imageUrls = []
+        for image in images:
+            imageUrls.append(kie.upload_file(image))
+        payload['imageUrls'] = imageUrls
+
+    logging.info(f"Payload prepared: f{payload}")
+
+    # start the video gen
+    if not task_id: # only if we dont have an existing task
         task_id = kie.generate_video(payload)
         with open(task_id_path, 'w') as f:
             f.write(task_id)
@@ -277,6 +308,11 @@ Example Usage:
         action="store_true",
         help="Enable debug level logging to show detailed request information."
     )
+    parser.add_argument(
+        "-f", "--force",
+        action="store_true",
+        help="Force generation of videos even if they already exist locally."
+    )
     args = parser.parse_args()
 
     # Configure logging
@@ -293,6 +329,9 @@ Example Usage:
         logging.critical("FATAL: KIE_API_KEY environment variable not set.")
         logging.critical("Please set your API key, e.g., 'export KIE_API_KEY=\"your_key\"'")
         sys.exit(-50)
+
+    if args.force:
+        logging.warning("Forcing generation of videos even if they already exist locally.")
 
     yaml_files = []
     for path_str in args.paths:
@@ -311,24 +350,7 @@ Example Usage:
 
     logging.info(f"Found {len(yaml_files)} YAML file(s) to process.")
     for yaml_path in yaml_files:
-        process_yaml(yaml_path, api_key)
-
-    # # kie = KieAIVideoGen(api_key, fullhd=True)
-    # # if not kie.upload_file('X:/urf_teaser2/shots/dvr/dvr_0000/XY_00069_.png'):
-    # #     logging.error("Upload failed!")
-    # #     return -10
-    # # payload = {
-    # #     "prompt": "Extreme close up of a rally car driver driving in a rally race. The driver has intense concentration his eyes are fixed straight ahead. Bright flashes of sunlight flash through the cabin as the camera vibrates and shakes due to the extreme speed.",
-    # #     "imageUrls": [kie._file_url],
-    # #     "model": "veo3_fast",
-    # #     "aspectRatio": "16:9",
-    # # }
-    # # kie.generate_video(payload)
-    # kie = KieAIVideoGen(api_key, '59da764ac8edd94bebf63ca214e3f926', fullhd=True)
-    # if not kie.wait_for_completion(retries=10):
-    #     logging.error(f"Timed out waiting for completion of {kie._task_id}.")
-    #     return -1
-    # kie.download_video()
+        process_yaml(yaml_path, api_key, force=args.force)
 
 
 if __name__ == "__main__":
