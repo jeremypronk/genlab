@@ -10,6 +10,7 @@ import functools
 import argparse
 from pathlib import Path
 
+
 def handle_http_exceptions(func):
     """
     A decorator that wraps a function with a try-except block for common
@@ -35,17 +36,14 @@ def handle_http_exceptions(func):
 
     return wrapper
 
+
 class KieAIVideoGen:
     """
     """
-    _api_server = "https://api.kie.ai"
-    _base_api_url = f"{_api_server}/api/v1"
     _upload_url = f"https://kieai.redpandaai.co/api/file-stream-upload"
 
-    def __init__(self, api_key, task_id=None, fullhd=True):
+    def __init__(self, api_key):
         self._api_key = api_key
-        self._task_id = task_id
-        self._fullhd = fullhd
         self._auth_header = {
             "Authorization": f"Bearer {self._api_key}",
         }
@@ -74,8 +72,74 @@ class KieAIVideoGen:
             logging.error(f"Unknown error ({response_json})")
             exit(-97)
 
+    def _download_video(self, url, output_path):
+        """
+        Downloads a file from a URL to a specified path.
+        Args:
+            url (str): The URL of the file to download.
+            output_path (Path): The path to save the downloaded file.
+        """
+        logging.debug(f"Downloading video from: {url}")
+        try:
+            with requests.get(url, stream=True) as r:
+                r.raise_for_status()
+                total_size = int(r.headers.get('content-length', 0))
+                bytes_downloaded = 0
+                with open(output_path, 'wb') as f:
+                    for chunk in r.iter_content(chunk_size=8192):
+                        f.write(chunk)
+                        bytes_downloaded += len(chunk)
+                        done = int(50 * bytes_downloaded / total_size) if total_size else 0
+                        sys.stdout.write(
+                            f"\r  [{'=' * done}{' ' * (50 - done)}] {bytes_downloaded / 1024 / 1024:.2f} MB")
+                        sys.stdout.flush()
+            sys.stdout.write("\n")
+            logging.debug(f"Video saved successfully to: {output_path}")
+        except requests.exceptions.RequestException as e:
+            sys.stdout.write("\n")
+            logging.error(f"Failed to download video: {e}")
+
+    @handle_http_exceptions
+    def upload_file(self, file_path: str) -> str | None:
+        if not os.path.exists(file_path):
+            logging.error(f"File not found at path: {file_path}")
+            return None
+
+        files = {
+            'file': (os.path.basename(file_path), open(file_path, 'rb')),
+            'uploadPath': (None, 'images/user-uploads'),
+            'fileName': (None, os.path.basename(file_path))
+        }
+        logging.debug(f"Preparing to upload '{files}'...")
+        response = requests.post(self._upload_url, headers=self._auth_header, files=files)
+        response.raise_for_status()
+        response_data = self._api_response(response)["data"]
+
+        # Extract the URL from the JSON response.
+        self._file_url = response_data.get("downloadUrl")
+        if self._file_url:
+            logging.info(f"File URL: {self._file_url}")
+            return self._file_url
+        else:
+            logging.error("URL not found in API response.")
+            return None
+
+
+class KieAIVideoGen_Veo(KieAIVideoGen):
+    """
+    """
+    _api_server = "https://api.kie.ai"
+    _base_api_url = f"{_api_server}/api/v1"
+
+    def __init__(self, api_key, task_id=None, fullhd=True):
+        logging.debug(f"KieAIVideoGen_Veo({api_key}, task_id={task_id}, fullhd={fullhd})")
+        super().__init__(api_key=api_key)
+        self._task_id = task_id
+        self._fullhd = fullhd
+
     @handle_http_exceptions
     def generate_video(self, payload):
+        logging.debug(f"KieAIVideoGen_Veo.generate_video({payload})")
         url = f"{self._base_api_url}/veo/generate"
 
         response = requests.post(url, json=payload, headers=self._json_header)
@@ -112,6 +176,7 @@ class KieAIVideoGen:
             return False
 
     def wait_for_completion(self, retries=10, retry_wait_secs=30):
+        logging.debug(f"KieAIVideoGen_Veo.wait_for_completion(retries={retries}, retry_wait_secs={retry_wait_secs})")
         retry=0
         while retry<retries:
             result = self._check_status()
@@ -121,35 +186,9 @@ class KieAIVideoGen:
             retry += 1
         return retry<retries
 
-    def _download_video(self, url, output_path):
-        """
-        Downloads a file from a URL to a specified path.
-        Args:
-            url (str): The URL of the file to download.
-            output_path (Path): The path to save the downloaded file.
-        """
-        logging.debug(f"Downloading video from: {url}")
-        try:
-            with requests.get(url, stream=True) as r:
-                r.raise_for_status()
-                total_size = int(r.headers.get('content-length', 0))
-                bytes_downloaded = 0
-                with open(output_path, 'wb') as f:
-                    for chunk in r.iter_content(chunk_size=8192):
-                        f.write(chunk)
-                        bytes_downloaded += len(chunk)
-                        done = int(50 * bytes_downloaded / total_size) if total_size else 0
-                        sys.stdout.write(
-                            f"\r  [{'=' * done}{' ' * (50 - done)}] {bytes_downloaded / 1024 / 1024:.2f} MB")
-                        sys.stdout.flush()
-            sys.stdout.write("\n")
-            logging.debug(f"Video saved successfully to: {output_path}")
-        except requests.exceptions.RequestException as e:
-            sys.stdout.write("\n")
-            logging.error(f"Failed to download video: {e}")
-
     @handle_http_exceptions
     def download_video(self, output_path):
+        logging.debug(f"KieAIVideoGen_Veo.download_video(output_path={output_path})")
         if self._fullhd:
             url = f"{self._base_api_url}/veo/get-1080p-video?taskId={self._task_id}"  # 1080P version
         else:
@@ -167,33 +206,6 @@ class KieAIVideoGen:
             output_path = Path(output_path).with_suffix(Path(video_name).suffix)
             logging.info(f"Downloading video: {video_url} --> {output_path}")
             self._download_video(video_url, output_path)
-
-    @handle_http_exceptions
-    def upload_file(self, file_path: str) -> str | None:
-        if not os.path.exists(file_path):
-            logging.error(f"File not found at path: {file_path}")
-            return None
-
-        files = {
-            'file': (os.path.basename(file_path), open(file_path, 'rb')),
-            'uploadPath': (None, 'images/user-uploads'),
-            'fileName': (None, os.path.basename(file_path))
-        }
-        logging.debug(f"Preparing to upload '{files}'...")
-        response = requests.post(self._upload_url, headers=self._auth_header, files=files)
-        response.raise_for_status()
-        response_data = self._api_response(response)["data"]
-
-        # Extract the URL from the JSON response.
-        self._file_url = response_data.get("downloadUrl")
-        if self._file_url:
-            logging.info(f"File URL: {self._file_url}")
-            return self._file_url
-        else:
-            logging.error("URL not found in API response.")
-            return None
-
-
 
 
 def backup_sidecar_files(file_paths):
@@ -249,9 +261,9 @@ def process_yaml(yaml_path, api_key, force=False):
 
     # connect to existing task or start a new one
     if task_id:
-        kie = KieAIVideoGen(api_key, task_id=task_id, fullhd=True)
+        kie = KieAIVideoGen_Veo(api_key, task_id=task_id, fullhd=False)
     else:
-        kie = KieAIVideoGen(api_key, fullhd=True)
+        kie = KieAIVideoGen_Veo(api_key, fullhd=False)
 
     # handle custom payload params
 
