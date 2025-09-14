@@ -42,11 +42,17 @@ class KieAIVideoGen:
     """
     _api_server = "https://api.kie.ai"
     _base_api_url = f"{_api_server}/api/v1"
+    _create_task_url = f"{_base_api_url}/jobs/createTask"
+    _query_task_url = f"{_base_api_url}/jobs/recordInfo"
     _upload_url = f"https://kieai.redpandaai.co/api/file-stream-upload"
 
-    def __init__(self, api_key):
-        logging.debug(f"KieAIVideoGen({api_key})")
+    _task_state_success = "success"
+    _task_state_fail = "fail"
+
+    def __init__(self, api_key, task_id=None):
+        logging.debug(f"KieAIVideoGen({api_key}, {task_id})")
         self._api_key = api_key
+        self._task_id = task_id
         self._auth_header = {
             "Authorization": f"Bearer {self._api_key}",
         }
@@ -71,33 +77,6 @@ class KieAIVideoGen:
             logging.error(f"Unknown error ({response_json})")
             exit(-97)
         return response_json
-
-    def _download_video(self, url, output_path):
-        """
-        Downloads a file from a URL to a specified path.
-        Args:
-            url (str): The URL of the file to download.
-            output_path (Path): The path to save the downloaded file.
-        """
-        logging.debug(f"KieAIVideoGen._download_video({url}, {output_path})")
-        try:
-            with requests.get(url, stream=True) as r:
-                r.raise_for_status()
-                total_size = int(r.headers.get('content-length', 0))
-                bytes_downloaded = 0
-                with open(output_path, 'wb') as f:
-                    for chunk in r.iter_content(chunk_size=8192):
-                        f.write(chunk)
-                        bytes_downloaded += len(chunk)
-                        done = int(50 * bytes_downloaded / total_size) if total_size else 0
-                        sys.stdout.write(
-                            f"\r  [{'=' * done}{' ' * (50 - done)}] {bytes_downloaded / 1024 / 1024:.2f} MB")
-                        sys.stdout.flush()
-            sys.stdout.write("\n")
-            logging.debug(f"Video saved successfully to: {output_path}")
-        except requests.exceptions.RequestException as e:
-            sys.stdout.write("\n")
-            logging.error(f"Failed to download video: {e}")
 
     @handle_http_exceptions
     def upload_file(self, file_path: str) -> str | None:
@@ -133,14 +112,118 @@ class KieAIVideoGen:
             imageUrls.append(self.upload_file(image))
         return imageUrls
 
+    def create_task(self, payload):
+        logging.debug(f"KieAIVideoGen.create_task({payload})")
+
+        input_payload = {}
+        for key in payload.keys():
+            if key not in ['model', 'image', 'images']:
+                input_payload[key] = payload[key]
+
+        if 'image' in payload:
+            input_payload['image_url'] = self.upload_file(payload['image'])
+        elif 'images' in payload:
+            logging.error("NOT SUPPORTED")
+            exit(-200)
+
+        task_payload = {}
+        task_payload['model'] = payload['model']
+        task_payload['input'] = input_payload
+
+        logging.info(f"create_task payload: {task_payload})")
+
+        response = requests.post(self._create_task_url, json=task_payload, headers=self._json_header)
+        response.raise_for_status()
+        response_json = self._api_response(response)
+        self._task_id = response_json['data']['taskId']
+        return self._task_id
+
+    def query_task(self):
+        logging.debug(f"KieAIVideoGen.query_task()")
+        response = requests.get(f"{self._query_task_url}?taskId={self._task_id}", headers=self._auth_header)
+        response.raise_for_status()
+        logging.debug(f"query_task response: {response}")
+        response_json_data = self._api_response(response)['data']
+        return response_json_data
+
+    def _check_status(self):
+        """
+        returns True if completed, False if failed amd None if other (in queue, generating, waiting)
+        """
+        if self.query_task()['state'].lower() == self._task_state_success:
+            return True
+        elif self.query_task()['state'].lower() == self._task_state_fail:
+            return False
+
+    def wait_for_completion(self, retries=10, retry_wait_secs=30):
+        logging.debug(f"KieAIVideoGen.wait_for_completion(retries={retries}, retry_wait_secs={retry_wait_secs})")
+        retry = 0
+        while retry < retries:
+            result = self._check_status()
+            if result is not None:
+                return result
+            time.sleep(retry_wait_secs)
+            retry += 1
+        return retry < retries
+
+    def _download_video(self, url, output_path):
+        """
+        Downloads a file from a URL to a specified path.
+        Args:
+            url (str): The URL of the file to download.
+            output_path (Path): The path to save the downloaded file.
+        """
+        logging.debug(f"KieAIVideoGen._download_video({url}, {output_path})")
+        try:
+            with requests.get(url, stream=True) as r:
+                r.raise_for_status()
+                total_size = int(r.headers.get('content-length', 0))
+                bytes_downloaded = 0
+                with open(output_path, 'wb') as f:
+                    for chunk in r.iter_content(chunk_size=8192):
+                        f.write(chunk)
+                        bytes_downloaded += len(chunk)
+                        done = int(50 * bytes_downloaded / total_size) if total_size else 0
+                        sys.stdout.write(
+                            f"\r  [{'=' * done}{' ' * (50 - done)}] {bytes_downloaded / 1024 / 1024:.2f} MB")
+                        sys.stdout.flush()
+            sys.stdout.write("\n")
+            logging.debug(f"Video saved successfully to: {output_path}")
+        except requests.exceptions.RequestException as e:
+            sys.stdout.write("\n")
+            logging.error(f"Failed to download video: {e}")
+
+    def _download_videos(self, video_urls, output_path):
+        logging.debug(f"KieAIVideoGen._download_videos(video_urls={video_urls}, output_path={output_path})")
+        for video_url in video_urls:
+            video_name = video_url.split('/')[-1]
+            output_path = Path(output_path).with_suffix(Path(video_name).suffix)
+            logging.info(f"Downloading video: {video_url} --> {output_path}")
+            self._download_video(video_url, output_path)
+
+    @handle_http_exceptions
+    def download_video(self, output_path):
+        logging.debug(f"KieAIVideoGen.download_video(output_path={output_path})")
+
+        query_data = self.query_task()
+        if query_data['state'].lower() == self._task_state_fail:
+            logging.error(f"Attempting to download a failed video generation: {self._task_id}")
+            logging.error(f"Fail code: {query_data['failCode']}")
+            logging.error(f"Fail message: {query_data['failMsg']}")
+            return -1
+        elif query_data['state'].lower() != self._task_state_success:
+            logging.error("Attempting to download a video generation that likely is not complete: {self._task_id}")
+            return -2
+
+        self._download_videos(json.loads(query_data['resultJson'])['resultUrls'], output_path)
+
 
 class KieAIVideoGen_Veo(KieAIVideoGen):
     """
     """
     def __init__(self, api_key, task_id=None, fullhd=True):
         logging.debug(f"KieAIVideoGen_Veo({api_key}, task_id={task_id}, fullhd={fullhd})")
-        super().__init__(api_key=api_key)
-        self._task_id = task_id
+        super().__init__(api_key=api_key, task_id=task_id)
         self._fullhd = fullhd
 
     def _api_response(self, response):
@@ -181,6 +264,9 @@ class KieAIVideoGen_Veo(KieAIVideoGen):
 
     @handle_http_exceptions
     def _check_status(self, ):
+        """
+        returns True if completed (could be failed) False if other (in queue, generating, waiting)
+        """
         if self._fullhd:
             url = f"{self._base_api_url}/veo/get-1080p-video?taskId={self._task_id}"  # wait for the 1080P version
         else:
@@ -203,17 +289,6 @@ class KieAIVideoGen_Veo(KieAIVideoGen):
             logging.info(f"Generation failed: {response_json['msg']}")
             return False
 
-    def wait_for_completion(self, retries=10, retry_wait_secs=30):
-        logging.debug(f"KieAIVideoGen_Veo.wait_for_completion(retries={retries}, retry_wait_secs={retry_wait_secs})")
-        retry=0
-        while retry<retries:
-            result = self._check_status()
-            if result is not None:
-                return result
-            time.sleep(retry_wait_secs)
-            retry += 1
-        return retry<retries
-
     @handle_http_exceptions
     def download_video(self, output_path):
         logging.debug(f"KieAIVideoGen_Veo.download_video(output_path={output_path})")
@@ -229,11 +304,10 @@ class KieAIVideoGen_Veo(KieAIVideoGen):
         else:
             video_urls = response_json['data']['response']['resultUrls']
 
-        for video_url in video_urls:
-            video_name = video_url.split('/')[-1]
-            output_path = Path(output_path).with_suffix(Path(video_name).suffix)
-            logging.info(f"Downloading video: {video_url} --> {output_path}")
-            self._download_video(video_url, output_path)
+        self._download_videos(video_urls, output_path)
+
+
+
 
 
 def backup_sidecar_files(file_paths):
@@ -299,10 +373,7 @@ def process_yaml(yaml_path, api_key, force=False):
             fullhd = True
 
         # connect to existing task or start a new one
-        if task_id:
-            kie = KieAIVideoGen_Veo(api_key, task_id=task_id, fullhd=fullhd)
-        else:
-            kie = KieAIVideoGen_Veo(api_key, fullhd=fullhd)
+        kie = KieAIVideoGen_Veo(api_key, task_id=task_id, fullhd=fullhd)
 
         # start the video gen
         if not task_id:  # only if we dont have an existing task
@@ -319,8 +390,19 @@ def process_yaml(yaml_path, api_key, force=False):
         kie.download_video(yaml_path)
     else:
         # assume it is the create/query api
-        #kie = KieAIVideoGen_Veo(api_key)
-        logging.error(f"NOT SUPPORTED!")
+        kie = KieAIVideoGen(api_key, task_id=task_id)
+        if not task_id:  # only if we dont have an existing task
+            task_id = kie.create_task(payload)
+            with open(task_id_path, 'w') as f:
+                f.write(task_id)
+
+        # wait for task to complete
+        if not kie.wait_for_completion(retries=10):
+            logging.error(f"Timed out waiting for completion of {kie._task_id}.")
+            return -1
+
+        # download the video
+        kie.download_video(yaml_path)
 
 
 def main():
