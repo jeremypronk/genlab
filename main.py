@@ -40,9 +40,12 @@ def handle_http_exceptions(func):
 class KieAIVideoGen:
     """
     """
+    _api_server = "https://api.kie.ai"
+    _base_api_url = f"{_api_server}/api/v1"
     _upload_url = f"https://kieai.redpandaai.co/api/file-stream-upload"
 
     def __init__(self, api_key):
+        logging.debug(f"KieAIVideoGen({api_key})")
         self._api_key = api_key
         self._auth_header = {
             "Authorization": f"Bearer {self._api_key}",
@@ -54,23 +57,20 @@ class KieAIVideoGen:
 
     def _api_response(self, response):
         response_json = response.json()
-        logging.debug(f"API response: {response_json}")
+        logging.debug(f"KieAIVideoGen._api_response({response_json})")
         if response_json['code'] == 200:
             logging.debug(f"Request was successful.")
             return response_json
         elif response_json['code'] == 400:
-            if self._fullhd: # fullhd returns 400 when it is still processing
-                return response_json
             logging.error(f"Content violation error, check your prompt and/or input images for content that violates the T&Cs.")
             exit(-98)
         elif response_json['code'] == 401:
             logging.error(f"NO ACCESS PERMISSION!! Check your api key.")
             exit(-99)
-        elif response_json['code'] == 500 and self._fullhd: # fullhd mode can return 500 early on in the process
-            return response_json
         else:
             logging.error(f"Unknown error ({response_json})")
             exit(-97)
+        return response_json
 
     def _download_video(self, url, output_path):
         """
@@ -79,7 +79,7 @@ class KieAIVideoGen:
             url (str): The URL of the file to download.
             output_path (Path): The path to save the downloaded file.
         """
-        logging.debug(f"Downloading video from: {url}")
+        logging.debug(f"KieAIVideoGen._download_video({url}, {output_path})")
         try:
             with requests.get(url, stream=True) as r:
                 r.raise_for_status()
@@ -101,6 +101,7 @@ class KieAIVideoGen:
 
     @handle_http_exceptions
     def upload_file(self, file_path: str) -> str | None:
+        logging.debug(f"KieAIVideoGen.upload_file({file_path})")
         if not os.path.exists(file_path):
             logging.error(f"File not found at path: {file_path}")
             return None
@@ -124,24 +125,51 @@ class KieAIVideoGen:
             logging.error("URL not found in API response.")
             return None
 
+    def upload_images(self, images):
+        logging.debug(f"KieAIVideoGen.upload_images({images})")
+        # upload images and return urls to uploaded images
+        imageUrls = []
+        for image in images:
+            imageUrls.append(self.upload_file(image))
+        return imageUrls
+
 
 class KieAIVideoGen_Veo(KieAIVideoGen):
     """
     """
-    _api_server = "https://api.kie.ai"
-    _base_api_url = f"{_api_server}/api/v1"
-
     def __init__(self, api_key, task_id=None, fullhd=True):
         logging.debug(f"KieAIVideoGen_Veo({api_key}, task_id={task_id}, fullhd={fullhd})")
         super().__init__(api_key=api_key)
         self._task_id = task_id
         self._fullhd = fullhd
 
+    def _api_response(self, response):
+        # handle veo specific responses
+        response_json = response.json()
+        logging.debug(f"KieAIVideoGen_Veo._api_response({response_json})")
+        if response_json['code'] == 400 and self._fullhd: # fullhd returns 400 when it is still processing
+            return response_json
+        if response_json['code'] == 422 and self._fullhd: # fullhd returns 422 "Records are being generated"
+            return response_json
+        elif response_json['code'] == 500 and self._fullhd: # fullhd mode can return 500 early on in the process
+            return response_json
+        else:
+            response_json = super()._api_response(response)
+        return response_json
+
     @handle_http_exceptions
     def generate_video(self, payload):
         logging.debug(f"KieAIVideoGen_Veo.generate_video({payload})")
         url = f"{self._base_api_url}/veo/generate"
 
+        # upload images and insert resulting imageurl to the payload
+        if 'images' in payload and payload['images']:
+            images = payload['images']
+            if isinstance(images, str):
+                images = [images]
+            payload['imageUrls'] = self.upload_images(images)
+
+        # generate the video
         response = requests.post(url, json=payload, headers=self._json_header)
         response.raise_for_status()
         response_json = self._api_response(response)
@@ -259,39 +287,41 @@ def process_yaml(yaml_path, api_key, force=False):
         logging.error(f"SKIPPED: Could not read or parse YAML file '{yaml_path.name}': {e}")
         return
 
-    # connect to existing task or start a new one
-    if task_id:
-        kie = KieAIVideoGen_Veo(api_key, task_id=task_id, fullhd=False)
+    logging.info(f"Pre-Payload: f{payload}")
+
+    # model specific handling
+    if 'veo' in payload['model'].lower():
+        # google veo has it's own api
+
+        # 1080P needs to be explicitly used if required
+        fullhd = False
+        if 'fullhd' in payload and payload['fullhd']:
+            fullhd = True
+
+        # connect to existing task or start a new one
+        if task_id:
+            kie = KieAIVideoGen_Veo(api_key, task_id=task_id, fullhd=fullhd)
+        else:
+            kie = KieAIVideoGen_Veo(api_key, fullhd=fullhd)
+
+        # start the video gen
+        if not task_id:  # only if we dont have an existing task
+            task_id = kie.generate_video(payload)
+            with open(task_id_path, 'w') as f:
+                f.write(task_id)
+
+        # wait for task to complete
+        if not kie.wait_for_completion(retries=10):
+            logging.error(f"Timed out waiting for completion of {kie._task_id}.")
+            return -1
+
+        # download the video
+        kie.download_video(yaml_path)
     else:
-        kie = KieAIVideoGen_Veo(api_key, fullhd=False)
+        # assume it is the create/query api
+        #kie = KieAIVideoGen_Veo(api_key)
+        logging.error(f"NOT SUPPORTED!")
 
-    # handle custom payload params
-
-    # upload images and insert resulting imageurl to the payload
-    if not task_id and 'images' in payload:
-        if isinstance(payload['images'], str):
-            images = [payload['images']]
-
-        imageUrls = []
-        for image in images:
-            imageUrls.append(kie.upload_file(image))
-        payload['imageUrls'] = imageUrls
-
-    logging.info(f"Payload prepared: f{payload}")
-
-    # start the video gen
-    if not task_id: # only if we dont have an existing task
-        task_id = kie.generate_video(payload)
-        with open(task_id_path, 'w') as f:
-            f.write(task_id)
-
-    # wait for task to complete
-    if not kie.wait_for_completion(retries=10):
-        logging.error(f"Timed out waiting for completion of {kie._task_id}.")
-        return -1
-
-    # download the video
-    kie.download_video(yaml_path)
 
 def main():
     parser = argparse.ArgumentParser(
