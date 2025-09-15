@@ -10,6 +10,12 @@ import functools
 import argparse
 from pathlib import Path
 
+import callback_server
+
+
+_API_KEY = None
+_TASKS_WAITING_QUEUE = dict()
+
 
 def handle_http_exceptions(func):
     """
@@ -35,7 +41,6 @@ def handle_http_exceptions(func):
         return None
 
     return wrapper
-
 
 class KieAIVideoGen:
     """
@@ -112,6 +117,18 @@ class KieAIVideoGen:
             imageUrls.append(self.upload_file(image))
         return imageUrls
 
+    def create_task_callback(self, payload, callback_url, test_mode=False):
+        logging.debug(f"KieAIVideoGen.create_task_callback(payload={payload}, callback_url={callback_url})")
+        payload['callBackUrl'] = callback_url
+        if test_mode:
+            # send back a fake task_id
+            import uuid
+            fake_task_id = "b157d2585ffe4b67acd264e627532edb" #uuid.uuid4().hex  # alphanumeric (32 chars)
+            logging.warning(f"Callback test mode create a fake task with id: {fake_task_id}")
+            return fake_task_id
+        else:
+            return self.create_task(payload)
+
     def create_task(self, payload):
         logging.debug(f"KieAIVideoGen.create_task({payload})")
 
@@ -142,7 +159,6 @@ class KieAIVideoGen:
         logging.debug(f"KieAIVideoGen.query_task()")
         response = requests.get(f"{self._query_task_url}?taskId={self._task_id}", headers=self._auth_header)
         response.raise_for_status()
-        logging.debug(f"query_task response: {response}")
         response_json_data = self._api_response(response)['data']
         return response_json_data
 
@@ -150,9 +166,11 @@ class KieAIVideoGen:
         """
         returns True if completed, False if failed amd None if other (in queue, generating, waiting)
         """
-        if self.query_task()['state'].lower() == self._task_state_success:
+        state = self.query_task()['state']
+        logging.info(f"Task state is: {state}")
+        if state.lower() == self._task_state_success:
             return True
-        elif self.query_task()['state'].lower() == self._task_state_fail:
+        elif state.lower() == self._task_state_fail:
             return False
 
     def wait_for_completion(self, retries=10, retry_wait_secs=30):
@@ -310,6 +328,28 @@ class KieAIVideoGen_Veo(KieAIVideoGen):
 
 
 
+def download_video_callback(post_json):
+    logging.debug(f"download_video_callback({post_json})")
+    logging.info(post_json['msg'])
+
+    global _TASKS_WAITING_QUEUE
+    global _API_KEY
+
+    data = post_json['data']
+
+    if post_json['code'] != 200:
+        logging.error(f"Generation failed cannot download! Return code: {post_json['code']}")
+    elif data['taskId'] not in _TASKS_WAITING_QUEUE:
+        logging.error(f"Task id not found in the waiting queue!: {data['taskId']}")
+        return
+    else:
+        result_json = json.loads(data['resultJson'])
+        logging.info(f"Downloading {result_json}")
+        kie = KieAIVideoGen(_API_KEY, task_id=data['taskId'])
+        kie._download_videos(result_json['resultUrls'], _TASKS_WAITING_QUEUE[kie._task_id])
+
+    del _TASKS_WAITING_QUEUE[kie._task_id]
+
 def backup_sidecar_files(file_paths):
     timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
     for file_path in file_paths:
@@ -317,7 +357,7 @@ def backup_sidecar_files(file_paths):
         logging.warning(f"RENAMING: Backing up sidecar file '{file_path}' to {file_path_backup}")
         file_path.rename(file_path_backup)
 
-def process_yaml(yaml_path, api_key, force=False):
+def process_yaml(yaml_path, api_key, force=False, use_callback=False, test_callback=False, cb_server=None):
     logging.info(f"Processing: {yaml_path.name}")
 
     # we will backup the sidecar files if forcing
@@ -390,20 +430,31 @@ def process_yaml(yaml_path, api_key, force=False):
         kie.download_video(yaml_path)
     else:
         # assume it is the create/query api
+        connected_to_existing_task = False
         kie = KieAIVideoGen(api_key, task_id=task_id)
+
         if not task_id:  # only if we dont have an existing task
-            task_id = kie.create_task(payload)
+            if use_callback:
+                global _TASKS_WAITING_QUEUE
+                task_id = kie.create_task_callback(payload, cb_server.get_callback_url("callback"), test_callback)
+                _TASKS_WAITING_QUEUE[task_id] = yaml_path
+            else:
+                task_id = kie.create_task(payload)
             with open(task_id_path, 'w') as f:
                 f.write(task_id)
+        else:
+            connected_to_existing_task = True
 
-        # wait for task to complete
-        if not kie.wait_for_completion(retries=10):
-            logging.error(f"Timed out waiting for completion of {kie._task_id}.")
-            return -1
+        # wait for task to complete if not using the callback
+        if not use_callback or connected_to_existing_task:
+            if not kie.wait_for_completion(retries=10):
+                logging.error(f"Timed out waiting for completion of {kie._task_id}.")
+                return -1
 
-        # download the video
-        kie.download_video(yaml_path)
+            # download the video
+            kie.download_video(yaml_path)
 
+        return kie._task_id
 
 def main():
     parser = argparse.ArgumentParser(
@@ -437,6 +488,16 @@ Example Usage:
         action="store_true",
         help="Force generation of videos even if they already exist locally."
     )
+    parser.add_argument(
+        "-c", "--use_callback",
+        action="store_true",
+        help="For create task jobs (not Google Veo), use the callback process instead of one-by-one generations."
+    )
+    parser.add_argument(
+        "-t", "--test_callback",
+        action="store_true",
+        help="When using the callback process, test mode will create a fake task rather than sending the task to Kie - useful for testing."
+    )
     args = parser.parse_args()
 
     # Configure logging
@@ -447,8 +508,9 @@ Example Usage:
         datefmt='%Y-%m-%d %H:%M:%S'
     )
 
+    global _API_KEY
     try:
-        api_key = os.environ["KIE_API_KEY"]
+        _API_KEY = os.environ["KIE_API_KEY"]
     except KeyError:
         logging.critical("FATAL: KIE_API_KEY environment variable not set.")
         logging.critical("Please set your API key, e.g., 'export KIE_API_KEY=\"your_key\"'")
@@ -472,10 +534,66 @@ Example Usage:
         logging.error("No .yaml or .yml files found in the specified paths.")
         sys.exit(1)
 
+    _cb_server = None
+    if args.use_callback:
+        logging.info("Starting the callback server.")
+        if not _cb_server:
+            _cb_server = callback_server.CallbackServer(local_port=5001, external_port=6666, callback=download_video_callback)
+            _cb_server.start()  # non-blocking
+            logging.info(f"Public callback URL: {_cb_server.get_callback_url("callback")}")
+            logging.info(f"Local callback URL: {_cb_server.get_local_callback_url("callback")}")
+
     logging.info(f"Found {len(yaml_files)} YAML file(s) to process.")
     for yaml_path in yaml_files:
-        process_yaml(yaml_path, api_key, force=args.force)
+        process_yaml(yaml_path, _API_KEY, force=args.force, use_callback=args.use_callback, test_callback=args.test_callback, cb_server=_cb_server)
+
+    if args.use_callback:
+        logging.info("Waiting for all callback jobs to be completed.")
+        retry_wait_secs = 30
+
+        global _TASKS_WAITING_QUEUE
+        retry = 0
+        while retry < 9999:
+            logging.debug(f"Tasks waiting queue: {_TASKS_WAITING_QUEUE}")
+            if not _TASKS_WAITING_QUEUE:
+                logging.info(f"All tasks completed!")
+                break
+            time.sleep(retry_wait_secs)
+            retry += 1
+            logging.info(f"Waiting for all callback jobs to be completed, retry {retry}.")
+
+        logging.info(f"All tasks completed! Stopping the callback server.")
+        _cb_server.stop()
 
 
 if __name__ == "__main__":
     main()
+
+
+
+"""
+
+Invoke-RestMethod -Uri "http://202.171.178.2:6666/callback" `
+  -Method POST `
+  -ContentType "application/json" `
+  -Body '{
+    "code": 200,
+    "data": {
+        "completeTime": 1755599644000,
+        "consumeCredits": 100,
+        "costTime": 8,
+        "createTime": 1755599634000,
+        "model": "bytedance/v1-pro-image-to-video",
+        "param": "{\"callBackUrl\":\"https://your-domain.com/api/callback\",\"model\":\"bytedance/v1-pro-image-to-video\",\"input\":{\"prompt\":\"A golden retriever dashing through shallow surf at the beach, back angle camera low near waterline, splashes frozen in time, blur trails in waves and paws, afternoon sun glinting off wet fur, overcast day, dramatic clouds\",\"image_url\":\"https://file.aiquickdraw.com/custom-page/akr/section-images/1755179021328w1nhip18.webp\",\"resolution\":\"720p\",\"duration\":\"5\",\"camera_fixed\":false,\"seed\":-1,\"enable_safety_checker\":true}}",
+        "remainedCredits": 2510330,
+        "resultJson": "{\"resultUrls\":[\"["https://tempfile.aiquickdraw.com/f/c6a8410f94f6916ab3bab0169178d72c_1757911713_zyervt7q.mp4"]\"]}",
+        "state": "success",
+        "taskId": "c6a8410f94f6916ab3bab0169178d72c",
+        "updateTime": 1755599644000
+    },
+    "msg": "Playground task completed successfully."
+}'
+
+
+
+"""
