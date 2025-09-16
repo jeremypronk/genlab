@@ -10,7 +10,6 @@ import functools
 import argparse
 from pathlib import Path
 
-import callback_server
 
 
 _API_KEY = None
@@ -117,18 +116,6 @@ class KieAIVideoGen:
             imageUrls.append(self.upload_file(image))
         return imageUrls
 
-    def create_task_callback(self, payload, callback_url, test_mode=False):
-        logging.debug(f"KieAIVideoGen.create_task_callback(payload={payload}, callback_url={callback_url})")
-        payload['callBackUrl'] = callback_url
-        if test_mode:
-            # send back a fake task_id
-            import uuid
-            fake_task_id = "b157d2585ffe4b67acd264e627532edb" #uuid.uuid4().hex  # alphanumeric (32 chars)
-            logging.warning(f"Callback test mode create a fake task with id: {fake_task_id}")
-            return fake_task_id
-        else:
-            return self.create_task(payload)
-
     def create_task(self, payload):
         logging.debug(f"KieAIVideoGen.create_task({payload})")
 
@@ -168,9 +155,9 @@ class KieAIVideoGen:
         """
         state = self.query_task()['state']
         logging.info(f"Task state is: {state}")
-        if state.lower() == self._task_state_success:
+        if self._task_state_success in state.lower():
             return True
-        elif state.lower() == self._task_state_fail:
+        elif self._task_state_fail in state.lower():
             return False
 
     def wait_for_completion(self, retries=10, retry_wait_secs=30):
@@ -224,12 +211,12 @@ class KieAIVideoGen:
         logging.debug(f"KieAIVideoGen.download_video(output_path={output_path})")
 
         query_data = self.query_task()
-        if query_data['state'].lower() == self._task_state_fail:
+        if self._task_state_fail in query_data['state'].lower():
             logging.error(f"Attempting to download a failed video generation: {self._task_id}")
             logging.error(f"Fail code: {query_data['failCode']}")
             logging.error(f"Fail message: {query_data['failMsg']}")
             return -1
-        elif query_data['state'].lower() != self._task_state_success:
+        elif self._task_state_success not in query_data['state'].lower():
             logging.error("Attempting to download a video generation that likely is not complete: {self._task_id}")
             return -2
 
@@ -328,27 +315,6 @@ class KieAIVideoGen_Veo(KieAIVideoGen):
 
 
 
-def download_video_callback(post_json):
-    logging.debug(f"download_video_callback({post_json})")
-    logging.info(post_json['msg'])
-
-    global _TASKS_WAITING_QUEUE
-    global _API_KEY
-
-    data = post_json['data']
-
-    if post_json['code'] != 200:
-        logging.error(f"Generation failed cannot download! Return code: {post_json['code']}")
-    elif data['taskId'] not in _TASKS_WAITING_QUEUE:
-        logging.error(f"Task id not found in the waiting queue!: {data['taskId']}")
-        return
-    else:
-        result_json = json.loads(data['resultJson'])
-        logging.info(f"Downloading {result_json}")
-        kie = KieAIVideoGen(_API_KEY, task_id=data['taskId'])
-        kie._download_videos(result_json['resultUrls'], _TASKS_WAITING_QUEUE[kie._task_id])
-
-    del _TASKS_WAITING_QUEUE[kie._task_id]
 
 def backup_sidecar_files(file_paths):
     timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
@@ -357,7 +323,7 @@ def backup_sidecar_files(file_paths):
         logging.warning(f"RENAMING: Backing up sidecar file '{file_path}' to {file_path_backup}")
         file_path.rename(file_path_backup)
 
-def process_yaml(yaml_path, api_key, force=False, use_callback=False, test_callback=False, cb_server=None):
+def process_yaml(yaml_path, api_key, force=False):
     logging.info(f"Processing: {yaml_path.name}")
 
     # we will backup the sidecar files if forcing
@@ -403,7 +369,7 @@ def process_yaml(yaml_path, api_key, force=False, use_callback=False, test_callb
 
     logging.info(f"Pre-Payload: f{payload}")
 
-    # model specific handling
+    # model specific factory creation
     if 'veo' in payload['model'].lower():
         # google veo has it's own api
 
@@ -415,48 +381,45 @@ def process_yaml(yaml_path, api_key, force=False, use_callback=False, test_callb
         # connect to existing task or start a new one
         kie = KieAIVideoGen_Veo(api_key, task_id=task_id, fullhd=fullhd)
 
-        # start the video gen
-        if not task_id:  # only if we dont have an existing task
-            task_id = kie.generate_video(payload)
-            with open(task_id_path, 'w') as f:
-                f.write(task_id)
+        # # start the video gen
+        # if not task_id:  # only if we dont have an existing task
+        #     task_id = kie.generate_video(payload)
+        #     with open(task_id_path, 'w') as f:
+        #         f.write(task_id)
 
-        # wait for task to complete
-        if not kie.wait_for_completion(retries=10):
-            logging.error(f"Timed out waiting for completion of {kie._task_id}.")
-            return -1
+        # # wait for task to complete
+        # if not kie.wait_for_completion(retries=10):
+        #     logging.error(f"Timed out waiting for completion of {kie._task_id}.")
+        #     return -1
 
-        # download the video
-        kie.download_video(yaml_path)
+        # # download the video
+        # kie.download_video(yaml_path)
     else:
         # assume it is the create/query api
-        connected_to_existing_task = False
         kie = KieAIVideoGen(api_key, task_id=task_id)
 
-        if not task_id:  # only if we dont have an existing task
-            if use_callback:
-                global _TASKS_WAITING_QUEUE
-                task_id = kie.create_task_callback(payload, cb_server.get_callback_url("callback"), test_callback)
-                _TASKS_WAITING_QUEUE[task_id] = yaml_path
-            else:
-                task_id = kie.create_task(payload)
-            with open(task_id_path, 'w') as f:
-                f.write(task_id)
-        else:
-            connected_to_existing_task = True
+    # start the video gen
+    if not task_id:  # only if we dont have an existing task
+        task_id = kie.create_task(payload)
+        with open(task_id_path, 'w') as f:
+            f.write(task_id)
+    # else:
+    #     connected_to_existing_task = True
 
-        # wait for task to complete if not using the callback
-        if not use_callback or connected_to_existing_task:
-            if not kie.wait_for_completion(retries=10):
-                logging.error(f"Timed out waiting for completion of {kie._task_id}.")
-                return -1
+    # # wait for task to complete if not using the callback
+    # if not use_callback or connected_to_existing_task:
+    #     if not kie.wait_for_completion(retries=10):
+    #         logging.error(f"Timed out waiting for completion of {kie._task_id}.")
+    #         return -1
 
-            # download the video
-            kie.download_video(yaml_path)
+    #     # download the video
+    #     kie.download_video(yaml_path)
 
-        return kie._task_id
-
+    return kie
+        
 def main():
+    global _TASKS_WAITING_QUEUE
+    
     parser = argparse.ArgumentParser(
         description="Generate videos from YAML files using the kie.ai API.",
         formatter_class=argparse.RawTextHelpFormatter,
@@ -488,16 +451,16 @@ Example Usage:
         action="store_true",
         help="Force generation of videos even if they already exist locally."
     )
-    parser.add_argument(
-        "-c", "--use_callback",
-        action="store_true",
-        help="For create task jobs (not Google Veo), use the callback process instead of one-by-one generations."
-    )
-    parser.add_argument(
-        "-t", "--test_callback",
-        action="store_true",
-        help="When using the callback process, test mode will create a fake task rather than sending the task to Kie - useful for testing."
-    )
+    # parser.add_argument(
+    #     "-c", "--use_callback",
+    #     action="store_true",
+    #     help="For create task jobs (not Google Veo), use the callback process instead of one-by-one generations."
+    # )
+    # parser.add_argument(
+    #     "-t", "--test_callback",
+    #     action="store_true",
+    #     help="When using the callback process, test mode will create a fake task rather than sending the task to Kie - useful for testing."
+    # )
     args = parser.parse_args()
 
     # Configure logging
@@ -534,36 +497,55 @@ Example Usage:
         logging.error("No .yaml or .yml files found in the specified paths.")
         sys.exit(1)
 
-    _cb_server = None
-    if args.use_callback:
-        logging.info("Starting the callback server.")
-        if not _cb_server:
-            _cb_server = callback_server.CallbackServer(local_port=5001, external_port=6666, callback=download_video_callback)
-            _cb_server.start()  # non-blocking
-            logging.info(f"Public callback URL: {_cb_server.get_callback_url("callback")}")
-            logging.info(f"Local callback URL: {_cb_server.get_local_callback_url("callback")}")
+    # _cb_server = None
+    # if args.use_callback:
+    #     logging.info("Starting the callback server.")
+    #     if not _cb_server:
+    #         _cb_server = callback_server.CallbackServer(local_port=5001, external_port=6666, callback=download_video_callback)
+    #         _cb_server.start()  # non-blocking
+    #         logging.info(f"Public callback URL: {_cb_server.get_callback_url("callback")}")
+    #         logging.info(f"Local callback URL: {_cb_server.get_local_callback_url("callback")}")
 
     logging.info(f"Found {len(yaml_files)} YAML file(s) to process.")
     for yaml_path in yaml_files:
-        process_yaml(yaml_path, _API_KEY, force=args.force, use_callback=args.use_callback, test_callback=args.test_callback, cb_server=_cb_server)
+        kie = process_yaml(yaml_path, _API_KEY, force=args.force)
+        _TASKS_WAITING_QUEUE[kie._task_id] = kie
+        
 
-    if args.use_callback:
-        logging.info("Waiting for all callback jobs to be completed.")
-        retry_wait_secs = 30
+    # if args.use_callback:
+    #     logging.info("Waiting for all callback jobs to be completed.")
+    #     retry_wait_secs = 30
 
-        global _TASKS_WAITING_QUEUE
-        retry = 0
-        while retry < 9999:
-            logging.debug(f"Tasks waiting queue: {_TASKS_WAITING_QUEUE}")
-            if not _TASKS_WAITING_QUEUE:
-                logging.info(f"All tasks completed!")
-                break
-            time.sleep(retry_wait_secs)
-            retry += 1
-            logging.info(f"Waiting for all callback jobs to be completed, retry {retry}.")
+    #     retry = 0
+    #     while retry < 9999:
+    #         logging.debug(f"Tasks waiting queue: {_TASKS_WAITING_QUEUE}")
+    #         if not _TASKS_WAITING_QUEUE:
+    #             logging.info(f"All tasks completed!")
+    #             break
+    #         time.sleep(retry_wait_secs)
+    #         retry += 1
+    #         logging.info(f"Waiting for all callback jobs to be completed, retry {retry}.")
 
-        logging.info(f"All tasks completed! Stopping the callback server.")
-        _cb_server.stop()
+    #     logging.info(f"All tasks completed! Stopping the callback server.")
+    #     _cb_server.stop()
+
+    logging.info("Waiting for all jobs to be completed.")
+
+    retry_wait_secs = 30
+    while retry < 9999:
+        logging.debug(f"Tasks waiting queue: {_TASKS_WAITING_QUEUE}")
+        # check each task
+        assert(false)
+        
+        if not _TASKS_WAITING_QUEUE:
+            logging.info(f"All tasks completed!")
+            break
+        time.sleep(retry_wait_secs)
+        retry += 1
+        logging.info(f"Waiting for all jobs to be completed, retry {retry}.")
+
+    logging.info(f"All tasks completed!")
+    
 
 
 if __name__ == "__main__":
