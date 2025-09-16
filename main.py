@@ -53,9 +53,10 @@ class KieAIVideoGen:
     _task_state_success = "success"
     _task_state_fail = "fail"
 
-    def __init__(self, api_key, task_id=None):
+    def __init__(self, api_key, output_path, task_id=None):
         logging.debug(f"KieAIVideoGen({api_key}, {task_id})")
         self._api_key = api_key
+        self._output_path = output_path
         self._task_id = task_id
         self._auth_header = {
             "Authorization": f"Bearer {self._api_key}",
@@ -116,6 +117,7 @@ class KieAIVideoGen:
             imageUrls.append(self.upload_file(image))
         return imageUrls
 
+    @handle_http_exceptions
     def create_task(self, payload):
         logging.debug(f"KieAIVideoGen.create_task({payload})")
 
@@ -142,6 +144,7 @@ class KieAIVideoGen:
         self._task_id = response_json['data']['taskId']
         return self._task_id
 
+    @handle_http_exceptions
     def query_task(self):
         logging.debug(f"KieAIVideoGen.query_task()")
         response = requests.get(f"{self._query_task_url}?taskId={self._task_id}", headers=self._auth_header)
@@ -160,16 +163,16 @@ class KieAIVideoGen:
         elif self._task_state_fail in state.lower():
             return False
 
-    def wait_for_completion(self, retries=10, retry_wait_secs=30):
-        logging.debug(f"KieAIVideoGen.wait_for_completion(retries={retries}, retry_wait_secs={retry_wait_secs})")
-        retry = 0
-        while retry < retries:
-            result = self._check_status()
-            if result is not None:
-                return result
-            time.sleep(retry_wait_secs)
-            retry += 1
-        return retry < retries
+    # def wait_for_completion(self, retries=10, retry_wait_secs=30):
+    #     logging.debug(f"KieAIVideoGen.wait_for_completion(retries={retries}, retry_wait_secs={retry_wait_secs})")
+    #     retry = 0
+    #     while retry < retries:
+    #         result = self._check_status()
+    #         if result is not None:
+    #             return result
+    #         time.sleep(retry_wait_secs)
+    #         retry += 1
+    #     return retry < retries
 
     def _download_video(self, url, output_path):
         """
@@ -207,8 +210,8 @@ class KieAIVideoGen:
             self._download_video(video_url, output_path)
 
     @handle_http_exceptions
-    def download_video(self, output_path):
-        logging.debug(f"KieAIVideoGen.download_video(output_path={output_path})")
+    def download_video(self):
+        logging.debug(f"KieAIVideoGen.download_video()")
 
         query_data = self.query_task()
         if self._task_state_fail in query_data['state'].lower():
@@ -220,7 +223,7 @@ class KieAIVideoGen:
             logging.error("Attempting to download a video generation that likely is not complete: {self._task_id}")
             return -2
 
-        self._download_videos(json.loads(query_data['resultJson'])['resultUrls'], output_path)
+        self._download_videos(json.loads(query_data['resultJson'])['resultUrls'], self._output_path)
 
 
 class KieAIVideoGen_Veo(KieAIVideoGen):
@@ -295,8 +298,8 @@ class KieAIVideoGen_Veo(KieAIVideoGen):
             return False
 
     @handle_http_exceptions
-    def download_video(self, output_path):
-        logging.debug(f"KieAIVideoGen_Veo.download_video(output_path={output_path})")
+    def download_video(self):
+        logging.debug(f"KieAIVideoGen_Veo.download_video()")
         if self._fullhd:
             url = f"{self._base_api_url}/veo/get-1080p-video?taskId={self._task_id}"  # 1080P version
         else:
@@ -309,7 +312,7 @@ class KieAIVideoGen_Veo(KieAIVideoGen):
         else:
             video_urls = response_json['data']['response']['resultUrls']
 
-        self._download_videos(video_urls, output_path)
+        self._download_videos(video_urls, self._output_path)
 
 
 
@@ -379,7 +382,7 @@ def process_yaml(yaml_path, api_key, force=False):
             fullhd = True
 
         # connect to existing task or start a new one
-        kie = KieAIVideoGen_Veo(api_key, task_id=task_id, fullhd=fullhd)
+        kie = KieAIVideoGen_Veo(api_key, output_path=yaml_path, task_id=task_id, fullhd=fullhd)
 
         # # start the video gen
         # if not task_id:  # only if we dont have an existing task
@@ -396,7 +399,7 @@ def process_yaml(yaml_path, api_key, force=False):
         # kie.download_video(yaml_path)
     else:
         # assume it is the create/query api
-        kie = KieAIVideoGen(api_key, task_id=task_id)
+        kie = KieAIVideoGen(api_key, output_path=yaml_path, task_id=task_id)
 
     # start the video gen
     if not task_id:  # only if we dont have an existing task
@@ -533,13 +536,30 @@ Example Usage:
 
     retry_wait_secs = 30
     while retry < 9999:
-        logging.debug(f"Tasks waiting queue: {_TASKS_WAITING_QUEUE}")
-        # check each task
-        assert(false)
+        logging.info(f"Tasks waiting in the queue: {_TASKS_WAITING_QUEUE}")
         
+        # check each task
+        completed_tasks = []
+        for kie in _TASKS_WAITING_QUEUE.itervalues():
+            status = kie.check_status()
+            if status is None:
+                pass # still generating
+            else:
+                if status:
+                    # download the video
+                    kie.download_video(output_path)
+                elif status is False:
+                    logging.error(f"Generation failed for {kie}")
+                completed_tasks.append(kie._task_id)
+
+        # remove completed from the queue      
+        for id in completed_tasks: _TASKS_WAITING_QUEUE.pop(id, None)
+
+        # check if there are any left
         if not _TASKS_WAITING_QUEUE:
             logging.info(f"All tasks completed!")
             break
+        
         time.sleep(retry_wait_secs)
         retry += 1
         logging.info(f"Waiting for all jobs to be completed, retry {retry}.")
