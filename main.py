@@ -51,7 +51,7 @@ class KieAIVideoGen:
     _query_task_url = f"{_base_api_url}/jobs/recordInfo"
     _upload_url = f"https://kieai.redpandaai.co/api/file-stream-upload"
     
-    class task_status(Enum):
+    class TASK_STATUS(Enum):
         completed = 1
         failed = 2
         generating = 3
@@ -62,7 +62,7 @@ class KieAIVideoGen:
     def __init__(self, api_key, output_path, task_id=None):
         logging.debug(f"KieAIVideoGen({api_key}, {task_id})")
         self._api_key = api_key
-        self._output_path = output_path
+        self._output_path = Path(output_path)
         self._task_id = task_id
         self._auth_header = {
             "Authorization": f"Bearer {self._api_key}",
@@ -72,28 +72,46 @@ class KieAIVideoGen:
             "Content-Type": "application/json"
         }
 
+    def _name(self):
+        return self._output_path.stem
+
+    def _log_msg(self, log_func, msg):
+        log_func(f"({self._name()}) {msg}")
+
+    def _info(self, msg):
+        self._log_msg(logging.info, msg)
+        
+    def _warning(self, msg):
+        self._log_msg(logging.warning, msg)
+
+    def _error(self, msg):
+        self._log_msg(logging.error, msg)
+
+    def _debug(self, msg):
+        self._log_msg(logging.debug, msg)
+
     def _api_response(self, response):
         response_json = response.json()
-        logging.debug(f"KieAIVideoGen._api_response({response_json})")
+        self._debug(f"KieAIVideoGen._api_response({response_json})")
         if response_json['code'] == 200:
-            logging.debug(f"Request was successful.")
+            self._debug(f"Request was successful.")
             return response_json
         elif response_json['code'] == 400:
-            logging.error(f"Content violation error, check your prompt and/or input images for content that violates the T&Cs.")
+            self._error(f"Content violation error, check your prompt and/or input images for content that violates the T&Cs.")
             exit(-98)
         elif response_json['code'] == 401:
-            logging.error(f"NO ACCESS PERMISSION!! Check your api key.")
+            self._error(f"NO ACCESS PERMISSION!! Check your api key.")
             exit(-99)
         else:
-            logging.error(f"Unknown error ({response_json})")
+            self._error(f"Unknown error ({response_json})")
             exit(-97)
         return response_json
 
     @handle_http_exceptions
     def upload_file(self, file_path: str) -> str | None:
-        logging.debug(f"KieAIVideoGen.upload_file({file_path})")
+        self._debug(f"KieAIVideoGen.upload_file({file_path})")
         if not os.path.exists(file_path):
-            logging.error(f"File not found at path: {file_path}")
+            self._error(f"File not found at path: {file_path}")
             return None
 
         files = {
@@ -101,7 +119,7 @@ class KieAIVideoGen:
             'uploadPath': (None, 'images/user-uploads'),
             'fileName': (None, os.path.basename(file_path))
         }
-        logging.debug(f"Preparing to upload '{files}'...")
+        self._debug(f"Preparing to upload '{files}'...")
         response = requests.post(self._upload_url, headers=self._auth_header, files=files)
         response.raise_for_status()
         response_data = self._api_response(response)["data"]
@@ -109,14 +127,14 @@ class KieAIVideoGen:
         # Extract the URL from the JSON response.
         self._file_url = response_data.get("downloadUrl")
         if self._file_url:
-            logging.info(f"File URL: {self._file_url}")
+            self._info(f"File URL: {self._file_url}")
             return self._file_url
         else:
-            logging.error("URL not found in API response.")
+            self._error("URL not found in API response.")
             return None
 
     def upload_images(self, images):
-        logging.debug(f"KieAIVideoGen.upload_images({images})")
+        self._debug(f"KieAIVideoGen.upload_images({images})")
         # upload images and return urls to uploaded images
         imageUrls = []
         for image in images:
@@ -125,7 +143,7 @@ class KieAIVideoGen:
 
     @handle_http_exceptions
     def create_task(self, payload):
-        logging.debug(f"KieAIVideoGen.create_task({payload})")
+        self._debug(f"KieAIVideoGen.create_task({payload})")
 
         input_payload = {}
         for key in payload.keys():
@@ -135,7 +153,7 @@ class KieAIVideoGen:
         if 'image' in payload:
             input_payload['image_url'] = self.upload_file(payload['image'])
         elif 'images' in payload:
-            logging.error("NOT SUPPORTED")
+            self._error("NOT SUPPORTED")
             exit(-200)
 
         task_payload = {}
@@ -151,33 +169,33 @@ class KieAIVideoGen:
         return self._task_id
 
     @handle_http_exceptions
-    def get_task_status(self):
-        logging.debug(f"KieAIVideoGen.get_task_status()")
+    def _query_task(self):
+        self._debug(f"KieAIVideoGen._query_task()")
         response = requests.get(f"{self._query_task_url}?taskId={self._task_id}", headers=self._auth_header)
         response.raise_for_status()
         #response_json_data = self._api_response(response)['data']
         return response
 
-    def _check_task_status(self, response):
+    def _check_task_status(self, query_task_response):
         """
-        returns True if completed, False if failed amd None if other (in queue, generating, waiting)
+        returns task_status
         """
-        logging.debug(f"KieAIVideoGen._check_task_status()")
-        state = response['state']
+        self._debug(f"KieAIVideoGen._get_task_status()")
+        state = query_task_response['state']
         # _task_state_success = "success"
         # _task_state_fail = "fail"
         if "success" in state.lower():
-            return self.task_status.completed
+            return TASK_STATUS.completed
         elif "fail" in state.lower():
-            return self.task_status.failed
+            return TASK_STATUS.failed
         elif "gen" in state.lower():
-            return self.task_status.generating
+            return TASK_STATUS.generating
         elif "wait" in state.lower():
-            return self.task_status.waiing
+            return TASK_STATUS.waiing
         elif "que" in state.lower():
-            return self.task_status.queuing
+            return TASK_STATUS.queuing
         else:
-            return self.task_status.unknown
+            return TASK_STATUS.unknown
 
     # def wait_for_completion(self, retries=10, retry_wait_secs=30):
     #     logging.debug(f"KieAIVideoGen.wait_for_completion(retries={retries}, retry_wait_secs={retry_wait_secs})")
@@ -197,7 +215,7 @@ class KieAIVideoGen:
             url (str): The URL of the file to download.
             output_path (Path): The path to save the downloaded file.
         """
-        logging.debug(f"KieAIVideoGen._download_video({url}, {output_path})")
+        self._debug(f"KieAIVideoGen._download_video({url}, {output_path})")
         try:
             with requests.get(url, stream=True) as r:
                 r.raise_for_status()
@@ -212,10 +230,10 @@ class KieAIVideoGen:
                             f"\r  [{'=' * done}{' ' * (50 - done)}] {bytes_downloaded / 1024 / 1024:.2f} MB")
                         sys.stdout.flush()
             sys.stdout.write("\n")
-            logging.debug(f"Video saved successfully to: {output_path}")
+            self._debug(f"Video saved successfully to: {output_path}")
         except requests.exceptions.RequestException as e:
             sys.stdout.write("\n")
-            logging.error(f"Failed to download video: {e}")
+            self._error(f"Failed to download video: {e}")
 
     def _download_videos(self, video_urls, output_path):
         logging.debug(f"KieAIVideoGen._download_videos(video_urls={video_urls}, output_path={output_path})")
@@ -225,23 +243,27 @@ class KieAIVideoGen:
             logging.info(f"Downloading video: {video_url} --> {output_path}")
             self._download_video(video_url, output_path)
 
-    @handle_http_exceptions
+    def _log_failure_msg(self):
+        self._error(f"Fail code: {query_data['failCode']}")
+        self._error(f"Fail message: {query_data['failMsg']}")
+
     def download_video(self):
         logging.debug(f"KieAIVideoGen.download_video()")
 
-        response = self.query_task_status()
-        if _check_task_status:
-        #if self._task_state_fail in query_data['state'].lower():
-        if 
-            logging.error(f"Attempting to download a failed video generation: {self._task_id}")
-            logging.error(f"Fail code: {query_data['failCode']}")
-            logging.error(f"Fail message: {query_data['failMsg']}")
-            return -1
-        elif self._task_state_success not in query_data['state'].lower():
-            logging.error("Attempting to download a video generation that likely is not complete: {self._task_id}")
-            return -2
+        query_task_response = self._query_task()
+        task_status = self._check_task_status(query_task_response_)
+        if task_status == TASK_STATUS.completed:
+            self._info("Video generation task complete!")
+            self._download_videos(json.loads(query_task_response['data']['resultJson'])['resultUrls'], self._output_path)
+        elif task_status == TASK_STATUS.failed:
+            self._error("Attempting to download a failed video generation!!")
+            self._log_failure_msg()
+        elif task_status == TASK_STATUS.unknown:
+            self._error(f"({self._name()} Unknown task status!")
+        else:
+            self._info(f"({self._name()} Task status: {task_status.name}")
 
-        self._download_videos(json.loads(query_data['resultJson'])['resultUrls'], self._output_path)
+        return task_status
 
 
 class KieAIVideoGen_Veo(KieAIVideoGen):
