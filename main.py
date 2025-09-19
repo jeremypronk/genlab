@@ -9,6 +9,7 @@ import sys
 import functools
 import argparse
 from pathlib import Path
+from enum import Enum
 
 
 
@@ -49,9 +50,14 @@ class KieAIVideoGen:
     _create_task_url = f"{_base_api_url}/jobs/createTask"
     _query_task_url = f"{_base_api_url}/jobs/recordInfo"
     _upload_url = f"https://kieai.redpandaai.co/api/file-stream-upload"
-
-    _task_state_success = "success"
-    _task_state_fail = "fail"
+    
+    class task_status(Enum):
+        completed = 1
+        failed = 2
+        generating = 3
+        waiting = 4
+        queuing = 5
+        unknown = 6
 
     def __init__(self, api_key, output_path, task_id=None):
         logging.debug(f"KieAIVideoGen({api_key}, {task_id})")
@@ -146,22 +152,32 @@ class KieAIVideoGen:
 
     @handle_http_exceptions
     def get_task_status(self):
-        logging.debug(f"KieAIVideoGen.query_task()")
+        logging.debug(f"KieAIVideoGen.get_task_status()")
         response = requests.get(f"{self._query_task_url}?taskId={self._task_id}", headers=self._auth_header)
         response.raise_for_status()
         #response_json_data = self._api_response(response)['data']
         return response
 
-    def _check_task_status(self, response=None):
+    def _check_task_status(self, response):
         """
         returns True if completed, False if failed amd None if other (in queue, generating, waiting)
         """
+        logging.debug(f"KieAIVideoGen._check_task_status()")
         state = response['state']
-        logging.debug(f"Task state is: {state}")
-        if self._task_state_success in state.lower():
-            return True
-        elif self._task_state_fail in state.lower():
-            return False
+        # _task_state_success = "success"
+        # _task_state_fail = "fail"
+        if "success" in state.lower():
+            return self.task_status.completed
+        elif "fail" in state.lower():
+            return self.task_status.failed
+        elif "gen" in state.lower():
+            return self.task_status.generating
+        elif "wait" in state.lower():
+            return self.task_status.waiing
+        elif "que" in state.lower():
+            return self.task_status.queuing
+        else:
+            return self.task_status.unknown
 
     # def wait_for_completion(self, retries=10, retry_wait_secs=30):
     #     logging.debug(f"KieAIVideoGen.wait_for_completion(retries={retries}, retry_wait_secs={retry_wait_secs})")
