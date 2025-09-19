@@ -581,16 +581,16 @@ Example Usage:
         # check each task
         completed_tasks = []
         for kie in _TASKS_WAITING_QUEUE.itervalues():
-            status = kie.check_status()
-            if status is None:
-                pass # still generating
-            else:
-                if status:
-                    # download the video
-                    kie.download_video(output_path)
-                elif status is False:
-                    logging.error(f"Generation failed for {kie}")
-                completed_tasks.append(kie._task_id)
+
+            # try downloading the video
+            status = kie.download_video(output_path)
+
+            # still gening?
+            if status in [kie.TASK_STATUS.generating, kie.TASK_STATUS.waiting, kie.queuing]
+                continue
+
+            # otherwise remove from the list
+            completed_tasks.append(kie._task_id)
 
         # remove completed from the queue      
         for id in completed_tasks: _TASKS_WAITING_QUEUE.pop(id, None)
