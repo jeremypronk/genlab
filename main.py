@@ -145,19 +145,19 @@ class KieAIVideoGen:
         return self._task_id
 
     @handle_http_exceptions
-    def query_task(self):
+    def get_task_status(self):
         logging.debug(f"KieAIVideoGen.query_task()")
         response = requests.get(f"{self._query_task_url}?taskId={self._task_id}", headers=self._auth_header)
         response.raise_for_status()
-        response_json_data = self._api_response(response)['data']
-        return response_json_data
+        #response_json_data = self._api_response(response)['data']
+        return response
 
-    def _check_status(self):
+    def _check_task_status(self, response=None):
         """
         returns True if completed, False if failed amd None if other (in queue, generating, waiting)
         """
-        state = self.query_task()['state']
-        logging.info(f"Task state is: {state}")
+        state = response['state']
+        logging.debug(f"Task state is: {state}")
         if self._task_state_success in state.lower():
             return True
         elif self._task_state_fail in state.lower():
@@ -213,8 +213,10 @@ class KieAIVideoGen:
     def download_video(self):
         logging.debug(f"KieAIVideoGen.download_video()")
 
-        query_data = self.query_task()
-        if self._task_state_fail in query_data['state'].lower():
+        response = self.query_task_status()
+        if _check_task_status:
+        #if self._task_state_fail in query_data['state'].lower():
+        if 
             logging.error(f"Attempting to download a failed video generation: {self._task_id}")
             logging.error(f"Fail code: {query_data['failCode']}")
             logging.error(f"Fail message: {query_data['failMsg']}")
