@@ -14,7 +14,7 @@ from enum import Enum
 
 
 _API_KEY = None
-_TASKS_WAITING_QUEUE = dict()
+_TASKS_WAITING_QUEUE = []
 
 
 def handle_http_exceptions(func):
@@ -50,7 +50,8 @@ class KieAIVideoGen:
     _create_task_url = f"{_base_api_url}/jobs/createTask"
     _query_task_url = f"{_base_api_url}/jobs/recordInfo"
     _upload_url = f"https://kieai.redpandaai.co/api/file-stream-upload"
-    
+    _file_url = None
+
     class TASK_STATUS(Enum):
         completed = 1
         failed = 2
@@ -90,22 +91,21 @@ class KieAIVideoGen:
     def _debug(self, msg):
         self._log_msg(logging.debug, msg)
 
-    def _api_response(self, response):
+    def _check_api_response(self, response):
+        self._debug(f"KieAIVideoGen._check_api_response({response})")
         response_json = response.json()
-        self._debug(f"KieAIVideoGen._api_response({response_json})")
         if response_json['code'] == 200:
             self._debug(f"Request was successful.")
-            return response_json
         elif response_json['code'] == 400:
             self._error(f"Content violation error, check your prompt and/or input images for content that violates the T&Cs.")
-            exit(-98)
+            return False
         elif response_json['code'] == 401:
             self._error(f"NO ACCESS PERMISSION!! Check your api key.")
-            exit(-99)
+            return False
         else:
             self._error(f"Unknown error ({response_json})")
-            exit(-97)
-        return response_json
+            return False
+        return True
 
     @handle_http_exceptions
     def upload_file(self, file_path: str) -> str | None:
@@ -122,16 +122,17 @@ class KieAIVideoGen:
         self._debug(f"Preparing to upload '{files}'...")
         response = requests.post(self._upload_url, headers=self._auth_header, files=files)
         response.raise_for_status()
-        response_data = self._api_response(response)["data"]
+        if self._check_api_response(response):
+            response_data = response.json()["data"]
 
-        # Extract the URL from the JSON response.
-        self._file_url = response_data.get("downloadUrl")
-        if self._file_url:
-            self._info(f"File URL: {self._file_url}")
-            return self._file_url
-        else:
-            self._error("URL not found in API response.")
-            return None
+            # Extract the URL from the JSON response.
+            self._file_url = response_data.get("downloadUrl")
+            if self._file_url:
+                self._info(f"File URL: {self._file_url}")
+                return self._file_url
+            else:
+                self._error("URL not found in API response.")
+        return None
 
     def upload_images(self, images):
         self._debug(f"KieAIVideoGen.upload_images({images})")
@@ -156,7 +157,7 @@ class KieAIVideoGen:
             self._error("NOT SUPPORTED")
             exit(-200)
 
-        task_payload = {}
+        task_payload = dict()
         task_payload['model'] = payload['model']
         task_payload['input'] = input_payload
 
@@ -164,49 +165,43 @@ class KieAIVideoGen:
 
         response = requests.post(self._create_task_url, json=task_payload, headers=self._json_header)
         response.raise_for_status()
-        response_json = self._api_response(response)
-        self._task_id = response_json['data']['taskId']
-        return self._task_id
+        if self._check_api_response(response):
+            response_json = response.json()
+            self._task_id = response_json['data']['taskId']
+            return self._task_id
 
     @handle_http_exceptions
     def _query_task(self):
         self._debug(f"KieAIVideoGen._query_task()")
         response = requests.get(f"{self._query_task_url}?taskId={self._task_id}", headers=self._auth_header)
         response.raise_for_status()
-        #response_json_data = self._api_response(response)['data']
-        return response
+        return response.json()
 
     def _check_task_status(self, query_task_response):
         """
-        returns task_status
+        returns TASK_STATUS for a task query
         """
         self._debug(f"KieAIVideoGen._get_task_status()")
         state = query_task_response['state']
-        # _task_state_success = "success"
-        # _task_state_fail = "fail"
         if "success" in state.lower():
-            return TASK_STATUS.completed
+            return self.TASK_STATUS.completed
         elif "fail" in state.lower():
-            return TASK_STATUS.failed
+            return self.TASK_STATUS.failed
         elif "gen" in state.lower():
-            return TASK_STATUS.generating
+            return self.TASK_STATUS.generating
         elif "wait" in state.lower():
-            return TASK_STATUS.waiing
+            return self.TASK_STATUS.waiting
         elif "que" in state.lower():
-            return TASK_STATUS.queuing
+            return self.TASK_STATUS.queuing
         else:
-            return TASK_STATUS.unknown
+            return self.TASK_STATUS.unknown
 
-    # def wait_for_completion(self, retries=10, retry_wait_secs=30):
-    #     logging.debug(f"KieAIVideoGen.wait_for_completion(retries={retries}, retry_wait_secs={retry_wait_secs})")
-    #     retry = 0
-    #     while retry < retries:
-    #         result = self._check_status()
-    #         if result is not None:
-    #             return result
-    #         time.sleep(retry_wait_secs)
-    #         retry += 1
-    #     return retry < retries
+    def is_finished(self, task_status):
+        self._debug(f"KieAIVideoGen._is_finished({task_status})")
+        assert(isinstance(task_status, self.TASK_STATUS))
+        if task_status in [self.TASK_STATUS.generating, self.TASK_STATUS.waiting, self.TASK_STATUS.queuing]:
+            return False
+        return True
 
     def _download_video(self, url, output_path):
         """
@@ -215,7 +210,7 @@ class KieAIVideoGen:
             url (str): The URL of the file to download.
             output_path (Path): The path to save the downloaded file.
         """
-        self._debug(f"KieAIVideoGen._download_video({url}, {output_path})")
+        self._debug(f"KieAIVideoGen._download_video(url={url}, output_path={output_path})")
         try:
             with requests.get(url, stream=True) as r:
                 r.raise_for_status()
@@ -243,25 +238,29 @@ class KieAIVideoGen:
             logging.info(f"Downloading video: {video_url} --> {output_path}")
             self._download_video(video_url, output_path)
 
-    def _log_failure_msg(self):
-        self._error(f"Fail code: {query_data['failCode']}")
-        self._error(f"Fail message: {query_data['failMsg']}")
+    def _log_failure_msg(self, query_task_response):
+        self._error(f"Fail code: {query_task_response['data']['failCode']}")
+        self._error(f"Fail message: {query_task_response['data']['failMsg']}")
 
     def download_video(self):
+        """
+        Attempts to download the generated video.
+        Returns the TASK_STATUS code of the current task status.
+        """
         logging.debug(f"KieAIVideoGen.download_video()")
 
         query_task_response = self._query_task()
-        task_status = self._check_task_status(query_task_response_)
-        if task_status == TASK_STATUS.completed:
+        task_status = self._check_task_status(query_task_response)
+        if task_status == self.TASK_STATUS.completed:
             self._info("Video generation task complete!")
             self._download_videos(json.loads(query_task_response['data']['resultJson'])['resultUrls'], self._output_path)
-        elif task_status == TASK_STATUS.failed:
+        elif task_status == self.TASK_STATUS.failed:
             self._error("Attempting to download a failed video generation!!")
-            self._log_failure_msg()
-        elif task_status == TASK_STATUS.unknown:
+            self._log_failure_msg(query_task_response)
+        elif task_status == self.TASK_STATUS.unknown:
             self._error(f"({self._name()} Unknown task status!")
         else:
-            self._info(f"({self._name()} Task status: {task_status.name}")
+            self._info(f"({self._name()} Task status: {self.TASK_STATUS.name}")
 
         return task_status
 
@@ -269,27 +268,25 @@ class KieAIVideoGen:
 class KieAIVideoGen_Veo(KieAIVideoGen):
     """
     """
-    def __init__(self, api_key, task_id=None, fullhd=True):
+    def __init__(self, api_key, output_path, task_id=None, fullhd=True):
         logging.debug(f"KieAIVideoGen_Veo({api_key}, task_id={task_id}, fullhd={fullhd})")
-        super().__init__(api_key=api_key, task_id=task_id)
+        super().__init__(api_key=api_key, output_path=output_path, task_id=task_id)
         self._fullhd = fullhd
 
-    def _api_response(self, response):
+    def _check_api_response(self, response):
         # handle veo specific responses
+        logging.debug(f"KieAIVideoGen_Veo._check_api_response({response})")
         response_json = response.json()
-        logging.debug(f"KieAIVideoGen_Veo._api_response({response_json})")
         if response_json['code'] == 400 and self._fullhd: # fullhd returns 400 when it is still processing
-            return response_json
-        if response_json['code'] == 422 and self._fullhd: # fullhd returns 422 "Records are being generated"
-            return response_json
+            return True
+        elif response_json['code'] == 422 and self._fullhd: # fullhd returns 422 "Records are being generated"
+            return True
         elif response_json['code'] == 500 and self._fullhd: # fullhd mode can return 500 early on in the process
-            return response_json
-        else:
-            response_json = super()._api_response(response)
-        return response_json
+            return True
+        return super()._check_api_response(response)
 
     @handle_http_exceptions
-    def generate_video(self, payload):
+    def create_task(self, payload):
         logging.debug(f"KieAIVideoGen_Veo.generate_video({payload})")
         url = f"{self._base_api_url}/veo/generate"
 
@@ -303,12 +300,13 @@ class KieAIVideoGen_Veo(KieAIVideoGen):
         # generate the video
         response = requests.post(url, json=payload, headers=self._json_header)
         response.raise_for_status()
-        response_json = self._api_response(response)
+        if self._check_api_response(response):
+            response_json = response.json()
 
-        self._task_id = response_json['data']['taskId']
-        logging.info(f"Task ID: {self._task_id}")
+            self._task_id = response_json['data']['taskId']
+            logging.info(f"Task ID: {self._task_id}")
 
-        return self._task_id
+            return self._task_id
 
     @handle_http_exceptions
     def _check_status(self, ):
@@ -321,38 +319,40 @@ class KieAIVideoGen_Veo(KieAIVideoGen):
             url = f"{self._base_api_url}/veo/record-info?taskId={self._task_id}" # wait for the default version
         response = requests.get(url, headers=self._auth_header)
         response.raise_for_status()
-        response_json = self._api_response(response)
+        if self._check_api_response(response):
+            response_json = response.json()
 
-        if self._fullhd:
-            status = 1 if response_json['code'] == 200 else 0
-        else:
-            status = response_json['data']['successFlag']
-        if status == 0:
-            logging.info("Still generating...")
-            return None
-        elif status == 1:
-            logging.info("Generation successful!")
-            return True
-        else:
-            logging.info(f"Generation failed: {response_json['msg']}")
-            return False
+            if self._fullhd:
+                status = 1 if response_json['code'] == 200 else 0
+            else:
+                status = response_json['data']['successFlag']
+            if status == 0:
+                logging.info("Still generating...")
+                return None
+            elif status == 1:
+                logging.info("Generation successful!")
+                return True
+            else:
+                logging.info(f"Generation failed: {response_json['msg']}")
+                return False
 
-    @handle_http_exceptions
-    def download_video(self):
-        logging.debug(f"KieAIVideoGen_Veo.download_video()")
-        if self._fullhd:
-            url = f"{self._base_api_url}/veo/get-1080p-video?taskId={self._task_id}"  # 1080P version
-        else:
-            url = f"{self._base_api_url}/veo/record-info?taskId={self._task_id}" # default version
-        response = requests.get(url, headers=self._auth_header)
-        response.raise_for_status()
-        response_json = self._api_response(response)
-        if self._fullhd:
-            video_urls = [response_json['data']['resultUrl']]
-        else:
-            video_urls = response_json['data']['response']['resultUrls']
-
-        self._download_videos(video_urls, self._output_path)
+    # @handle_http_exceptions
+    # def download_video(self):
+    #     logging.debug(f"KieAIVideoGen_Veo.download_video()")
+    #     if self._fullhd:
+    #         url = f"{self._base_api_url}/veo/get-1080p-video?taskId={self._task_id}"  # 1080P version
+    #     else:
+    #         url = f"{self._base_api_url}/veo/record-info?taskId={self._task_id}" # default version
+    #     response = requests.get(url, headers=self._auth_header)
+    #     response.raise_for_status()
+    #     if self._check_api_response(response):
+    #         response_json = response.json()
+    #         if self._fullhd:
+    #             video_urls = [response_json['data']['resultUrl']]
+    #         else:
+    #             video_urls = response_json['data']['response']['resultUrls']
+    #
+    #         self._download_videos(video_urls, self._output_path)
 
 
 
@@ -423,20 +423,6 @@ def process_yaml(yaml_path, api_key, force=False):
 
         # connect to existing task or start a new one
         kie = KieAIVideoGen_Veo(api_key, output_path=yaml_path, task_id=task_id, fullhd=fullhd)
-
-        # # start the video gen
-        # if not task_id:  # only if we dont have an existing task
-        #     task_id = kie.generate_video(payload)
-        #     with open(task_id_path, 'w') as f:
-        #         f.write(task_id)
-
-        # # wait for task to complete
-        # if not kie.wait_for_completion(retries=10):
-        #     logging.error(f"Timed out waiting for completion of {kie._task_id}.")
-        #     return -1
-
-        # # download the video
-        # kie.download_video(yaml_path)
     else:
         # assume it is the create/query api
         kie = KieAIVideoGen(api_key, output_path=yaml_path, task_id=task_id)
@@ -446,17 +432,6 @@ def process_yaml(yaml_path, api_key, force=False):
         task_id = kie.create_task(payload)
         with open(task_id_path, 'w') as f:
             f.write(task_id)
-    # else:
-    #     connected_to_existing_task = True
-
-    # # wait for task to complete if not using the callback
-    # if not use_callback or connected_to_existing_task:
-    #     if not kie.wait_for_completion(retries=10):
-    #         logging.error(f"Timed out waiting for completion of {kie._task_id}.")
-    #         return -1
-
-    #     # download the video
-    #     kie.download_video(yaml_path)
 
     return kie
         
@@ -494,16 +469,11 @@ Example Usage:
         action="store_true",
         help="Force generation of videos even if they already exist locally."
     )
-    # parser.add_argument(
-    #     "-c", "--use_callback",
-    #     action="store_true",
-    #     help="For create task jobs (not Google Veo), use the callback process instead of one-by-one generations."
-    # )
-    # parser.add_argument(
-    #     "-t", "--test_callback",
-    #     action="store_true",
-    #     help="When using the callback process, test mode will create a fake task rather than sending the task to Kie - useful for testing."
-    # )
+    parser.add_argument(
+        "-r", "--retry_wait_secs",
+        type=int, default=20,
+        help="Number of seconds to wait before retrying, AKA polling wait time."
+    )
     args = parser.parse_args()
 
     # Configure logging
@@ -540,69 +510,39 @@ Example Usage:
         logging.error("No .yaml or .yml files found in the specified paths.")
         sys.exit(1)
 
-    # _cb_server = None
-    # if args.use_callback:
-    #     logging.info("Starting the callback server.")
-    #     if not _cb_server:
-    #         _cb_server = callback_server.CallbackServer(local_port=5001, external_port=6666, callback=download_video_callback)
-    #         _cb_server.start()  # non-blocking
-    #         logging.info(f"Public callback URL: {_cb_server.get_callback_url("callback")}")
-    #         logging.info(f"Local callback URL: {_cb_server.get_local_callback_url("callback")}")
-
     logging.info(f"Found {len(yaml_files)} YAML file(s) to process.")
     for yaml_path in yaml_files:
-        kie = process_yaml(yaml_path, _API_KEY, force=args.force)
-        _TASKS_WAITING_QUEUE[kie._task_id] = kie
-        
+        _TASKS_WAITING_QUEUE.append(process_yaml(yaml_path, _API_KEY, force=args.force))
 
-    # if args.use_callback:
-    #     logging.info("Waiting for all callback jobs to be completed.")
-    #     retry_wait_secs = 30
-
-    #     retry = 0
-    #     while retry < 9999:
-    #         logging.debug(f"Tasks waiting queue: {_TASKS_WAITING_QUEUE}")
-    #         if not _TASKS_WAITING_QUEUE:
-    #             logging.info(f"All tasks completed!")
-    #             break
-    #         time.sleep(retry_wait_secs)
-    #         retry += 1
-    #         logging.info(f"Waiting for all callback jobs to be completed, retry {retry}.")
-
-    #     logging.info(f"All tasks completed! Stopping the callback server.")
-    #     _cb_server.stop()
-
-    logging.info("Waiting for all jobs to be completed.")
-
-    retry_wait_secs = 30
+    logging.info("Waiting for all tasks to be completed.")
+    retry = 0
     while retry < 9999:
         logging.info(f"Tasks waiting in the queue: {_TASKS_WAITING_QUEUE}")
         
         # check each task
         completed_tasks = []
-        for kie in _TASKS_WAITING_QUEUE.itervalues():
+        for kie in _TASKS_WAITING_QUEUE:
 
             # try downloading the video
-            status = kie.download_video(output_path)
+            status = kie.download_video()
 
-            # still gening?
-            if status in [kie.TASK_STATUS.generating, kie.TASK_STATUS.waiting, kie.queuing]
-                continue
+            # is this task finished?
+            if kie.is_finished(status):
+                # remove from the list
+                completed_tasks.append(kie)
 
-            # otherwise remove from the list
-            completed_tasks.append(kie._task_id)
-
-        # remove completed from the queue      
-        for id in completed_tasks: _TASKS_WAITING_QUEUE.pop(id, None)
+        # remove completed from the queue (outside loop to avoid corrupting the very list it is checking)
+        #for id in completed_tasks: _TASKS_WAITING_QUEUE.pop(id, None)
+        _TASKS_WAITING_QUEUE = [kie for kie in _TASKS_WAITING_QUEUE if kie not in completed_tasks]
 
         # check if there are any left
         if not _TASKS_WAITING_QUEUE:
             logging.info(f"All tasks completed!")
             break
-        
-        time.sleep(retry_wait_secs)
+
         retry += 1
-        logging.info(f"Waiting for all jobs to be completed, retry {retry}.")
+        logging.info(f"Waiting {args.retry_wait_secs}s for all jobs to be completed, retry {retry}.")
+        time.sleep(args.retry_wait_secs)
 
     logging.info(f"All tasks completed!")
     
@@ -610,32 +550,3 @@ Example Usage:
 
 if __name__ == "__main__":
     main()
-
-
-
-"""
-
-Invoke-RestMethod -Uri "http://202.171.178.2:6666/callback" `
-  -Method POST `
-  -ContentType "application/json" `
-  -Body '{
-    "code": 200,
-    "data": {
-        "completeTime": 1755599644000,
-        "consumeCredits": 100,
-        "costTime": 8,
-        "createTime": 1755599634000,
-        "model": "bytedance/v1-pro-image-to-video",
-        "param": "{\"callBackUrl\":\"https://your-domain.com/api/callback\",\"model\":\"bytedance/v1-pro-image-to-video\",\"input\":{\"prompt\":\"A golden retriever dashing through shallow surf at the beach, back angle camera low near waterline, splashes frozen in time, blur trails in waves and paws, afternoon sun glinting off wet fur, overcast day, dramatic clouds\",\"image_url\":\"https://file.aiquickdraw.com/custom-page/akr/section-images/1755179021328w1nhip18.webp\",\"resolution\":\"720p\",\"duration\":\"5\",\"camera_fixed\":false,\"seed\":-1,\"enable_safety_checker\":true}}",
-        "remainedCredits": 2510330,
-        "resultJson": "{\"resultUrls\":[\"["https://tempfile.aiquickdraw.com/f/c6a8410f94f6916ab3bab0169178d72c_1757911713_zyervt7q.mp4"]\"]}",
-        "state": "success",
-        "taskId": "c6a8410f94f6916ab3bab0169178d72c",
-        "updateTime": 1755599644000
-    },
-    "msg": "Playground task completed successfully."
-}'
-
-
-
-"""
