@@ -11,11 +11,8 @@ import argparse
 from pathlib import Path
 from enum import Enum
 
-
-
 _API_KEY = None
 _TASKS_WAITING_QUEUE = []
-
 
 def handle_http_exceptions(func):
     """
@@ -264,12 +261,12 @@ class KieAIVideoGen:
 
         return task_status
 
-
 class KieAIVideoGen_Veo(KieAIVideoGen):
     """
     """
     def __init__(self, api_key, output_path, task_id=None, fullhd=True):
         logging.debug(f"KieAIVideoGen_Veo({api_key}, task_id={task_id}, fullhd={fullhd})")
+        assert(False)
         super().__init__(api_key=api_key, output_path=output_path, task_id=task_id)
         self._fullhd = fullhd
 
@@ -308,33 +305,33 @@ class KieAIVideoGen_Veo(KieAIVideoGen):
 
             return self._task_id
 
-    @handle_http_exceptions
-    def _check_status(self, ):
-        """
-        returns True if completed (could be failed) False if other (in queue, generating, waiting)
-        """
-        if self._fullhd:
-            url = f"{self._base_api_url}/veo/get-1080p-video?taskId={self._task_id}"  # wait for the 1080P version
-        else:
-            url = f"{self._base_api_url}/veo/record-info?taskId={self._task_id}" # wait for the default version
-        response = requests.get(url, headers=self._auth_header)
-        response.raise_for_status()
-        if self._check_api_response(response):
-            response_json = response.json()
-
-            if self._fullhd:
-                status = 1 if response_json['code'] == 200 else 0
-            else:
-                status = response_json['data']['successFlag']
-            if status == 0:
-                logging.info("Still generating...")
-                return None
-            elif status == 1:
-                logging.info("Generation successful!")
-                return True
-            else:
-                logging.info(f"Generation failed: {response_json['msg']}")
-                return False
+    # @handle_http_exceptions
+    # def _check_status(self, ):
+    #     """
+    #     returns True if completed (could be failed) False if other (in queue, generating, waiting)
+    #     """
+    #     if self._fullhd:
+    #         url = f"{self._base_api_url}/veo/get-1080p-video?taskId={self._task_id}"  # wait for the 1080P version
+    #     else:
+    #         url = f"{self._base_api_url}/veo/record-info?taskId={self._task_id}" # wait for the default version
+    #     response = requests.get(url, headers=self._auth_header)
+    #     response.raise_for_status()
+    #     if self._check_api_response(response):
+    #         response_json = response.json()
+    #
+    #         if self._fullhd:
+    #             status = 1 if response_json['code'] == 200 else 0
+    #         else:
+    #             status = response_json['data']['successFlag']
+    #         if status == 0:
+    #             logging.info("Still generating...")
+    #             return None
+    #         elif status == 1:
+    #             logging.info("Generation successful!")
+    #             return True
+    #         else:
+    #             logging.info(f"Generation failed: {response_json['msg']}")
+    #             return False
 
     # @handle_http_exceptions
     # def download_video(self):
