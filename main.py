@@ -147,12 +147,20 @@ class KieAIVideoGen:
 
     @handle_http_exceptions
     def create_task(self, payload, test=False):
+        """
+        image becomes image_url
+        images becomes image_urls
+        """
         self._debug(f"KieAIVideoGen.create_task({payload})")
 
         input_payload = {}
         for key in payload.keys():
             if key not in ['model', 'image', 'images']:
                 input_payload[key] = payload[key]
+
+        if 'image' in input_payload and 'images' in input_payload:
+            self._error("image and images keys found!")
+            return None
 
         if 'image' in payload:
             upload_file = self.upload_file(payload['image'])
@@ -161,8 +169,13 @@ class KieAIVideoGen:
             else:
                 return None
         elif 'images' in payload:
-            self._error("NOT SUPPORTED")
-            exit(-200)
+            images = payload['images']
+            if not isinstance(payload['images'], list):
+                images = [payload['images']]
+            input_payload['image_urls'] = list()
+            for image in images:
+                input_payload['image_urls'].append(self.upload_file(image))
+            if None in input_payload['image_urls']: return None
 
         task_payload = dict()
         task_payload['model'] = payload['model']
@@ -279,7 +292,7 @@ class KieAIVideoGen:
         elif task_status == self.TASK_STATUS.unknown:
             self._error(f"Unknown task status!")
         else:
-            self._info(f"Task status: {self.TASK_STATUS.name}")
+            self._info(f"Task status: {task_status.name}")
 
         return task_status
 

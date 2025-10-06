@@ -1,0 +1,5 @@
+model: sora-2-image-to-video
+images: X:/urf_teaser2/shots/dvr/dvr_0010/startframe/urf_dvr_0010_v012/urf_dvr_0010_v012_00012_.png
+prompt: "A realistic video from a camera mounted inside a group b rally car framed as a close-up profile on the rally driver. The rally driver is wearing a white helmet with a martini logo on the shell. He is driving at extreme speed, his eyes locked forward with intense concentration. His body is violently shaken by the car's movements as sunlight flickers and flashes rapidly around the cockpit. Through the small side window we can see the mountainous Corsican scenery is just a fast-moving blur. The drivers concentration is absolute he never breaks his forward gaze. The camera has no movement it is fixed securely to the rally car."
+aspect_ratio: "landscape"
+quality: "hd"
