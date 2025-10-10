@@ -1,8 +1,8 @@
 model: bytedance/v1-pro-image-to-video
-image: /Volumes/projects/urf_teaser2/shots/dvr/dvr_0010/startframe/urf_dvr_0010_v012/urf_dvr_0010_v012_00012_.png
-prompt: "A realistic video from a camera mounted inside a group b rally car framed as a close-up profile on the rally driver.THe rally driver is driving at extreme speed, his eyes locked forward with intense concentration. His body is violently shaken by the car's movements as sunlight flickers and flashes rapidly around the cockpit. Through the rally drivers window we can see the mountainous Corsican scenery streak past as a fast-moving blur. The drivers concentration is absolute he never breaks his forward gaze."
+image: C:\Users\jpronk\Downloads\urf_dvr_0030_v001_00039_.png
+prompt: "Extreme close-up highly realistic in-car shot of a rally driver racing a group b rally car. The rally driver is driving at extreme speed and his eyes are locked forward focused in the distance with intense concentration. Sunlight flickers in his eyes that reflect the rapidly passed environment. The drivers concentration is absolute he never breaks his forward gaze."
 resolution: 1080p
-duration: "3"
+duration: "9"
 camera_fixed: true
 seed: -1
 enable_safety_checker: false

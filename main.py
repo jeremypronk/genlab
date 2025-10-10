@@ -96,15 +96,18 @@ class KieAIVideoGen:
         response_json = response.json()
         if response_json['code'] == 200:
             self._debug(f"Request was successful.")
-        elif response_json['code'] == 400:
-            self._error(f"Content violation error, check your prompt and/or input images for content that violates the T&Cs.")
-            return False
-        elif response_json['code'] == 401:
-            self._error(f"NO ACCESS PERMISSION!! Check your api key.")
-            return False
+        # elif response_json['code'] == 400:
+        #     self._error(f"Content violation error, check your prompt and/or input images for content that violates the T&Cs.")
+        #     return False
+        # elif response_json['code'] == 401:
+        #     self._error(f"Unauthorized - Authentication credentials are missing or invalid.")
+        #     return False
+        # elif response_json['code'] == 402:
+        #     self._error(f"Insufficient Credits - Account does not have enough credits to perform the operation.")
+        #     return False
         else:
             if 'msg' in response_json:
-                self._error(f"Error: {response_json['msg']}")
+                self._error(f"Error: API response code:- {response_json['code']} API response msg:- {response_json['msg']}")
             else:
                 self._error(f"Unknown error ({response_json})")
             return False
@@ -137,13 +140,15 @@ class KieAIVideoGen:
                 self._error("URL not found in API response.")
         return None
 
-    # def upload_images(self, images):
-    #     self._debug(f"KieAIVideoGen.upload_images({images})")
-    #     # upload images and return urls to uploaded images
-    #     imageUrls = []
-    #     for image in images:
-    #         imageUrls.append(self.upload_file(image))
-    #     return imageUrls
+    def upload_images(self, images):
+        self._debug(f"KieAIVideoGen.upload_images({images})")
+        # upload images and return urls to uploaded images
+        image_urls = list()
+        if not isinstance(images, list):
+            images = [images]
+        for image in images:
+            image_urls.append(self.upload_file(image))
+        return image_urls
 
     @handle_http_exceptions
     def create_task(self, payload, test=False):
@@ -169,13 +174,8 @@ class KieAIVideoGen:
             else:
                 return None
         elif 'images' in payload:
-            images = payload['images']
-            if not isinstance(payload['images'], list):
-                images = [payload['images']]
-            input_payload['image_urls'] = list()
-            for image in images:
-                input_payload['image_urls'].append(self.upload_file(image))
-            if None in input_payload['image_urls']: return None
+            input_payload['image_urls'] = self.upload_images(payload['images'])
+            if not input_payload['image_urls'] or None in input_payload['image_urls']: return None
 
         task_payload = dict()
         task_payload['model'] = payload['model']
@@ -207,11 +207,12 @@ class KieAIVideoGen:
             return response.json()
         return None
 
-    def _check_task_status(self, task_response_status):
+    def _check_task_status(self, query_task_response):
         """
         returns TASK_STATUS for a task query
         """
-        self._debug(f"KieAIVideoGen._get_task_status({task_response_status})")
+        self._debug(f"KieAIVideoGen._get_task_status({query_task_response})")
+        task_response_status = query_task_response['data']['state']
         if "success" in task_response_status.lower():
             return self.TASK_STATUS.completed
         elif "fail" in task_response_status.lower():
@@ -224,6 +225,14 @@ class KieAIVideoGen:
             return self.TASK_STATUS.queuing
         else:
             return self.TASK_STATUS.unknown
+
+    def _log_failure_msg(self, query_task_response):
+        self._error(f"Fail code: {query_task_response['data']['failCode']}")
+        self._error(f"Fail message: {query_task_response['data']['failMsg']}")
+
+    def _get_result_urls(self, query_task_response):
+        self._debug(f"KieAIVideoGen._get_result_urls({query_task_response})")
+        return json.loads(query_task_response['data']['resultJson'])['resultUrls']
 
     def is_finished(self, task_status):
         self._debug(f"KieAIVideoGen._is_finished({task_status})")
@@ -267,10 +276,6 @@ class KieAIVideoGen:
             self._info(f"Downloading video: {video_url} --> {output_path}")
             self._download_video(video_url, output_path)
 
-    def _log_failure_msg(self, query_task_response):
-        self._error(f"Fail code: {query_task_response['data']['failCode']}")
-        self._error(f"Fail message: {query_task_response['data']['failMsg']}")
-
     def download_video(self):
         """
         Attempts to download the generated video.
@@ -282,10 +287,10 @@ class KieAIVideoGen:
         if query_task_response is None:
             return self.TASK_STATUS.unknown
         
-        task_status = self._check_task_status(query_task_response['data']['state'])
+        task_status = self._check_task_status(query_task_response)
         if task_status == self.TASK_STATUS.completed:
             self._info("Video generation task complete!")
-            self._download_videos(json.loads(query_task_response['data']['resultJson'])['resultUrls'], self._output_path)
+            self._download_videos(self._get_result_urls(query_task_response), self._output_path)
         elif task_status == self.TASK_STATUS.failed:
             self._error("Attempting to download a failed video generation!!")
             self._log_failure_msg(query_task_response)
@@ -300,93 +305,96 @@ class KieAIVideoGen_Veo(KieAIVideoGen):
     """
     """
     def __init__(self, api_key, output_path, task_id=None, fullhd=True):
-        self._debug(f"KieAIVideoGen_Veo({api_key}, task_id={task_id}, fullhd={fullhd})")
-        assert(False)
         super().__init__(api_key=api_key, output_path=output_path, task_id=task_id)
+        self._debug(f"KieAIVideoGen_Veo({api_key}, task_id={task_id}, fullhd={fullhd})")
         self._fullhd = fullhd
 
     def _check_api_response(self, response):
         # handle veo specific responses
         self._debug(f"KieAIVideoGen_Veo._check_api_response({response})")
         response_json = response.json()
-        if response_json['code'] == 400 and self._fullhd: # fullhd returns 400 when it is still processing
+        if response_json['code'] == 400 and self._fullhd: # 1080P is still processing
+            self._info("1080P is processing. It should be ready in 1-2 minutes. Please check back shortly.")
             return True
         elif response_json['code'] == 422 and self._fullhd: # fullhd returns 422 "Records are being generated"
+            self._info("Records are being generated.")
             return True
-        elif response_json['code'] == 500 and self._fullhd: # fullhd mode can return 500 early on in the process
-            return True
+        # elif response_json['code'] == 500 and self._fullhd: # fullhd mode can return 500 early on in the process
+        #     self._info("Records are being generated.")
+        #     return True
         return super()._check_api_response(response)
 
     @handle_http_exceptions
-    def create_task(self, payload):
+    def create_task(self, payload, test=False):
         self._debug(f"KieAIVideoGen_Veo.generate_video({payload})")
         url = f"{self._base_api_url}/veo/generate"
 
-        # upload images and insert resulting imageurl to the payload
-        if 'images' in payload and payload['images']:
-            images = payload['images']
-            if isinstance(images, str):
-                images = [images]
-            payload['imageUrls'] = self.upload_images(images)
+        # make a copy as well need to modify the payload to kie
+        gen_payload = payload.copy()
 
-        # generate the video
-        response = requests.post(url, json=payload, headers=self._json_header)
+        # upload images and insert resulting imageurl to the payload
+        if 'images' in gen_payload and gen_payload['images']:
+            gen_payload['imageUrls'] = self.upload_images(gen_payload['images'])
+            if not gen_payload['imageUrls'] or None in gen_payload['imageUrls']: return None
+            gen_payload.pop('images')
+
+        # start the video generation
+        if test:
+            # send back a fake task_id
+            import uuid
+            self._task_id = uuid.uuid4().hex  # alphanumeric (32 chars)
+            self._warning(f"Callback test mode create a fake task with id: {self._task_id}")
+            return self._task_id
+        else:
+            response = requests.post(url, json=gen_payload, headers=self._json_header)
+            response.raise_for_status()
+            if self._check_api_response(response):
+                response_json = response.json()
+                self._task_id = response_json['data']['taskId']
+                self._debug(f"Task ID: {self._task_id}")
+                return self._task_id
+        return None
+
+    @handle_http_exceptions
+    def _query_task(self):
+        self._debug(f"KieAIVideoGen_Veo._query_task()")
+        if self._fullhd:
+            url = f"{self._base_api_url}/veo/get-1080p-video?taskId={self._task_id}"  # wait for the 1080P version
+        else:
+            url = f"{self._base_api_url}/veo/record-info?taskId={self._task_id}" # wait for the default version
+        response = requests.get(url, headers=self._auth_header)
         response.raise_for_status()
         if self._check_api_response(response):
-            response_json = response.json()
+            return response.json()
+        return None
 
-            self._task_id = response_json['data']['taskId']
-            self._info(f"Task ID: {self._task_id}")
+    def _check_task_status(self, query_task_response):
+        """
+        returns TASK_STATUS for a task query
+        """
+        self._debug(f"KieAIVideoGen_Veo._get_task_status({query_task_response})")
+        if self._fullhd:
+            if query_task_response['code'] == 200:
+                return self.TASK_STATUS.completed
+            else:
+                return self.TASK_STATUS.generating
+        elif query_task_response['data']['successFlag'] == 0:
+            return self.TASK_STATUS.generating
+        elif query_task_response['data']['successFlag'] == 1:
+            return self.TASK_STATUS.completed
+        else:
+            return self.TASK_STATUS.failed
 
-            return self._task_id
+    def _log_failure_msg(self, query_task_response):
+        self._error(f"Fail code: {query_task_response['data']['errorCode']}")
+        self._error(f"Fail message: {query_task_response['data']['errorMessage']}")
 
-    # @handle_http_exceptions
-    # def _check_status(self, ):
-    #     """
-    #     returns True if completed (could be failed) False if other (in queue, generating, waiting)
-    #     """
-    #     if self._fullhd:
-    #         url = f"{self._base_api_url}/veo/get-1080p-video?taskId={self._task_id}"  # wait for the 1080P version
-    #     else:
-    #         url = f"{self._base_api_url}/veo/record-info?taskId={self._task_id}" # wait for the default version
-    #     response = requests.get(url, headers=self._auth_header)
-    #     response.raise_for_status()
-    #     if self._check_api_response(response):
-    #         response_json = response.json()
-    #
-    #         if self._fullhd:
-    #             status = 1 if response_json['code'] == 200 else 0
-    #         else:
-    #             status = response_json['data']['successFlag']
-    #         if status == 0:
-    #             self._info("Still generating...")
-    #             return None
-    #         elif status == 1:
-    #             self._info("Generation successful!")
-    #             return True
-    #         else:
-    #             self._info(f"Generation failed: {response_json['msg']}")
-    #             return False
-
-    # @handle_http_exceptions
-    # def download_video(self):
-    #     self._debug(f"KieAIVideoGen_Veo.download_video()")
-    #     if self._fullhd:
-    #         url = f"{self._base_api_url}/veo/get-1080p-video?taskId={self._task_id}"  # 1080P version
-    #     else:
-    #         url = f"{self._base_api_url}/veo/record-info?taskId={self._task_id}" # default version
-    #     response = requests.get(url, headers=self._auth_header)
-    #     response.raise_for_status()
-    #     if self._check_api_response(response):
-    #         response_json = response.json()
-    #         if self._fullhd:
-    #             video_urls = [response_json['data']['resultUrl']]
-    #         else:
-    #             video_urls = response_json['data']['response']['resultUrls']
-    #
-    #         self._download_videos(video_urls, self._output_path)
-
-
+    def _get_result_urls(self, query_task_response):
+        self._debug(f"KieAIVideoGen_Veo._get_result_urls({query_task_response})")
+        if self._fullhd:
+            return [query_task_response['data']['result_url']]
+        else:
+            return query_task_response['data']['response']['resultUrls'] # is it resultUrls or result_urls ?? not HD so we may never know :)
 
 
 
