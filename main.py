@@ -8,6 +8,7 @@ import logging
 import sys
 import functools
 import argparse
+import re
 from pathlib import Path
 from enum import Enum
 
@@ -406,8 +407,27 @@ def backup_sidecar_files(file_paths):
         logging.warning(f"RENAMING: Backing up sidecar file '{file_path}' to {file_path_backup}")
         file_path.rename(file_path_backup)
 
-def process_yaml(yaml_path, api_key, force=False, test=False):
+def process_yaml(yaml_path, api_key, generations=1, download=False, test=False):
     logging.info(f"Processing: {yaml_path.name}")
+
+    if download:
+        logging.error(f"SKIPPING {yaml_path} download not yet implemented!")
+        return None
+
+    # find existing generations
+    task_gens_dict = {}
+    for f in Path(yaml_path).parent.glob(f"{Path(yaml_path).stem}*.task"):
+        if f.is_file() and (m := re.search(r'_(\d{5})$', f.stem)):
+            task_gens_dict[int(m.group(1))] = f
+
+    start_generation = 0
+    if task_gens_dict:
+        start_generation = max(task_gens_dict.keys())+1
+
+    logging.info(f"Generation start index: {start_generation}.")
+
+
+    return
 
     # we will backup the sidecar files if forcing
     sidecar_files_to_backup =  []
@@ -501,19 +521,24 @@ Example Usage:
         help="One or more paths to .yaml files or directories containing them."
     )
     parser.add_argument(
-        "-d", "--debug",
-        action="store_true",
-        help="Enable debug level logging to show detailed request information."
+        "-g", "--generations",
+        type=int, default=1,
+        help="Number of video versions to generate per yaml (also known as number of seeds)."
     )
     parser.add_argument(
-        "-f", "--force",
+        "-d", "--download",
         action="store_true",
-        help="Force generation of videos even if they already exist locally."
+        help="Download the video files of existing tasks (do not create any new tasks, --seeds is ignored)."
     )
     parser.add_argument(
         "-r", "--retry_wait_secs",
         type=int, default=20,
         help="Number of seconds to wait before retrying, AKA polling wait time."
+    )
+    parser.add_argument(
+        "--debug",
+        action="store_true",
+        help="Enable debug level logging to show detailed request information."
     )
     parser.add_argument(
         "-t", "--test",
@@ -538,8 +563,8 @@ Example Usage:
         logging.critical("Please set your API key, e.g., 'export KIE_API_KEY=\"your_key\"'")
         sys.exit(-50)
 
-    if args.force:
-        logging.warning("Forcing generation of videos even if they already exist locally.")
+    if args.download:
+        logging.warning("Download mode - will only download videos of existing tasks, no new tasks will be created.")
 
     yaml_files = []
     for path_str in args.paths:
@@ -558,7 +583,7 @@ Example Usage:
 
     logging.info(f"Found {len(yaml_files)} YAML file(s) to process.")
     for yaml_path in yaml_files:
-        kie = process_yaml(yaml_path, _API_KEY, force=args.force, test=args.test)
+        kie = process_yaml(yaml_path, _API_KEY, generations=args.generations, download=args.download, test=args.test)
         if kie:
             _TASKS_WAITING_QUEUE.append(kie)
         else:
