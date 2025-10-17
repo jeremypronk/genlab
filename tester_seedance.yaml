@@ -4,5 +4,5 @@ prompt: "Extreme close-up highly realistic in-car shot of a rally driver racing 
 resolution: 1080p
 duration: "9"
 camera_fixed: true
-seed: -1
+#seed: -1
 enable_safety_checker: false
