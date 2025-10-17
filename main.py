@@ -439,11 +439,6 @@ def yaml_load_payload(yaml_path):
 def yaml_connect_to_existing_tasks(yaml_path, api_key):
     logging.info(f"yaml_connect_to_existing_tasks: {yaml_path.name}")
 
-    # read the payload from the yaml
-    payload = yaml_load_payload(yaml_path)
-    if not payload:
-        return None
-
     task_paths = [f for f in yaml_path.parent.glob(f"{Path(yaml_path).stem}*.task")]
     kies = []
     for task_path in task_paths:
@@ -453,7 +448,8 @@ def yaml_connect_to_existing_tasks(yaml_path, api_key):
         logging.debug(f"Found task sidecar possible video files: {file_paths}")
         if not file_paths:
             with open(task_path, 'r') as f:
-                task_id = f.read()
+                task_id = f.readline().strip()
+                payload = yaml.safe_load(f)
             logging.info(f"Found existing task to attach to {task_id}.")
 
             kies.append(kie_factory(payload, api_key, task_path.stem, task_id))
@@ -502,7 +498,8 @@ def yaml_create_tasks(yaml_path, api_key, generations=1, test=False):
         task_id = kie.create_task(payload, test=test)
         if not task_id: continue
         with open(task_id_path, 'w') as f:
-            f.write(task_id)
+            f.write(f"{task_id}\n")
+            yaml.dump(payload, f)
 
         kies.append(kie)
 
