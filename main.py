@@ -1,7 +1,6 @@
 import requests
 import yaml
 import json
-import datetime
 import os
 import time
 import logging
@@ -9,6 +8,7 @@ import sys
 import functools
 import argparse
 import re
+import glob
 from pathlib import Path
 from enum import Enum
 
@@ -188,7 +188,7 @@ class KieAIVideoGen:
         task_payload['model'] = payload['model']
         task_payload['input'] = input_payload
 
-        self._info(f"create_task payload: {task_payload})")
+        self._debug(f"create_task payload: {task_payload})")
 
         if test:
             # send back a fake task_id
@@ -339,6 +339,11 @@ class KieAIVideoGen_Veo(KieAIVideoGen):
         # make a copy as well need to modify the payload to kie
         gen_payload = payload.copy()
 
+        # lets assume we are always image to video for now (caught me out already!)
+        if not 'images' in gen_payload:
+            self._error(f"No images param in the payload - doesn't seem right!")
+            return None
+
         # upload images and insert resulting imageurl to the payload
         if 'images' in gen_payload and gen_payload['images']:
             gen_payload['imageUrls'] = self.upload_images(gen_payload['images'])
@@ -463,7 +468,7 @@ def yaml_create_tasks(yaml_path, api_key, generations=1, test=False):
     payload = yaml_load_payload(yaml_path)
     if not payload:
         return None
-    logging.info(f"Pre-Payload: f{payload}")
+    logging.debug(f"Pre-Payload: f{payload}")
 
     # check we're not forcing a seed and running multiple generations
     if generations>1 and any('seed' in key.lower() for key in payload):
@@ -530,17 +535,17 @@ Example Usage:
         help="One or more paths to .yaml files or directories containing them."
     )
     parser.add_argument(
-        "-g", "--generations",
+        "--generations",
         type=int, default=1,
         help="Number of video versions to generate per yaml (also known as number of seeds)."
     )
     parser.add_argument(
-        "-d", "--download",
+        "--download",
         action="store_true",
         help="Download the video files of existing tasks (do not create any new tasks, --generations is ignored)."
     )
     parser.add_argument(
-        "-r", "--retry_wait_secs",
+        "--retry_wait_secs",
         type=int, default=20,
         help="Number of seconds to wait before retrying, AKA polling wait time."
     )
@@ -550,19 +555,37 @@ Example Usage:
         help="Enable debug level logging to show detailed request information."
     )
     parser.add_argument(
-        "-t", "--test",
+        "--test",
         action="store_true",
         help="Test, do everything but actually submit a generation task."
     )
     args = parser.parse_args()
 
-    # Configure logging
-    log_level = logging.DEBUG if args.debug else logging.INFO
-    logging.basicConfig(
-        level=log_level,
-        format='%(asctime)s - %(levelname)s - %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S'
-    )
+    # --- Handler 1: INFO and above to terminal (stdout) ---
+    console_handler = logging.StreamHandler(sys.stdout)
+    if args.debug:
+        console_handler.setLevel(logging.DEBUG)
+    else:
+        console_handler.setLevel(logging.INFO)
+    console_format = logging.Formatter('[%(levelname)s] %(message)s')
+    console_handler.setFormatter(console_format)
+
+    # --- Handler 2: DEBUG and above to file ---
+    file_handler = logging.FileHandler('genlab.log')
+    file_handler.setLevel(logging.DEBUG)
+    file_format = logging.Formatter('%(asctime)s [%(levelname)s] %(name)s: %(message)s')
+    file_handler.setFormatter(file_format)
+
+    # Configure root logger
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging.DEBUG)
+    root_logger.addHandler(console_handler)
+    root_logger.addHandler(file_handler)
+
+    logging.info(f"----------------------------------------------------------------------------------------")
+    logging.info(f"-----------------------------------GENLAB-----------------------------------------------")
+    logging.info(f"----------------------------------------------------------------------------------------")
+    logging.info(f"genlab is running: {vars(args)}")
 
     global _API_KEY
     try:
@@ -577,14 +600,14 @@ Example Usage:
 
     yaml_files = []
     for path_str in args.paths:
-        path = Path(path_str)
-        if path.is_dir():
-            yaml_files.extend(sorted(path.glob("*.yaml")))
-            yaml_files.extend(sorted(path.glob("*.yml")))
-        elif path.is_file() and path.suffix.lower() in [".yaml", ".yml"]:
-            yaml_files.append(path)
-        else:
-            logging.warning(f"Path '{path_str}' is not a valid file or directory. Ignoring.")
+        for path in [Path(p) for p in glob.glob(path_str)]:
+            if path.is_dir():
+                yaml_files.extend(sorted(path.glob("*.yaml")))
+                yaml_files.extend(sorted(path.glob("*.yml")))
+            elif path.is_file() and path.suffix.lower() in [".yaml", ".yml"]:
+                yaml_files.append(path)
+            else:
+                logging.warning(f"Path '{path_str}' is not a valid file or directory. Ignoring.")
 
     if not yaml_files:
         logging.error("No .yaml or .yml files found in the specified paths.")
