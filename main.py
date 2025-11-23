@@ -339,8 +339,8 @@ class KieAIVideoGen_Veo(KieAIVideoGen):
         # make a copy as well need to modify the payload to kie
         gen_payload = payload.copy()
 
-        # lets assume we are always image to video for now (caught me out already!)
-        if not 'images' in gen_payload:
+        # check we have an image for i2v
+        if gen_payload['generationType'] != "TEXT_2_VIDEO" and  not 'images' in gen_payload:
             self._error(f"No images param in the payload - doesn't seem right!")
             return None
 
@@ -623,10 +623,10 @@ Example Usage:
                 logging.warning(f"{yaml_path.name} some generations did not start.")
         if kies:
             _TASKS_WAITING_QUEUE.extend(kies)
-        else:
+        elif not args.download:
             logging.warning(f"{yaml_path} failed or nothing to do!")
 
-    if not kies:
+    if not _TASKS_WAITING_QUEUE:
         logging.error(f"Nothing to do!")
         exit(-67)
         
