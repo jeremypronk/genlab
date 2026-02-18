@@ -147,27 +147,28 @@ class KieAIVideoGen:
                 self._error("URL not found in API response.")
         return None
 
-    def upload_images(self, images):
-        self._debug(f"KieAIVideoGen.upload_images({images})")
-        # upload images and return urls to uploaded images
-        image_urls = list()
-        if not isinstance(images, list):
-            images = [images]
-        for image in images:
-            image_urls.append(self.upload_file(image))
-        return image_urls
+    def upload_files(self, files):
+        self._debug(f"KieAIVideoGen.upload_files({files})")
+        # upload files and return urls to uploaded files
+        file_urls = list()
+        if not isinstance(files, list):
+            files = [files]
+        for file in files:
+            file_urls.append(self.upload_file(file))
+        return file_urls
 
     @handle_http_exceptions
     def create_task(self, payload, test=False):
         """
         image becomes image_url
         images becomes image_urls
+        inputs becomes input_urls
         """
         self._debug(f"KieAIVideoGen.create_task({payload})")
 
         input_payload = {}
         for key in payload.keys():
-            if key not in ['model', 'image', 'images']:
+            if key not in ['model', 'image', 'images', 'inputs']:
                 input_payload[key] = payload[key]
 
         if 'image' in input_payload and 'images' in input_payload:
@@ -181,8 +182,11 @@ class KieAIVideoGen:
             else:
                 return None
         elif 'images' in payload:
-            input_payload['image_urls'] = self.upload_images(payload['images'])
+            input_payload['image_urls'] = self.upload_files(payload['images'])
             if not input_payload['image_urls'] or None in input_payload['image_urls']: return None
+        elif 'inputs' in payload:
+            input_payload['input_urls'] = self.upload_files(payload['inputs'])
+            if not input_payload['input_urls'] or None in input_payload['input_urls']: return None
 
         task_payload = dict()
         task_payload['model'] = payload['model']
@@ -346,7 +350,7 @@ class KieAIVideoGen_Veo(KieAIVideoGen):
 
         # upload images and insert resulting imageurl to the payload
         if 'images' in gen_payload and gen_payload['images']:
-            gen_payload['imageUrls'] = self.upload_images(gen_payload['images'])
+            gen_payload['imageUrls'] = self.upload_files(gen_payload['images'])
             if not gen_payload['imageUrls'] or None in gen_payload['imageUrls']: return None
             gen_payload.pop('images')
 
