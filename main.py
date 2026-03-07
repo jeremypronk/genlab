@@ -12,6 +12,8 @@ import glob
 from pathlib import Path
 from enum import Enum
 
+from . import NetworkPathConverter
+
 _API_KEY = None
 _TASKS_WAITING_QUEUE = []
 
@@ -59,7 +61,7 @@ class KieAIVideoGen:
         queuing = 5
         unknown = 6
 
-    def __init__(self, api_key, output_basepath, task_id=None):
+    def __init__(self, api_key, output_basepath, task_id=None, path_converter_func=lambda x: x):
         logging.debug(f"KieAIVideoGen(api_key={api_key}, task_id={task_id})")
         self._api_key = api_key
         self._output_basepath = Path(output_basepath)
@@ -71,6 +73,7 @@ class KieAIVideoGen:
             "Authorization": f"Bearer {self._api_key}",
             "Content-Type": "application/json"
         }
+        self._path_converter_func = path_converter_func
 
     def __repr__(self):
         return f"KieAIVideoGen({self._task_id}, {self._output_basepath})"
@@ -117,7 +120,10 @@ class KieAIVideoGen:
 
     @handle_http_exceptions
     def upload_file(self, file_path: str) -> str | None:
-        self._debug(f"KieAIVideoGen.upload_file({file_path})")
+        self._debug(f"KieAIVideoGen.upload_file({file_path}) -- agnostic path")
+        print(self._path_converter_func)
+        file_path = self._path_converter_func(file_path)
+        self._debug(f"KieAIVideoGen.upload_file({file_path}) -- local os path")
         if not os.path.exists(file_path):
             self._error(f"File not found at path: {file_path}")
             return None
@@ -315,8 +321,8 @@ class KieAIVideoGen:
 class KieAIVideoGen_Veo(KieAIVideoGen):
     """
     """
-    def __init__(self, api_key, output_basepath, task_id=None, fullhd=True):
-        super().__init__(api_key=api_key, output_basepath=output_basepath, task_id=task_id)
+    def __init__(self, api_key, output_basepath, task_id=None, fullhd=True, path_converter_func=lambda x: x):
+        super().__init__(api_key=api_key, output_basepath=output_basepath, task_id=task_id, path_converter_func=path_converter_func)
         self._debug(f"KieAIVideoGen_Veo({api_key}, task_id={task_id}, fullhd={fullhd})")
         self._fullhd = fullhd
 
@@ -416,7 +422,7 @@ class KieAIVideoGen_Veo(KieAIVideoGen):
 
 
 
-def kie_factory(payload, api_key, output_basepath, task_id=None):
+def kie_factory(payload, api_key, output_basepath, task_id=None, path_converter_func=lambda x: x):
     if 'veo' in payload['model'].lower():
         # google veo has it's own api
 
@@ -426,10 +432,10 @@ def kie_factory(payload, api_key, output_basepath, task_id=None):
             fullhd = True
 
         # connect to existing task or start a new one
-        kie = KieAIVideoGen_Veo(api_key, output_basepath=output_basepath, task_id=task_id, fullhd=fullhd)
+        kie = KieAIVideoGen_Veo(api_key, output_basepath=output_basepath, task_id=task_id, fullhd=fullhd, path_converter_func=path_converter_func)
     else:
         # assume it is the create/query api
-        kie = KieAIVideoGen(api_key, output_basepath=output_basepath, task_id=task_id)
+        kie = KieAIVideoGen(api_key, output_basepath=output_basepath, task_id=task_id, path_converter_func=path_converter_func)
     return kie
 
 def yaml_load_payload(yaml_path):
@@ -445,7 +451,7 @@ def yaml_load_payload(yaml_path):
         return None
     return payload
 
-def yaml_connect_to_existing_tasks(yaml_path, api_key):
+def yaml_connect_to_existing_tasks(yaml_path, api_key, path_converter_func=lambda x: x):
     logging.info(f"yaml_connect_to_existing_tasks: {yaml_path.name}")
 
     task_paths = [f for f in yaml_path.parent.glob(f"{Path(yaml_path).stem}*.task")]
@@ -461,11 +467,11 @@ def yaml_connect_to_existing_tasks(yaml_path, api_key):
                 payload = yaml.safe_load(f)
             logging.info(f"Found existing task to attach to {task_id}.")
 
-            kies.append(kie_factory(payload, api_key, task_path.stem, task_id))
+            kies.append(kie_factory(payload, api_key, task_path.stem, task_id, path_converter_func=path_converter_func))
 
     return kies
 
-def yaml_create_tasks(yaml_path, api_key, generations=1, test=False):
+def yaml_create_tasks(yaml_path, api_key, generations=1, test=False, path_converter_func=lambda x: x):
     logging.info(f"yaml_create_tasks: {yaml_path.name}")
 
     # read the payload from the yaml
@@ -501,7 +507,7 @@ def yaml_create_tasks(yaml_path, api_key, generations=1, test=False):
         output_basepath = task_id_path.stem # remove the extension
 
         # model specific factory creation
-        kie = kie_factory(payload, api_key, output_basepath)
+        kie = kie_factory(payload, api_key, output_basepath, path_converter_func=path_converter_func)
 
         # start the video gen
         task_id = kie.create_task(payload, test=test)
@@ -514,7 +520,7 @@ def yaml_create_tasks(yaml_path, api_key, generations=1, test=False):
 
     return kies
         
-def main():
+def main(path_converter_func=lambda x: x):
     global _TASKS_WAITING_QUEUE
     
     parser = argparse.ArgumentParser(
@@ -620,9 +626,9 @@ Example Usage:
     logging.info(f"Found {len(yaml_files)} YAML file(s) to process.")
     for yaml_path in yaml_files:
         if args.download:
-            kies = yaml_connect_to_existing_tasks(yaml_path, _API_KEY)
+            kies = yaml_connect_to_existing_tasks(yaml_path, _API_KEY, path_converter_func=path_converter_func)
         else:
-            kies = yaml_create_tasks(yaml_path, _API_KEY, generations=args.generations, test=args.test)
+            kies = yaml_create_tasks(yaml_path, _API_KEY, generations=args.generations, test=args.test, path_converter_func=path_converter_func)
             if len(kies) != args.generations:
                 logging.warning(f"{yaml_path.name} some generations did not start.")
         if kies:
@@ -668,4 +674,9 @@ Example Usage:
 
 
 if __name__ == "__main__":
-    main()
+    _DEFAULT_MAPPINGS = [ # should load this from a config file
+            {"win": r"X:", "osx": "/Volumes/projects"}
+        ]
+    path_converter = NetworkPathConverter(_DEFAULT_MAPPINGS)
+
+    main(path_converter_func=path_converter.convert)
