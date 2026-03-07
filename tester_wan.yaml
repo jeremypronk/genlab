@@ -1,7 +1,0 @@
-model: wan/2-2-a14b-image-to-video-turbo
-image: C:\Users\jpronk\Downloads\urf_dvr_0020_v003.00064_00001_.png
-prompt: "Extreme close-up highly realistic in-car shot of a rally driver racing a group b rally car. The rally driver is driving at extreme speed, his eyes are locked forward looking straight through camera into the distance with intense concentration. His head is violently shaken by the car's movements as sunlight flickers and flashes rapidly through the cockpit."
-enable_prompt_expansion: false
-resolution: "480p"
-aspect_ratio: "auto"
-acceleration: "none"
