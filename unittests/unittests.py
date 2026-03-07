@@ -1,6 +1,13 @@
 import unittest
 from pathlib import Path, WindowsPath, PosixPath
+import os
+import shutil
+import tempfile
+import yaml
+
 from __init__ import NetworkPathConverter
+
+from __init__ import YamlParamReplacer
 
 class TestNetworkPathConverter(unittest.TestCase):
     def setUp(self):
@@ -88,5 +95,375 @@ class TestNetworkPathConverter(unittest.TestCase):
         self.assertIsNone(self.converter.convert(None))
 
 
+
+# ---------------------------------------------------------------------------
+# Shared helpers
+# ---------------------------------------------------------------------------
+
+def write_yaml(directory: str, filename: str, data: object) -> str:
+    """Serialise *data* as YAML into *directory/filename* and return the path."""
+    path = os.path.join(directory, filename)
+    with open(path, "w", encoding="utf-8") as fh:
+        yaml.dump(data, fh)
+    return path
+
+class _TempDirMixin(unittest.TestCase):
+    """Mixin that provides a fresh temporary directory for each test."""
+
+    def setUp(self) -> None:
+        self._tmp = tempfile.mkdtemp()
+
+    def tearDown(self) -> None:
+        shutil.rmtree(self._tmp, ignore_errors=True)
+
+    def make_replacer(self, params: dict) -> YamlParamReplacer:
+        """Write *params* to a temp YAML file and return a replacer for it."""
+        path = write_yaml(self._tmp, "params.yaml", params)
+        return YamlParamReplacer(path)
+
+    def write_yaml(self, filename: str, data: object) -> str:
+        return write_yaml(self._tmp, filename, data)
+
+
+# ===========================================================================
+# 1. Constructor / initialisation
+# ===========================================================================
+
+class TestInit(_TempDirMixin):
+    """Tests that cover __init__ validation and state setup."""
+
+    def test_loads_valid_params_file(self):
+        replacer = self.make_replacer({"host": "localhost", "port": 5432})
+        self.assertEqual(replacer.get_params(), {"host": "localhost", "port": "5432"})
+
+    def test_raises_file_not_found_for_missing_params(self):
+        missing = os.path.join(self._tmp, "nonexistent.yaml")
+        with self.assertRaises(FileNotFoundError) as ctx:
+            YamlParamReplacer(missing)
+        self.assertIn("Params file not found", str(ctx.exception))
+
+    def test_raises_value_error_on_empty_params_file(self):
+        path = os.path.join(self._tmp, "empty.yaml")
+        open(path, "w").close()  # create an empty file
+        with self.assertRaises(ValueError) as ctx:
+            YamlParamReplacer(path)
+        self.assertIn("empty", str(ctx.exception))
+
+    def test_raises_value_error_when_params_file_is_a_list(self):
+        path = self.write_yaml("list.yaml", ["item1", "item2"])
+        with self.assertRaises(ValueError) as ctx:
+            YamlParamReplacer(path)
+        self.assertIn("mapping", str(ctx.exception))
+
+    def test_all_param_values_coerced_to_strings(self):
+        replacer = self.make_replacer({"int_val": 42, "bool_val": True, "float_val": 3.14})
+        params = replacer.get_params()
+        self.assertEqual(params["int_val"], "42")
+        self.assertEqual(params["float_val"], "3.14")
+        # yaml.dump serialises True as 'true'; str(True) gives 'True' — either is fine
+        self.assertIsInstance(params["bool_val"], str)
+
+    def test_get_params_returns_independent_copy(self):
+        """Mutating the returned dict must not affect the internal state."""
+        replacer = self.make_replacer({"key": "original"})
+        copy = replacer.get_params()
+        copy["key"] = "mutated"
+        self.assertEqual(replacer.get_params()["key"], "original")
+
+
+# ===========================================================================
+# 2. Simple / flat token replacement
+# ===========================================================================
+
+class TestReplaceTokensSimple(_TempDirMixin):
+    """Tests for basic single-level token substitution."""
+
+    def test_single_token_replaced(self):
+        replacer = self.make_replacer({"env": "production"})
+        self.assertEqual(
+            replacer.replace_tokens({"environment": "{{ env }}"}),
+            {"environment": "production"},
+        )
+
+    def test_multiple_distinct_tokens_in_one_value(self):
+        replacer = self.make_replacer({"host": "db.example.com", "port": "5432"})
+        result = replacer.replace_tokens({"dsn": "{{ host }}:{{ port }}"})
+        self.assertEqual(result, {"dsn": "db.example.com:5432"})
+
+    def test_token_embedded_within_larger_string(self):
+        replacer = self.make_replacer({"name": "world"})
+        result = replacer.replace_tokens({"greeting": "Hello, {{ name }}!"})
+        self.assertEqual(result, {"greeting": "Hello, world!"})
+
+    def test_value_without_tokens_is_unchanged(self):
+        replacer = self.make_replacer({"key": "value"})
+        result = replacer.replace_tokens({"plain": "no tokens here"})
+        self.assertEqual(result, {"plain": "no tokens here"})
+
+    def test_unknown_token_is_left_unchanged(self):
+        replacer = self.make_replacer({"known": "ok"})
+        result = replacer.replace_tokens({"field": "{{ unknown }}"})
+        self.assertEqual(result, {"field": "{{ unknown }}"})
+
+    def test_token_with_surrounding_whitespace(self):
+        replacer = self.make_replacer({"key": "value"})
+        result = replacer.replace_tokens({"field": "{{  key  }}"})
+        self.assertEqual(result, {"field": "value"})
+
+    def test_repeated_token_in_one_value(self):
+        replacer = self.make_replacer({"sep": "-"})
+        result = replacer.replace_tokens({"val": "{{ sep }}{{ sep }}{{ sep }}"})
+        self.assertEqual(result, {"val": "---"})
+
+    def test_known_and_unknown_tokens_in_same_string(self):
+        """Known tokens replaced; unknown tokens preserved."""
+        replacer = self.make_replacer({"known": "X"})
+        result = replacer.replace_tokens({"val": "{{ known }}-{{ unknown }}"})
+        self.assertEqual(result, {"val": "X-{{ unknown }}"})
+
+
+# ===========================================================================
+# 3. Type coercion
+# ===========================================================================
+
+class TestTypeCoercion(_TempDirMixin):
+    """Whole-token strings should be coerced to native Python types."""
+
+    def test_integer_coercion(self):
+        replacer = self.make_replacer({"port": 8080})
+        result = replacer.replace_tokens({"port": "{{ port }}"})
+        self.assertIsInstance(result["port"], int)
+        self.assertEqual(result["port"], 8080)
+
+    def test_float_coercion(self):
+        replacer = self.make_replacer({"ratio": 0.75})
+        result = replacer.replace_tokens({"ratio": "{{ ratio }}"})
+        self.assertIsInstance(result["ratio"], float)
+        self.assertAlmostEqual(result["ratio"], 0.75)
+
+    def test_bool_true_coercion(self):
+        replacer = self.make_replacer({"debug": "true"})
+        result = replacer.replace_tokens({"debug": "{{ debug }}"})
+        self.assertIs(result["debug"], True)
+
+    def test_bool_false_coercion(self):
+        replacer = self.make_replacer({"verbose": "false"})
+        result = replacer.replace_tokens({"verbose": "{{ verbose }}"})
+        self.assertIs(result["verbose"], False)
+
+    def test_bool_yes_coercion(self):
+        replacer = self.make_replacer({"flag": "yes"})
+        result = replacer.replace_tokens({"flag": "{{ flag }}"})
+        self.assertIs(result["flag"], True)
+
+    def test_bool_no_coercion(self):
+        replacer = self.make_replacer({"flag": "no"})
+        result = replacer.replace_tokens({"flag": "{{ flag }}"})
+        self.assertIs(result["flag"], False)
+
+    def test_no_coercion_when_token_is_in_mixed_string(self):
+        """A token embedded in a larger string must NOT trigger type coercion."""
+        replacer = self.make_replacer({"port": 8080})
+        result = replacer.replace_tokens({"url": "http://localhost:{{ port }}/api"})
+        self.assertEqual(result["url"], "http://localhost:8080/api")
+        self.assertIsInstance(result["url"], str)
+
+    def test_plain_string_value_stays_string(self):
+        replacer = self.make_replacer({"name": "Alice"})
+        result = replacer.replace_tokens({"name": "{{ name }}"})
+        self.assertIsInstance(result["name"], str)
+        self.assertEqual(result["name"], "Alice")
+
+
+# ===========================================================================
+# 4. Recursive / nested structures
+# ===========================================================================
+
+class TestRecursiveStructures(_TempDirMixin):
+    """Token replacement must recurse into nested dicts and lists."""
+
+    def test_nested_dict(self):
+        replacer = self.make_replacer({"host": "localhost", "port": 5432})
+        result = replacer.replace_tokens({"db": {"host": "{{ host }}", "port": "{{ port }}"}})
+        self.assertEqual(result, {"db": {"host": "localhost", "port": 5432}})
+
+    def test_list_of_strings(self):
+        replacer = self.make_replacer({"item": "replaced"})
+        result = replacer.replace_tokens(["{{ item }}", "static", "{{ item }}"])
+        self.assertEqual(result, ["replaced", "static", "replaced"])
+
+    def test_list_inside_dict(self):
+        replacer = self.make_replacer({"tag": "v1.0"})
+        result = replacer.replace_tokens({"releases": ["{{ tag }}", "v0.9"]})
+        self.assertEqual(result, {"releases": ["v1.0", "v0.9"]})
+
+    def test_deeply_nested_dict(self):
+        replacer = self.make_replacer({"secret": "s3cr3t"})
+        target = {"a": {"b": {"c": {"d": "{{ secret }}"}}}}
+        self.assertEqual(replacer.replace_tokens(target)["a"]["b"]["c"]["d"], "s3cr3t")
+
+    def test_mixed_list_containing_dicts_and_lists(self):
+        replacer = self.make_replacer({"env": "prod"})
+        target = [{"env": "{{ env }}"}, "static", ["{{ env }}"]]
+        self.assertEqual(replacer.replace_tokens(target), [{"env": "prod"}, "static", ["prod"]])
+
+
+# ===========================================================================
+# 5. Non-string scalar pass-through
+# ===========================================================================
+
+class TestScalarPassThrough(_TempDirMixin):
+    """Native scalars already in the target YAML must pass through untouched."""
+
+    def test_integer_scalar_untouched(self):
+        replacer = self.make_replacer({"key": "val"})
+        self.assertEqual(replacer.replace_tokens({"count": 42}), {"count": 42})
+
+    def test_float_scalar_untouched(self):
+        replacer = self.make_replacer({"key": "val"})
+        self.assertEqual(replacer.replace_tokens({"ratio": 1.5}), {"ratio": 1.5})
+
+    def test_bool_scalar_untouched(self):
+        replacer = self.make_replacer({"key": "val"})
+        self.assertIs(replacer.replace_tokens({"flag": True})["flag"], True)
+
+    def test_none_scalar_untouched(self):
+        replacer = self.make_replacer({"key": "val"})
+        self.assertIsNone(replacer.replace_tokens({"nothing": None})["nothing"])
+
+
+# ===========================================================================
+# 6. replace_tokens_from_file
+# ===========================================================================
+
+class TestReplaceTokensFromFile(_TempDirMixin):
+    """Tests for the file-based convenience method."""
+
+    def test_replaces_tokens_loaded_from_target_file(self):
+        replacer = self.make_replacer({"greeting": "Hello", "name": "World"})
+        target_path = self.write_yaml("target.yaml", {"message": "{{ greeting }}, {{ name }}!"})
+        result = replacer.replace_tokens_from_file(target_path)
+        self.assertEqual(result, {"message": "Hello, World!"})
+
+    def test_raises_file_not_found_for_missing_target(self):
+        replacer = self.make_replacer({"key": "val"})
+        with self.assertRaises(FileNotFoundError) as ctx:
+            replacer.replace_tokens_from_file(os.path.join(self._tmp, "missing.yaml"))
+        self.assertIn("Target file not found", str(ctx.exception))
+
+    def test_nested_target_file_processed_correctly(self):
+        replacer = self.make_replacer({"region": "us-east-1", "tier": "premium"})
+        target_path = self.write_yaml(
+            "target.yaml",
+            {"cloud": {"region": "{{ region }}", "tier": "{{ tier }}"}},
+        )
+        result = replacer.replace_tokens_from_file(target_path)
+        self.assertEqual(result, {"cloud": {"region": "us-east-1", "tier": "premium"}})
+
+
+# ===========================================================================
+# 7. Edge cases
+# ===========================================================================
+
+class TestEdgeCases(_TempDirMixin):
+    """Boundary and defensive-programming scenarios."""
+
+    def test_empty_dict_target_returns_empty_dict(self):
+        replacer = self.make_replacer({"key": "val"})
+        self.assertEqual(replacer.replace_tokens({}), {})
+
+    def test_empty_list_target_returns_empty_list(self):
+        replacer = self.make_replacer({"key": "val"})
+        self.assertEqual(replacer.replace_tokens([]), [])
+
+    def test_target_with_no_tokens_is_structurally_identical(self):
+        replacer = self.make_replacer({"key": "val"})
+        target = {"a": 1, "b": "plain", "c": [True, None]}
+        self.assertEqual(replacer.replace_tokens(target), target)
+
+    def test_original_dict_target_is_not_mutated(self):
+        replacer = self.make_replacer({"env": "prod"})
+        original = {"env": "{{ env }}"}
+        replacer.replace_tokens(original)
+        self.assertEqual(original, {"env": "{{ env }}"})
+
+    def test_original_list_target_is_not_mutated(self):
+        replacer = self.make_replacer({"x": "1"})
+        original = ["{{ x }}"]
+        replacer.replace_tokens(original)
+        self.assertEqual(original, ["{{ x }}"])
+
+    def test_param_value_containing_special_url_characters(self):
+        replacer = self.make_replacer({"url": "https://example.com/path?q=1&r=2"})
+        result = replacer.replace_tokens({"endpoint": "{{ url }}"})
+        self.assertEqual(result["endpoint"], "https://example.com/path?q=1&r=2")
+
+    def test_large_param_set_all_replaced(self):
+        params = {f"key{i}": f"val{i}" for i in range(20)}
+        replacer = self.make_replacer(params)
+        target = {f"field{i}": "{{{{ key{i} }}}}".format(i=i) for i in range(20)}
+        result = replacer.replace_tokens(target)
+        for i in range(20):
+            self.assertEqual(result[f"field{i}"], f"val{i}")
+
+class TestInlineYamlStrings(_TempDirMixin):
+    """
+    End-to-end tests driven entirely by inline YAML strings.
+
+    Each test defines three YAML documents as triple-quoted strings:
+      - PARAMS_YAML  — the parameter name/value pairs (written to a temp file
+                       so YamlParamReplacer can load it normally)
+      - TARGET_YAML  — the template to process, passed as a loaded object
+      - EXPECTED_YAML — the anticipated result after substitution
+
+    This style mirrors real-world usage where both files exist on disk and
+    makes the intent of each test immediately readable.
+    """
+
+    # ------------------------------------------------------------------
+    # helpers
+    # ------------------------------------------------------------------
+
+    def _make_replacer_from_string(self, params_yaml: str) -> YamlParamReplacer:
+        """Write an inline YAML string to a temp file and return a replacer."""
+        path = os.path.join(self._tmp, "params.yaml")
+        with open(path, "w", encoding="utf-8") as fh:
+            fh.write(params_yaml)
+        return YamlParamReplacer(path)
+
+    def test_genlab_style_replace(self):
+        params_yaml = """
+images: /Volumes/projects/urf_teaser2/shots/end/end_0020/startframe_outputs/urf_end_0020_v015/urf_end_0020_v015.00006_00001_.png
+prompt: A realistic wide angle dolly shot moving slowly forward through a forest of tall Corsican pine trees that are swaying and jostling in the breeze. Down near the forest floor there is a light mist catching slithers of light that reach down from the overcast sky above the high canopy of the forest. Shot on 28mm wide-angle lens, f/11 with deep focus, natural lighting, high-resolution photography.
+"""
+        target_yaml = """
+model: kling-3.0/video
+images: "{{ images }}"
+prompt: "{{ prompt }}"
+sound: false
+multi_shots: false
+kling_elements: []
+duration: 5
+mode: pro
+"""
+        expected_yaml = """
+model: kling-3.0/video
+images: /Volumes/projects/urf_teaser2/shots/end/end_0020/startframe_outputs/urf_end_0020_v015/urf_end_0020_v015.00006_00001_.png
+prompt: A realistic wide angle dolly shot moving slowly forward through a forest of tall Corsican pine trees that are swaying and jostling in the breeze. Down near the forest floor there is a light mist catching slithers of light that reach down from the overcast sky above the high canopy of the forest. Shot on 28mm wide-angle lens, f/11 with deep focus, natural lighting, high-resolution photography.
+sound: false
+multi_shots: false
+kling_elements: []
+duration: 5
+mode: pro
+"""
+        replacer = self._make_replacer_from_string(params_yaml)
+        result   = replacer.replace_tokens(yaml.safe_load(target_yaml))
+        expected = yaml.safe_load(expected_yaml)
+        self.assertEqual(result, expected)
+        # # Also verify the native types survive the round-trip
+        # self.assertIsInstance(result["config"]["workers"], int)
+        # self.assertIsInstance(result["config"]["rate"], float)
+        # self.assertIs(result["config"]["verbose"], True)
+
 if __name__ == "__main__":
-    unittest.main()
+    unittest.main(verbosity=2)

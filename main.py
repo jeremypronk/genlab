@@ -13,9 +13,12 @@ from pathlib import Path
 from enum import Enum
 
 from . import NetworkPathConverter
+from . import YamlParamReplacer
 
 _API_KEY = None
 _TASKS_WAITING_QUEUE = []
+
+_CONFIG_FILENAME = r'config.yaml'
 
 def handle_http_exceptions(func):
     """
@@ -438,11 +441,20 @@ def kie_factory(payload, api_key, output_basepath, task_id=None, path_converter_
         kie = KieAIVideoGen(api_key, output_basepath=output_basepath, task_id=task_id, path_converter_func=path_converter_func)
     return kie
 
+def configure_yaml(path, yaaml):
+    # replace tokens with values from the config file located in the same dir
+    logging.debug(f"configure_yaml(f{path})")
+    config_file_path = os.path.join(path,_CONFIG_FILENAME)
+    if config_file_path:
+        logging.debug(f"Loading config: {config_file_path}")
+        return YamlParamReplacer(config_file_path).replace_tokens(yaaml)
+    return yaaml
+
 def yaml_load_payload(yaml_path):
     # read the payload from the yaml
     try:
         with open(yaml_path, 'r') as f:
-            payload = yaml.safe_load(f)
+            payload = configure_yaml(yaml_path.parent, yaml.safe_load(f))
         if not isinstance(payload, dict):
             logging.error(f"SKIPPED: YAML file '{yaml_path.name}' is empty or invalid.")
             return None
@@ -464,7 +476,7 @@ def yaml_connect_to_existing_tasks(yaml_path, api_key, path_converter_func=lambd
         if not file_paths:
             with open(task_path, 'r') as f:
                 task_id = f.readline().strip()
-                payload = yaml.safe_load(f)
+                payload = configure_yaml(task_path.parent, yaml.safe_load(f))
             logging.info(f"Found existing task to attach to {task_id}.")
 
             kies.append(kie_factory(payload, api_key, task_path.stem, task_id, path_converter_func=path_converter_func))
@@ -618,6 +630,13 @@ Example Usage:
                 yaml_files.append(path)
             else:
                 logging.warning(f"Path '{path_str}' is not a valid file or directory. Ignoring.")
+
+    # filter out known yamls
+    check_yaml_files = yaml_files
+    yaml_files = []
+    for yaml_file in check_yaml_files:
+        if yaml_file.name not in [_CONFIG_FILENAME]:
+            yaml_files.append(yaml_file)
 
     if not yaml_files:
         logging.error("No .yaml or .yml files found in the specified paths.")
