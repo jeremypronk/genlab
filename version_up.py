@@ -6,6 +6,15 @@ found in the filenames to match the new version.
 
 The zero-padding width of the input version is preserved in both the new
 directory name and any version tokens found inside filenames.
+
+Optional parameters:
+  --output-dir DIR            Place the new versioned folder inside DIR instead
+                              of alongside the source directory.
+  --version-override N        Use version N for the new directory instead of
+                              auto-incrementing.
+  --rename SEARCH REPLACEMENT Replace every occurrence of SEARCH with
+                              REPLACEMENT in each filename after version
+                              substitution has been applied.
 """
 
 import argparse
@@ -43,7 +52,7 @@ def format_version(new_version: int, old_raw: str) -> str:
     return str(new_version).zfill(len(old_raw))
 
 
-def rename_yaml_file(filename: str, old_raw: str, new_raw: str) -> str:
+def apply_version_rename(filename: str, old_raw: str, new_raw: str) -> str:
     """
     Replace occurrences of the old version token in the filename with the new one.
     Matches both v-prefixed (e.g. v042) and bare integer (e.g. 042) occurrences,
@@ -64,6 +73,11 @@ def rename_yaml_file(filename: str, old_raw: str, new_raw: str) -> str:
     return new_name
 
 
+def apply_string_rename(filename: str, search: str, replacement: str) -> str:
+    """Replace every literal occurrence of search with replacement in filename."""
+    return filename.replace(search, replacement)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="Increment a versioned directory and migrate its YAML files."
@@ -71,6 +85,36 @@ def main() -> None:
     parser.add_argument(
         "source_dir",
         help="Source directory in the format v<number>, e.g. v42 or v042",
+    )
+    parser.add_argument(
+        "--output-dir",
+        default=None,
+        metavar="DIR",
+        help=(
+            "Directory in which to create the new versioned folder. "
+            "Defaults to the same parent as source_dir."
+        ),
+    )
+    parser.add_argument(
+        "--version-override",
+        type=int,
+        default=None,
+        metavar="N",
+        help=(
+            "Use this version number for the new directory instead of "
+            "auto-incrementing, e.g. --version-override 100"
+        ),
+    )
+    parser.add_argument(
+        "--rename",
+        nargs=2,
+        metavar=("SEARCH", "REPLACEMENT"),
+        default=None,
+        help=(
+            "Replace every occurrence of SEARCH with REPLACEMENT in each "
+            "filename after version substitution. "
+            "Example: --rename staging production"
+        ),
     )
     args = parser.parse_args()
 
@@ -82,15 +126,43 @@ def main() -> None:
     if not source_path.is_dir():
         raise SystemExit(f"Error: '{source_path}' is not a directory.")
 
+    # Validate --rename strings
+    if args.rename is not None:
+        search, replacement = args.rename
+        if not search:
+            raise SystemExit("Error: --rename SEARCH string must not be empty.")
+
     # Parse the version, preserving the raw digit string for width information
     dir_name = source_path.name
     prefix, old_raw, old_version = parse_version_dir(dir_name)
-    new_version = old_version + 1
+
+    # Determine the new version number
+    if args.version_override is not None:
+        if args.version_override <= 0:
+            raise SystemExit("Error: --version-override must be a positive integer.")
+        new_version = args.version_override
+    else:
+        new_version = old_version + 1
+
     new_raw = format_version(new_version, old_raw)
 
-    # Build the new directory path (sibling of the source directory)
+    # Determine the parent directory for the new versioned folder
+    if args.output_dir is not None:
+        output_parent = Path(args.output_dir)
+        if not output_parent.exists():
+            raise SystemExit(
+                f"Error: --output-dir '{output_parent}' does not exist."
+            )
+        if not output_parent.is_dir():
+            raise SystemExit(
+                f"Error: --output-dir '{output_parent}' is not a directory."
+            )
+    else:
+        output_parent = source_path.parent
+
+    # Build the new directory path
     new_dir_name = f"{prefix}{new_raw}"
-    new_path = source_path.parent / new_dir_name
+    new_path = output_parent / new_dir_name
 
     if new_path.exists():
         raise SystemExit(f"Error: Target directory '{new_path}' already exists.")
@@ -107,7 +179,12 @@ def main() -> None:
         return
 
     for src_file in yaml_files:
-        new_filename = rename_yaml_file(src_file.name, old_raw, new_raw)
+        # Step 1: apply version rename
+        new_filename = apply_version_rename(src_file.name, old_raw, new_raw)
+        # Step 2: apply optional string substitution
+        if args.rename is not None:
+            new_filename = apply_string_rename(new_filename, search, replacement)
+
         dest_file = new_path / new_filename
         shutil.copy2(src_file, dest_file)
         if new_filename != src_file.name:
