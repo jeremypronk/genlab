@@ -124,7 +124,6 @@ class KieAIVideoGen:
     @handle_http_exceptions
     def upload_file(self, file_path: str) -> str | None:
         self._debug(f"KieAIVideoGen.upload_file({file_path}) -- agnostic path")
-        print(self._path_converter_func)
         file_path = self._path_converter_func(file_path)
         self._debug(f"KieAIVideoGen.upload_file({file_path}) -- local os path")
         if not os.path.exists(file_path):
@@ -539,6 +538,11 @@ def main(path_converter_func=lambda x: x):
         description="Generate videos from YAML files using the kie.ai API.",
         formatter_class=argparse.RawTextHelpFormatter,
         epilog="""
+Local image files are uploaded with parameter handling as follows:
+  - image becomes image_url
+  - images becomes image_urls
+  - inputs becomes input_urls
+ 
 Example Usage:
   - Process a single file:
     ./genlab.py my_video.yaml

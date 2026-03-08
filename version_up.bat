@@ -1,0 +1,1 @@
+python "%~dp0version_up.py" %*
