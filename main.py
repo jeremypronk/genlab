@@ -168,37 +168,34 @@ class KieAIVideoGen:
     @handle_http_exceptions
     def create_task(self, payload, test=False):
         """
-        image becomes image_url
-        images becomes image_urls
-        inputs becomes input_urls
+        any field names ending with url or urls are assumed to point to local files that will be uploaded
         """
         self._debug(f"KieAIVideoGen.create_task({payload})")
 
-        input_payload = {}
-        for key in payload.keys():
-            if key not in ['model', 'image', 'images', 'inputs']:
-                input_payload[key] = payload[key]
-
-        if 'image' in input_payload and 'images' in input_payload:
-            self._error("image and images keys found!")
-            return None
-
-        if 'image' in payload:
-            upload_file = self.upload_file(payload['image'])
-            if upload_file:
-                input_payload['image_url'] = upload_file
-            else:
-                return None
-        elif 'images' in payload:
-            input_payload['image_urls'] = self.upload_files(payload['images'])
-            if not input_payload['image_urls'] or None in input_payload['image_urls']: return None
-        elif 'inputs' in payload:
-            input_payload['input_urls'] = self.upload_files(payload['inputs'])
-            if not input_payload['input_urls'] or None in input_payload['input_urls']: return None
-
+        # build the task payload
         task_payload = dict()
         task_payload['model'] = payload['model']
-        task_payload['input'] = input_payload
+        task_payload['input'] = {}
+
+        # copy relevant keys
+        # upload any files in url keys
+        # TODO: should check if it is already a url then no need to upload just skip
+        _exclude_list = ['model']
+        for key in payload:
+            if key.endswith('url'):
+                task_payload['input'][key] = self.upload_file(payload[key])
+            elif key.endswith('urls'):
+                task_payload['input'][key] = self.upload_files(payload[key])
+            elif key not in _exclude_list:
+                task_payload['input'][key] = payload[key]
+            else:
+                self._debug(f"create_task skip key: {key})")
+                continue
+
+            # check the key is value NULL or NONE IS NOT VALID
+            if task_payload['input'][key] is None:
+                self._error(f"create_task empty key {key}: {task_payload['input'][key]}")
+                return None
 
         self._debug(f"create_task payload: {task_payload})")
 
