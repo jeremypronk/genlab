@@ -558,12 +558,12 @@ Example Usage:
         help="One or more paths to .yaml files or directories containing them."
     )
     parser.add_argument(
-        "--generations",
+        "-g", "--generations",
         type=int, default=1,
         help="Number of video versions to generate per yaml (also known as number of seeds)."
     )
     parser.add_argument(
-        "--download",
+        "-d", "--download",
         action="store_true",
         help="Download the video files of existing tasks (do not create any new tasks, --generations is ignored)."
     )

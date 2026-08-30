@@ -87,7 +87,7 @@ def main() -> None:
         help="Source directory in the format v<number>, e.g. v42 or v042",
     )
     parser.add_argument(
-        "--output-dir",
+        "-o", "--output-dir",
         default=None,
         metavar="DIR",
         help=(
@@ -96,7 +96,7 @@ def main() -> None:
         ),
     )
     parser.add_argument(
-        "--version-override",
+        "-v", "--version-override",
         type=int,
         default=None,
         metavar="N",
@@ -106,7 +106,7 @@ def main() -> None:
         ),
     )
     parser.add_argument(
-        "--rename",
+        "-r", "--rename",
         nargs=2,
         metavar=("SEARCH", "REPLACEMENT"),
         default=None,
