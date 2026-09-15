@@ -1,7 +1,0 @@
-model: veo3_fast
-images: X:\urf_teaser2\shots\dvr\dvr_0020\startframe_outputs\v003\urf_dvr_0020_v003.00064_00001_.png
-prompt: "Extreme close-up highly realistic in-car shot of a rally driver racing a group b rally car. The rally driver is driving at extreme speed, his eyes are locked forward looking straight through camera into the distance with intense concentration. His head is violently shaken by the car's movements as sunlight flickers and flashes rapidly through the cockpit."
-fullhd: true
-aspect_ratio: "16:9"
-enableFallback: false
-enableTranslation: false
