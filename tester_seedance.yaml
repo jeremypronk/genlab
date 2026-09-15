@@ -1,8 +1,0 @@
-model: bytedance/v1-pro-image-to-video
-image: C:\Users\jpronk\Downloads\urf_dvr_0030_v001_00039_.png
-prompt: "Extreme close-up highly realistic in-car shot of a rally driver racing a group b rally car. The rally driver is driving at extreme speed and his eyes are locked forward focused in the distance with intense concentration. Sunlight flickers in his eyes that reflect the rapidly passed environment. The drivers concentration is absolute he never breaks his forward gaze."
-resolution: 1080p
-duration: "9"
-camera_fixed: true
-seed: -1
-enable_safety_checker: false

@@ -1,18 +1,24 @@
 import requests
 import yaml
 import json
-import datetime
 import os
 import time
 import logging
 import sys
 import functools
 import argparse
+import re
+import glob
 from pathlib import Path
 from enum import Enum
 
+from . import NetworkPathConverter
+from . import YamlParamReplacer
+
 _API_KEY = None
 _TASKS_WAITING_QUEUE = []
+
+_CONFIG_FILENAME = r'config.yaml'
 
 def handle_http_exceptions(func):
     """
@@ -47,7 +53,8 @@ class KieAIVideoGen:
     _create_task_url = f"{_base_api_url}/jobs/createTask"
     _query_task_url = f"{_base_api_url}/jobs/recordInfo"
     _upload_url = f"https://kieai.redpandaai.co/api/file-stream-upload"
-    _file_url = None
+
+    _upload_cache = {}
 
     class TASK_STATUS(Enum):
         completed = 1
@@ -57,10 +64,10 @@ class KieAIVideoGen:
         queuing = 5
         unknown = 6
 
-    def __init__(self, api_key, output_path, task_id=None):
-        logging.debug(f"KieAIVideoGen({api_key}, {task_id})")
+    def __init__(self, api_key, output_basepath, task_id=None, path_converter_func=lambda x: x):
+        logging.debug(f"KieAIVideoGen(api_key={api_key}, task_id={task_id})")
         self._api_key = api_key
-        self._output_path = Path(output_path)
+        self._output_basepath = Path(output_basepath)
         self._task_id = task_id
         self._auth_header = {
             "Authorization": f"Bearer {self._api_key}",
@@ -69,12 +76,13 @@ class KieAIVideoGen:
             "Authorization": f"Bearer {self._api_key}",
             "Content-Type": "application/json"
         }
+        self._path_converter_func = path_converter_func
 
     def __repr__(self):
-        return f"KieAIVideoGen({self._task_id}, {self._output_path})"
+        return f"KieAIVideoGen({self._task_id}, {self._output_basepath})"
 
     def _name(self):
-        return self._output_path.stem
+        return self._output_basepath.stem
 
     def _log_msg(self, log_func, msg):
         log_func(f"({self._name()}) {msg}")
@@ -115,73 +123,81 @@ class KieAIVideoGen:
 
     @handle_http_exceptions
     def upload_file(self, file_path: str) -> str | None:
-        self._debug(f"KieAIVideoGen.upload_file({file_path})")
+        self._debug(f"KieAIVideoGen.upload_file({file_path}) -- agnostic path")
+        file_path = self._path_converter_func(file_path)
+        self._debug(f"KieAIVideoGen.upload_file({file_path}) -- local os path")
         if not os.path.exists(file_path):
             self._error(f"File not found at path: {file_path}")
             return None
+
+        if file_path in self._upload_cache:
+            self._debug(f"{file_path} found in cache file URL: {self._upload_cache[file_path]}")
+            return self._upload_cache[file_path]
 
         files = {
             'file': (os.path.basename(file_path), open(file_path, 'rb')),
             'uploadPath': (None, 'images/user-uploads'),
             'fileName': (None, os.path.basename(file_path))
         }
-        self._debug(f"Preparing to upload '{files}'...")
-        response = requests.post(self._upload_url, headers=self._auth_header, files=files)
+        self._info(f"Preparing to upload '{files}'...")
+        response = requests.post(KieAIVideoGen._upload_url, headers=self._auth_header, files=files)
         response.raise_for_status()
         if self._check_api_response(response):
             response_data = response.json()["data"]
 
             # Extract the URL from the JSON response.
-            self._file_url = response_data.get("downloadUrl")
-            if self._file_url:
-                self._info(f"File URL: {self._file_url}")
-                return self._file_url
+            file_url = response_data.get("downloadUrl")
+            if file_url:
+                self._debug(f"File URL: {file_url}")
+                KieAIVideoGen._upload_cache[file_path] = file_url
+                return self._upload_cache[file_path]
             else:
                 self._error("URL not found in API response.")
         return None
 
-    def upload_images(self, images):
-        self._debug(f"KieAIVideoGen.upload_images({images})")
-        # upload images and return urls to uploaded images
-        image_urls = list()
-        if not isinstance(images, list):
-            images = [images]
-        for image in images:
-            image_urls.append(self.upload_file(image))
-        return image_urls
+    def upload_files(self, files):
+        self._debug(f"KieAIVideoGen.upload_files({files})")
+        # upload files and return urls to uploaded files
+        file_urls = list()
+        if not isinstance(files, list):
+            files = [files]
+        for file in files:
+            file_urls.append(self.upload_file(file))
+        return file_urls
 
     @handle_http_exceptions
     def create_task(self, payload, test=False):
         """
-        image becomes image_url
-        images becomes image_urls
+        any field names ending with url or urls are assumed to point to local files that will be uploaded
         """
         self._debug(f"KieAIVideoGen.create_task({payload})")
 
-        input_payload = {}
-        for key in payload.keys():
-            if key not in ['model', 'image', 'images']:
-                input_payload[key] = payload[key]
-
-        if 'image' in input_payload and 'images' in input_payload:
-            self._error("image and images keys found!")
-            return None
-
-        if 'image' in payload:
-            upload_file = self.upload_file(payload['image'])
-            if upload_file:
-                input_payload['image_url'] = upload_file
-            else:
-                return None
-        elif 'images' in payload:
-            input_payload['image_urls'] = self.upload_images(payload['images'])
-            if not input_payload['image_urls'] or None in input_payload['image_urls']: return None
-
+        # build the task payload
         task_payload = dict()
         task_payload['model'] = payload['model']
-        task_payload['input'] = input_payload
+        task_payload['input'] = {}
 
-        self._info(f"create_task payload: {task_payload})")
+        # copy relevant keys
+        # upload any files in url keys
+        # TODO: should check if it is already a url then no need to upload just skip
+        _exclude_list = ['model']
+        for key in payload:
+            if key.endswith('url'):
+                task_payload['input'][key] = self.upload_file(payload[key])
+            elif key.endswith('urls'):
+                task_payload['input'][key] = self.upload_files(payload[key])
+            elif key not in _exclude_list:
+                task_payload['input'][key] = payload[key]
+            else:
+                self._debug(f"create_task skip key: {key})")
+                continue
+
+            # check the key is value NULL or NONE IS NOT VALID
+            if task_payload['input'][key] is None:
+                self._error(f"create_task empty key {key}: {task_payload['input'][key]}")
+                return None
+
+        self._debug(f"create_task payload: {task_payload})")
 
         if test:
             # send back a fake task_id
@@ -190,7 +206,7 @@ class KieAIVideoGen:
             self._warning(f"Callback test mode create a fake task with id: {self._task_id}")
             return self._task_id
         else:
-            response = requests.post(self._create_task_url, json=task_payload, headers=self._json_header)
+            response = requests.post(KieAIVideoGen._create_task_url, json=task_payload, headers=self._json_header)
             response.raise_for_status()
             if self._check_api_response(response):
                 response_json = response.json()
@@ -201,7 +217,7 @@ class KieAIVideoGen:
     @handle_http_exceptions
     def _query_task(self):
         self._debug(f"KieAIVideoGen._query_task()")
-        response = requests.get(f"{self._query_task_url}?taskId={self._task_id}", headers=self._auth_header)
+        response = requests.get(f"{KieAIVideoGen._query_task_url}?taskId={self._task_id}", headers=self._auth_header)
         response.raise_for_status()
         if self._check_api_response(response):
             return response.json()
@@ -241,14 +257,14 @@ class KieAIVideoGen:
             return False
         return True
 
-    def _download_video(self, url, output_path):
+    def _download_file(self, url, output_path):
         """
         Downloads a file from a URL to a specified path.
         Args:
             url (str): The URL of the file to download.
             output_path (Path): The path to save the downloaded file.
         """
-        self._debug(f"KieAIVideoGen._download_video(url={url}, output_path={output_path})")
+        self._debug(f"KieAIVideoGen._download_file(url={url}, output_path={output_path})")
         try:
             with requests.get(url, stream=True) as r:
                 r.raise_for_status()
@@ -268,13 +284,13 @@ class KieAIVideoGen:
             sys.stdout.write("\n")
             self._error(f"Failed to download video: {e}")
 
-    def _download_videos(self, video_urls, output_path):
-        self._debug(f"KieAIVideoGen._download_videos(video_urls={video_urls}, output_path={output_path})")
+    def _download_videos(self, video_urls):
+        self._debug(f"KieAIVideoGen._download_videos(video_urls={video_urls})")
         for video_url in video_urls:
             video_name = video_url.split('/')[-1]
-            output_path = Path(output_path).with_suffix(Path(video_name).suffix)
+            output_path = Path(self._output_basepath).with_suffix(Path(video_name).suffix)
             self._info(f"Downloading video: {video_url} --> {output_path}")
-            self._download_video(video_url, output_path)
+            self._download_file(video_url, output_path)
 
     def download_video(self):
         """
@@ -290,7 +306,7 @@ class KieAIVideoGen:
         task_status = self._check_task_status(query_task_response)
         if task_status == self.TASK_STATUS.completed:
             self._info("Video generation task complete!")
-            self._download_videos(self._get_result_urls(query_task_response), self._output_path)
+            self._download_videos(self._get_result_urls(query_task_response))
         elif task_status == self.TASK_STATUS.failed:
             self._error("Attempting to download a failed video generation!!")
             self._log_failure_msg(query_task_response)
@@ -304,8 +320,8 @@ class KieAIVideoGen:
 class KieAIVideoGen_Veo(KieAIVideoGen):
     """
     """
-    def __init__(self, api_key, output_path, task_id=None, fullhd=True):
-        super().__init__(api_key=api_key, output_path=output_path, task_id=task_id)
+    def __init__(self, api_key, output_basepath, task_id=None, fullhd=True, path_converter_func=lambda x: x):
+        super().__init__(api_key=api_key, output_basepath=output_basepath, task_id=task_id, path_converter_func=path_converter_func)
         self._debug(f"KieAIVideoGen_Veo({api_key}, task_id={task_id}, fullhd={fullhd})")
         self._fullhd = fullhd
 
@@ -316,8 +332,8 @@ class KieAIVideoGen_Veo(KieAIVideoGen):
         if response_json['code'] == 400 and self._fullhd: # 1080P is still processing
             self._info("1080P is processing. It should be ready in 1-2 minutes. Please check back shortly.")
             return True
-        elif response_json['code'] == 422 and self._fullhd: # fullhd returns 422 "Records are being generated"
-            self._info("Records are being generated.")
+        elif response_json['code'] == 422 and "generate" in response_json['msg'].lower(): # fullhd sometimes returns 422 "Records are being generated"
+            self._info(response_json['msg'])
             return True
         # elif response_json['code'] == 500 and self._fullhd: # fullhd mode can return 500 early on in the process
         #     self._info("Records are being generated.")
@@ -327,14 +343,19 @@ class KieAIVideoGen_Veo(KieAIVideoGen):
     @handle_http_exceptions
     def create_task(self, payload, test=False):
         self._debug(f"KieAIVideoGen_Veo.generate_video({payload})")
-        url = f"{self._base_api_url}/veo/generate"
+        url = f"{KieAIVideoGen._base_api_url}/veo/generate"
 
         # make a copy as well need to modify the payload to kie
         gen_payload = payload.copy()
 
+        # check we have an image for i2v
+        if gen_payload['generationType'] != "TEXT_2_VIDEO" and  not 'images' in gen_payload:
+            self._error(f"No images param in the payload - doesn't seem right!")
+            return None
+
         # upload images and insert resulting imageurl to the payload
         if 'images' in gen_payload and gen_payload['images']:
-            gen_payload['imageUrls'] = self.upload_images(gen_payload['images'])
+            gen_payload['imageUrls'] = self.upload_files(gen_payload['images'])
             if not gen_payload['imageUrls'] or None in gen_payload['imageUrls']: return None
             gen_payload.pop('images')
 
@@ -359,9 +380,9 @@ class KieAIVideoGen_Veo(KieAIVideoGen):
     def _query_task(self):
         self._debug(f"KieAIVideoGen_Veo._query_task()")
         if self._fullhd:
-            url = f"{self._base_api_url}/veo/get-1080p-video?taskId={self._task_id}"  # wait for the 1080P version
+            url = f"{KieAIVideoGen._base_api_url}/veo/get-1080p-video?taskId={self._task_id}"  # wait for the 1080P version
         else:
-            url = f"{self._base_api_url}/veo/record-info?taskId={self._task_id}" # wait for the default version
+            url = f"{KieAIVideoGen._base_api_url}/veo/record-info?taskId={self._task_id}" # wait for the default version
         response = requests.get(url, headers=self._auth_header)
         response.raise_for_status()
         if self._check_api_response(response):
@@ -399,60 +420,8 @@ class KieAIVideoGen_Veo(KieAIVideoGen):
 
 
 
-def backup_sidecar_files(file_paths):
-    timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
-    for file_path in file_paths:
-        file_path_backup = f"{file_path.stem}_bk{timestamp}{file_path.suffix}"
-        logging.warning(f"RENAMING: Backing up sidecar file '{file_path}' to {file_path_backup}")
-        file_path.rename(file_path_backup)
 
-def process_yaml(yaml_path, api_key, force=False, test=False):
-    logging.info(f"Processing: {yaml_path.name}")
-
-    # we will backup the sidecar files if forcing
-    sidecar_files_to_backup =  []
-
-    # check we havent already gen'd this video
-    excluded = {'.yaml', '.yml', '.task'}
-    file_paths = [f for f in Path(yaml_path).parent.glob(f"{Path(yaml_path).stem}.*") if f.suffix.lower() not in excluded]
-    logging.debug(f"Found yaml sidecar possible video files: {file_paths}")
-    if len(file_paths) > 0:
-        if force:
-            sidecar_files_to_backup += file_paths
-        else:
-            logging.warning(f"SKIPPING: Output files '{file_paths}' already exist!")
-            return
-
-    # check if a task id exists, then we will connect to the running task
-    task_id = None
-    task_id_path = yaml_path.with_suffix(".task")
-    if task_id_path.exists():
-        if force:
-            logging.warning(f"Ignoring existing task file {task_id_path}.")
-            sidecar_files_to_backup.append(task_id_path)
-        else:
-            with open(task_id_path, 'r') as f:
-                task_id = f.read()
-            logging.info(f"Found existing task to attach to {task_id}.")
-
-    # backup sidecar files
-    if sidecar_files_to_backup:
-        backup_sidecar_files(sidecar_files_to_backup)
-
-    # read the payload from the yaml
-    try:
-        with open(yaml_path, 'r') as f:
-            payload = yaml.safe_load(f)
-        if not isinstance(payload, dict):
-            logging.error(f"SKIPPED: YAML file '{yaml_path.name}' is empty or invalid.")
-            return
-    except (yaml.YAMLError, FileNotFoundError) as e:
-        logging.error(f"SKIPPED: Could not read or parse YAML file '{yaml_path.name}': {e}")
-        return
-
-    logging.info(f"Pre-Payload: f{payload}")
-
-    # model specific factory creation
+def kie_factory(payload, api_key, output_basepath, task_id=None, path_converter_func=lambda x: x):
     if 'veo' in payload['model'].lower():
         # google veo has it's own api
 
@@ -462,27 +431,115 @@ def process_yaml(yaml_path, api_key, force=False, test=False):
             fullhd = True
 
         # connect to existing task or start a new one
-        kie = KieAIVideoGen_Veo(api_key, output_path=yaml_path, task_id=task_id, fullhd=fullhd)
+        kie = KieAIVideoGen_Veo(api_key, output_basepath=output_basepath, task_id=task_id, fullhd=fullhd, path_converter_func=path_converter_func)
     else:
         # assume it is the create/query api
-        kie = KieAIVideoGen(api_key, output_path=yaml_path, task_id=task_id)
-
-    # start the video gen
-    if not task_id:  # only if we dont have an existing task
-        task_id = kie.create_task(payload, test=test)
-        if not task_id: return None
-        with open(task_id_path, 'w') as f:
-            f.write(task_id)
-
+        kie = KieAIVideoGen(api_key, output_basepath=output_basepath, task_id=task_id, path_converter_func=path_converter_func)
     return kie
+
+def configure_yaml(path, yaaml):
+    # replace tokens with values from the config file located in the same dir
+    logging.debug(f"configure_yaml(f{path})")
+    config_file_path = os.path.join(path,_CONFIG_FILENAME)
+    if config_file_path:
+        logging.debug(f"Loading config: {config_file_path}")
+        return YamlParamReplacer(config_file_path).replace_tokens(yaaml)
+    return yaaml
+
+def yaml_load_payload(yaml_path):
+    # read the payload from the yaml
+    try:
+        with open(yaml_path, 'r') as f:
+            payload = configure_yaml(yaml_path.parent, yaml.safe_load(f))
+        if not isinstance(payload, dict):
+            logging.error(f"SKIPPED: YAML file '{yaml_path.name}' is empty or invalid.")
+            return None
+    except (yaml.YAMLError, FileNotFoundError) as e:
+        logging.error(f"SKIPPED: Could not read or parse YAML file '{yaml_path.name}': {e}")
+        return None
+    return payload
+
+def yaml_connect_to_existing_tasks(yaml_path, api_key, path_converter_func=lambda x: x):
+    logging.info(f"yaml_connect_to_existing_tasks: {yaml_path.name}")
+
+    task_paths = [f for f in yaml_path.parent.glob(f"{Path(yaml_path).stem}*.task")]
+    kies = []
+    for task_path in task_paths:
+        excluded = {'.yaml', '.yml', '.task'}
+        file_paths = [f for f in task_path.parent.glob(f"{task_path.stem}.*") if
+                      f.suffix.lower() not in excluded]
+        logging.debug(f"Found task sidecar possible video files: {file_paths}")
+        if not file_paths:
+            with open(task_path, 'r') as f:
+                task_id = f.readline().strip()
+                payload = configure_yaml(task_path.parent, yaml.safe_load(f))
+            logging.info(f"Found existing task to attach to {task_id}.")
+
+            kies.append(kie_factory(payload, api_key, task_path.stem, task_id, path_converter_func=path_converter_func))
+
+    return kies
+
+def yaml_create_tasks(yaml_path, api_key, generations=1, test=False, path_converter_func=lambda x: x):
+    logging.info(f"yaml_create_tasks: {yaml_path.name}")
+
+    # read the payload from the yaml
+    payload = yaml_load_payload(yaml_path)
+    if not payload:
+        return None
+    logging.debug(f"Pre-Payload: f{payload}")
+
+    # check we're not forcing a seed and running multiple generations
+    if generations>1 and any('seed' in key.lower() for key in payload):
+        logging.error(f"SKIPPED: Requested multiple generates with a seed value, doesn't seem right! '{yaml_path.name}'")
+        return None
+
+    # find existing generations
+    task_gens_dict = {}
+    for f in yaml_path.parent.glob(f"{yaml_path.stem}*.task"):
+        if f.is_file() and (m := re.search(r'_(\d{5})$', f.stem)):
+            logging.debug(f"Found existing generation file '{f}'")
+            task_gens_dict[int(m.group(1))] = f
+
+    # what is the next generation
+    start_generation = 0
+    if task_gens_dict:
+        start_generation = max(task_gens_dict.keys())+1
+    logging.info(f"Generation start index: {start_generation}.")
+
+    # create a task for each generation
+    kies = []
+    for generation in range(start_generation, start_generation+generations):
+        logging.info(f"Generation: {generation}")
+
+        task_id_path = yaml_path.with_stem(f"{yaml_path.stem}_{generation:05d}").with_suffix(".task")
+        output_basepath = task_id_path.stem # remove the extension
+
+        # model specific factory creation
+        kie = kie_factory(payload, api_key, output_basepath, path_converter_func=path_converter_func)
+
+        # start the video gen
+        task_id = kie.create_task(payload, test=test)
+        if not task_id: continue
+        with open(task_id_path, 'w') as f:
+            f.write(f"{task_id}\n")
+            yaml.dump(payload, f)
+
+        kies.append(kie)
+
+    return kies
         
-def main():
+def main(path_converter_func=lambda x: x):
     global _TASKS_WAITING_QUEUE
     
     parser = argparse.ArgumentParser(
         description="Generate videos from YAML files using the kie.ai API.",
         formatter_class=argparse.RawTextHelpFormatter,
         epilog="""
+Local image files are uploaded with parameter handling as follows:
+  - image becomes image_url
+  - images becomes image_urls
+  - inputs becomes input_urls
+ 
 Example Usage:
   - Process a single file:
     ./genlab.py my_video.yaml
@@ -501,34 +558,57 @@ Example Usage:
         help="One or more paths to .yaml files or directories containing them."
     )
     parser.add_argument(
-        "-d", "--debug",
-        action="store_true",
-        help="Enable debug level logging to show detailed request information."
+        "-g", "--generations",
+        type=int, default=1,
+        help="Number of video versions to generate per yaml (also known as number of seeds)."
     )
     parser.add_argument(
-        "-f", "--force",
+        "-d", "--download",
         action="store_true",
-        help="Force generation of videos even if they already exist locally."
+        help="Download the video files of existing tasks (do not create any new tasks, --generations is ignored)."
     )
     parser.add_argument(
-        "-r", "--retry_wait_secs",
+        "--retry_wait_secs",
         type=int, default=20,
         help="Number of seconds to wait before retrying, AKA polling wait time."
     )
     parser.add_argument(
-        "-t", "--test",
+        "--debug",
+        action="store_true",
+        help="Enable debug level logging to show detailed request information."
+    )
+    parser.add_argument(
+        "--test",
         action="store_true",
         help="Test, do everything but actually submit a generation task."
     )
     args = parser.parse_args()
 
-    # Configure logging
-    log_level = logging.DEBUG if args.debug else logging.INFO
-    logging.basicConfig(
-        level=log_level,
-        format='%(asctime)s - %(levelname)s - %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S'
-    )
+    # --- Handler 1: INFO and above to terminal (stdout) ---
+    console_handler = logging.StreamHandler(sys.stdout)
+    if args.debug:
+        console_handler.setLevel(logging.DEBUG)
+    else:
+        console_handler.setLevel(logging.INFO)
+    console_format = logging.Formatter('[%(levelname)s] %(message)s')
+    console_handler.setFormatter(console_format)
+
+    # --- Handler 2: DEBUG and above to file ---
+    file_handler = logging.FileHandler('genlab.log')
+    file_handler.setLevel(logging.DEBUG)
+    file_format = logging.Formatter('%(asctime)s [%(levelname)s] %(name)s: %(message)s')
+    file_handler.setFormatter(file_format)
+
+    # Configure root logger
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging.DEBUG)
+    root_logger.addHandler(console_handler)
+    root_logger.addHandler(file_handler)
+
+    logging.info(f"----------------------------------------------------------------------------------------")
+    logging.info(f"-----------------------------------GENLAB-----------------------------------------------")
+    logging.info(f"----------------------------------------------------------------------------------------")
+    logging.info(f"genlab is running: {vars(args)}")
 
     global _API_KEY
     try:
@@ -538,19 +618,26 @@ Example Usage:
         logging.critical("Please set your API key, e.g., 'export KIE_API_KEY=\"your_key\"'")
         sys.exit(-50)
 
-    if args.force:
-        logging.warning("Forcing generation of videos even if they already exist locally.")
+    if args.download:
+        logging.warning("Download mode - will only download videos of existing tasks, no new tasks will be created.")
 
     yaml_files = []
     for path_str in args.paths:
-        path = Path(path_str)
-        if path.is_dir():
-            yaml_files.extend(sorted(path.glob("*.yaml")))
-            yaml_files.extend(sorted(path.glob("*.yml")))
-        elif path.is_file() and path.suffix.lower() in [".yaml", ".yml"]:
-            yaml_files.append(path)
-        else:
-            logging.warning(f"Path '{path_str}' is not a valid file or directory. Ignoring.")
+        for path in [Path(p) for p in glob.glob(path_str)]:
+            if path.is_dir():
+                yaml_files.extend(sorted(path.glob("*.yaml")))
+                yaml_files.extend(sorted(path.glob("*.yml")))
+            elif path.is_file() and path.suffix.lower() in [".yaml", ".yml"]:
+                yaml_files.append(path)
+            else:
+                logging.warning(f"Path '{path_str}' is not a valid file or directory. Ignoring.")
+
+    # filter out known yamls
+    check_yaml_files = yaml_files
+    yaml_files = []
+    for yaml_file in check_yaml_files:
+        if yaml_file.name not in [_CONFIG_FILENAME]:
+            yaml_files.append(yaml_file)
 
     if not yaml_files:
         logging.error("No .yaml or .yml files found in the specified paths.")
@@ -558,11 +645,20 @@ Example Usage:
 
     logging.info(f"Found {len(yaml_files)} YAML file(s) to process.")
     for yaml_path in yaml_files:
-        kie = process_yaml(yaml_path, _API_KEY, force=args.force, test=args.test)
-        if kie:
-            _TASKS_WAITING_QUEUE.append(kie)
+        if args.download:
+            kies = yaml_connect_to_existing_tasks(yaml_path, _API_KEY, path_converter_func=path_converter_func)
         else:
-            logging.error(f"{yaml_path.name} failed, skipping.")
+            kies = yaml_create_tasks(yaml_path, _API_KEY, generations=args.generations, test=args.test, path_converter_func=path_converter_func)
+            if len(kies) != args.generations:
+                logging.warning(f"{yaml_path.name} some generations did not start.")
+        if kies:
+            _TASKS_WAITING_QUEUE.extend(kies)
+        elif not args.download:
+            logging.warning(f"{yaml_path} failed or nothing to do!")
+
+    if not _TASKS_WAITING_QUEUE:
+        logging.error(f"Nothing to do!")
+        exit(-67)
         
     logging.info("Waiting for all tasks to be completed.")
     retry = 0
@@ -598,4 +694,9 @@ Example Usage:
 
 
 if __name__ == "__main__":
-    main()
+    _DEFAULT_MAPPINGS = [ # should load this from a config file
+            {"win": r"X:", "osx": "/Volumes/projects"}
+        ]
+    path_converter = NetworkPathConverter(_DEFAULT_MAPPINGS)
+
+    main(path_converter_func=path_converter.convert)
