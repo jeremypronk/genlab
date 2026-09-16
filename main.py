@@ -54,6 +54,55 @@ class GenAPI:
         waiting = 4
         queuing = 5
         unknown = 6
+
+    def __init__(self, output_basepath, task_id=None, path_converter_func=lambda x: x):
+        self._output_basepath = Path(output_basepath)
+        self._task_id = task_id
+        self._path_converter_func = path_converter_func
+
+    def __repr__(self):
+        return f"{type(self).__name__}({self._task_id}, {self._output_basepath})"
+
+    def _name(self):
+        return self._output_basepath.stem
+
+    def _log_msg(self, log_func, msg):
+        log_func(f"({self._name()}) {msg}")
+
+    def _info(self, msg):
+        self._log_msg(logging.info, msg)
+
+    def _warning(self, msg):
+        self._log_msg(logging.warning, msg)
+
+    def _error(self, msg):
+        self._log_msg(logging.error, msg)
+
+    def _debug(self, msg):
+        self._log_msg(logging.debug, msg)
+
+    def _check_api_response(self, response):
+        self._debug(f"{type(self).__name__}._check_api_response({response})")
+        response_json = response.json()
+        if response_json['code'] == 200:
+            self._debug(f"Request was successful.")
+        # elif response_json['code'] == 400:
+        #     self._error(f"Content violation error, check your prompt and/or input images for content that violates the T&Cs.")
+        #     return False
+        # elif response_json['code'] == 401:
+        #     self._error(f"Unauthorized - Authentication credentials are missing or invalid.")
+        #     return False
+        # elif response_json['code'] == 402:
+        #     self._error(f"Insufficient Credits - Account does not have enough credits to perform the operation.")
+        #     return False
+        else:
+            if 'msg' in response_json:
+                self._error(
+                    f"Error: API response code:- {response_json['code']} API response msg:- {response_json['msg']}")
+            else:
+                self._error(f"Unknown error ({response_json})")
+            return False
+        return True
     
 class KieAIGen(GenAPI):
     """
@@ -70,12 +119,10 @@ class KieAIGen(GenAPI):
     
     def __init__(self, api_key, output_basepath, task_id=None, path_converter_func=lambda x: x):
         logging.debug(f"KieAIGen(api_key={api_key}, task_id={task_id})")
-        super().__init__()
+        super().__init__(output_basepath, task_id=task_id, path_converter_func=path_converter_func)
         
         self._api_key = api_key
-        
-        self._output_basepath = Path(output_basepath)
-        self._task_id = task_id
+
         self._auth_header = {
             "Authorization": f"Bearer {self._api_key}",
         }
@@ -83,72 +130,19 @@ class KieAIGen(GenAPI):
             "Authorization": f"Bearer {self._api_key}",
             "Content-Type": "application/json"
         }
-        self._path_converter_func = path_converter_func
-
-class KieAIVideoGen(KieAIGen):
-    """
-    Base class for kie.ai video gen api
-    """
-
-    def __init__(self, api_key, output_basepath, task_id=None, path_converter_func=lambda x: x):
-        logging.debug(f"KieAIVideoGen(api_key={api_key}, task_id={task_id})")
-        super().__init__(api_key, output_basepath, task_id, path_converter_func))
-
-    def __repr__(self):
-        return f"KieAIVideoGen({self._task_id}, {self._output_basepath})"
-
-    def _name(self):
-        return self._output_basepath.stem
-
-    def _log_msg(self, log_func, msg):
-        log_func(f"({self._name()}) {msg}")
-
-    def _info(self, msg):
-        self._log_msg(logging.info, msg)
-        
-    def _warning(self, msg):
-        self._log_msg(logging.warning, msg)
-
-    def _error(self, msg):
-        self._log_msg(logging.error, msg)
-
-    def _debug(self, msg):
-        self._log_msg(logging.debug, msg)
-
-    def _check_api_response(self, response):
-        self._debug(f"KieAIVideoGen._check_api_response({response})")
-        response_json = response.json()
-        if response_json['code'] == 200:
-            self._debug(f"Request was successful.")
-        # elif response_json['code'] == 400:
-        #     self._error(f"Content violation error, check your prompt and/or input images for content that violates the T&Cs.")
-        #     return False
-        # elif response_json['code'] == 401:
-        #     self._error(f"Unauthorized - Authentication credentials are missing or invalid.")
-        #     return False
-        # elif response_json['code'] == 402:
-        #     self._error(f"Insufficient Credits - Account does not have enough credits to perform the operation.")
-        #     return False
-        else:
-            if 'msg' in response_json:
-                self._error(f"Error: API response code:- {response_json['code']} API response msg:- {response_json['msg']}")
-            else:
-                self._error(f"Unknown error ({response_json})")
-            return False
-        return True
 
     @handle_http_exceptions
     def upload_file(self, file_path: str) -> str | None:
-        self._debug(f"KieAIVideoGen.upload_file({file_path}) -- agnostic path")
+        self._debug(f"KieAIGen.upload_file({file_path}) -- agnostic path")
         file_path = self._path_converter_func(file_path)
-        self._debug(f"KieAIVideoGen.upload_file({file_path}) -- local os path")
+        self._debug(f"KieAIGen.upload_file({file_path}) -- local os path")
         if not os.path.exists(file_path):
             self._error(f"File not found at path: {file_path}")
             return None
 
-        if file_path in self._upload_cache:
-            self._debug(f"{file_path} found in cache file URL: {self._upload_cache[file_path]}")
-            return self._upload_cache[file_path]
+        if file_path in KieAIGen.UPLOAD_CACHE:
+            self._debug(f"{file_path} found in cache file URL: {KieAIGen.UPLOAD_CACHE[file_path]}")
+            return KieAIGen.UPLOAD_CACHE[file_path]
 
         files = {
             'file': (os.path.basename(file_path), open(file_path, 'rb')),
@@ -156,7 +150,7 @@ class KieAIVideoGen(KieAIGen):
             'fileName': (None, os.path.basename(file_path))
         }
         self._info(f"Preparing to upload '{files}'...")
-        response = requests.post(KieAIVideoGen._upload_url, headers=self._auth_header, files=files)
+        response = requests.post(KieAIGen.UPLOAD_URL, headers=self._auth_header, files=files)
         response.raise_for_status()
         if self._check_api_response(response):
             response_data = response.json()["data"]
@@ -165,14 +159,14 @@ class KieAIVideoGen(KieAIGen):
             file_url = response_data.get("downloadUrl")
             if file_url:
                 self._debug(f"File URL: {file_url}")
-                KieAIVideoGen._upload_cache[file_path] = file_url
-                return self._upload_cache[file_path]
+                KieAIGen.UPLOAD_CACHE[file_path] = file_url
+                return KieAIGen.UPLOAD_CACHE[file_path]
             else:
                 self._error("URL not found in API response.")
         return None
 
     def upload_files(self, files):
-        self._debug(f"KieAIVideoGen.upload_files({files})")
+        self._debug(f"KieAIGen.upload_files({files})")
         # upload files and return urls to uploaded files
         file_urls = list()
         if not isinstance(files, list):
@@ -180,6 +174,11 @@ class KieAIVideoGen(KieAIGen):
         for file in files:
             file_urls.append(self.upload_file(file))
         return file_urls
+
+class KieAIVideoGen(KieAIGen):
+    """
+    Base class for kie.ai video gen api
+    """
 
     @handle_http_exceptions
     def create_task(self, payload, test=False):
@@ -222,7 +221,7 @@ class KieAIVideoGen(KieAIGen):
             self._warning(f"Callback test mode create a fake task with id: {self._task_id}")
             return self._task_id
         else:
-            response = requests.post(KieAIVideoGen._create_task_url, json=task_payload, headers=self._json_header)
+            response = requests.post(KieAIGen.CREATE_TASK_URL, json=task_payload, headers=self._json_header)
             response.raise_for_status()
             if self._check_api_response(response):
                 response_json = response.json()
@@ -233,7 +232,7 @@ class KieAIVideoGen(KieAIGen):
     @handle_http_exceptions
     def _query_task(self):
         self._debug(f"KieAIVideoGen._query_task()")
-        response = requests.get(f"{KieAIVideoGen._query_task_url}?taskId={self._task_id}", headers=self._auth_header)
+        response = requests.get(f"{KieAIGen.QUERY_TASK_URL}?taskId={self._task_id}", headers=self._auth_header)
         response.raise_for_status()
         if self._check_api_response(response):
             return response.json()
