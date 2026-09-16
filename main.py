@@ -44,18 +44,9 @@ def handle_http_exceptions(func):
         return None
 
     return wrapper
-
-class KieAIVideoGen:
-    """
-    """
-    _api_server = "https://api.kie.ai"
-    _base_api_url = f"{_api_server}/api/v1"
-    _create_task_url = f"{_base_api_url}/jobs/createTask"
-    _query_task_url = f"{_base_api_url}/jobs/recordInfo"
-    _upload_url = f"https://kieai.redpandaai.co/api/file-stream-upload"
-
-    _upload_cache = {}
-
+    
+class GenAPI:
+    
     class TASK_STATUS(Enum):
         completed = 1
         failed = 2
@@ -63,10 +54,31 @@ class KieAIVideoGen:
         waiting = 4
         queuing = 5
         unknown = 6
+    
+    def __init__(self):
+        self._api_server = None
+        self._base_api_url = None
+        self._upload_url = None
+
+
+class KieAIVideoGen(GenAPI):
+    """
+    """
+    _upload_cache = {} # upload cache is shared across all instances of video gen
 
     def __init__(self, api_key, output_basepath, task_id=None, path_converter_func=lambda x: x):
         logging.debug(f"KieAIVideoGen(api_key={api_key}, task_id={task_id})")
+        super().__init__()
+
+        # kie.ai
+        self._api_server = "https://api.kie.ai"
+        self._base_api_url = f"{self._api_server}/api/v1"
+        self._create_task_url = f"{self._base_api_url}/jobs/createTask"
+        self._query_task_url = f"{self._base_api_url}/jobs/recordInfo"
+        self._upload_url = "https://kieai.redpandaai.co/api/file-stream-upload"
+        
         self._api_key = api_key
+        
         self._output_basepath = Path(output_basepath)
         self._task_id = task_id
         self._auth_header = {
