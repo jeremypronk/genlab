@@ -59,14 +59,14 @@ class KieAIGen(GenAPI):
     """
     Base class for kie.ai api
     """
-    _api_server = "https://api.kie.ai"
-    _base_api_url = f"{self._api_server}/api/v1"
-    _create_task_url = f"{self._base_api_url}/jobs/createTask"
-    _query_task_url = f"{self._base_api_url}/jobs/recordInfo"
-    _upload_url = "https://kieai.redpandaai.co/api/file-stream-upload"
+    API_SERVER = "https://api.kie.ai"
+    BASE_API_URL = f"{API_SERVER}/api/v1"
+    CREATE_TASK_URL = f"{BASE_API_URL}/jobs/createTask"
+    QUERY_TASK_URL = f"{BASE_API_URL}/jobs/recordInfo"
+    UPLOAD_URL = "https://kieai.redpandaai.co/api/file-stream-upload"
 
     # upload cache is shared across all instances of kie ai gen subclasses
-    _upload_cache = {} 
+    UPLOAD_CACHE = {} 
     
     def __init__(self, api_key, output_basepath, task_id=None, path_converter_func=lambda x: x):
         logging.debug(f"KieAIGen(api_key={api_key}, task_id={task_id})")
