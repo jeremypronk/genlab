@@ -9,13 +9,11 @@ import requests
 import logging
 
 
-from genlab.main import setup_logging
-
 from genlab.main import NetworkPathConverter
 
 from genlab.main import YamlParamReplacer
 
-from genlab.main import GenAPI
+from genlab import GenAPI, setup_logging
 
 
 class TestLoggingSetup(unittest.TestCase):
