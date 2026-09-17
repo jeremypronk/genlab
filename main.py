@@ -11,7 +11,9 @@ import re
 import glob
 from pathlib import Path
 from enum import Enum
+from typing import Union, Optional
 
+# TODO: from . should we improve this
 from . import NetworkPathConverter
 from . import YamlParamReplacer
 
@@ -44,9 +46,9 @@ def handle_http_exceptions(func):
         return None
 
     return wrapper
-    
+
+
 class GenAPI:
-    
     class TASK_STATUS(Enum):
         completed = 1
         failed = 2
@@ -54,6 +56,12 @@ class GenAPI:
         waiting = 4
         queuing = 5
         unknown = 6
+
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        # Automatically guarantees an isolated cache dict for each subclass
+        if "UPLOAD_CACHE" not in cls.__dict__:
+            cls.UPLOAD_CACHE = {}
 
     def __init__(self, output_basepath, task_id=None, path_converter_func=lambda x: x):
         self._output_basepath = Path(output_basepath)
@@ -84,96 +92,121 @@ class GenAPI:
     def _check_api_response(self, response):
         self._debug(f"{type(self).__name__}._check_api_response({response})")
         response_json = response.json()
-        if response_json['code'] == 200:
-            self._debug(f"Request was successful.")
-        # elif response_json['code'] == 400:
-        #     self._error(f"Content violation error, check your prompt and/or input images for content that violates the T&Cs.")
-        #     return False
-        # elif response_json['code'] == 401:
-        #     self._error(f"Unauthorized - Authentication credentials are missing or invalid.")
-        #     return False
-        # elif response_json['code'] == 402:
-        #     self._error(f"Insufficient Credits - Account does not have enough credits to perform the operation.")
-        #     return False
+        if response_json.get('code') == 200:
+            self._debug("Request was successful.")
+            return True
+
+        if 'msg' in response_json:
+            self._error(f"Error: API response code:- {response_json['code']} API response msg:- {response_json['msg']}")
         else:
-            if 'msg' in response_json:
-                self._error(
-                    f"Error: API response code:- {response_json['code']} API response msg:- {response_json['msg']}")
-            else:
-                self._error(f"Unknown error ({response_json})")
-            return False
-        return True
-    
+            self._error(f"Unknown error ({response_json})")
+        return False
+
+    # --- Base Upload & Download Functionality ---
+
+    @handle_http_exceptions
+    def upload_file(self, file_path: str | Path) -> str | None:
+        """Uploads a file using subclass-specific endpoints and caches."""
+        self._debug(f"{type(self).__name__}.upload_file({file_path}) -- agnostic path")
+        local_path = Path(self._path_converter_func(file_path))
+        self._debug(f"{type(self).__name__}.upload_file({local_path}) -- local os path")
+
+        if not local_path.exists():
+            self._error(f"File not found at path: {local_path}")
+            return None
+
+        cache_key = str(local_path.resolve())
+
+        # Subclass-isolated cache lookup
+        if cache_key in self.UPLOAD_CACHE:
+            self._debug(f"{cache_key} found in cache file URL: {self.UPLOAD_CACHE[cache_key]}")
+            return self.UPLOAD_CACHE[cache_key]
+
+        upload_url = getattr(self, "UPLOAD_URL", None)
+        auth_header = getattr(self, "_auth_header", None)
+        if not upload_url:
+            raise NotImplementedError(f"Subclass '{type(self).__name__}' must define 'UPLOAD_URL'.")
+
+        self._info(f"Preparing to upload '{local_path.name}'...")
+
+        # Using context manager to guarantee resource closure
+        with open(local_path, 'rb') as f:
+            files = {
+                'file': (local_path.name, f),
+                'uploadPath': (None, 'images/user-uploads'),
+                'fileName': (None, local_path.name)
+            }
+            response = requests.post(upload_url, headers=auth_header, files=files)
+
+        response.raise_for_status()
+
+        if self._check_api_response(response):
+            response_data = response.json().get("data", {})
+            file_url = response_data.get("downloadUrl")
+            if file_url:
+                self._debug(f"File URL: {file_url}")
+                self.UPLOAD_CACHE[cache_key] = file_url
+                return file_url
+            self._error("URL not found in API response.")
+        return None
+
+    def upload_files(self, files: list | str | Path) -> list[str | None]:
+        self._debug(f"{type(self).__name__}.upload_files({files})")
+        if not isinstance(files, list):
+            files = [files]
+        return [self.upload_file(f) for f in files]
+
+    @handle_http_exceptions
+    def download_file(self, url: str, output_path: str | Path) -> int:
+        output_path = Path(output_path)
+        self._debug(f"{type(self).__name__}.download_file(url={url}, output_path={output_path})")
+        try:
+            with requests.get(url, stream=True) as r:
+                r.raise_for_status()
+                total_size = int(r.headers.get('content-length', -1))
+                bytes_downloaded = 0
+                with open(output_path, 'wb') as f:
+                    for chunk in r.iter_content(chunk_size=8192):
+                        f.write(chunk)
+                        bytes_downloaded += len(chunk)
+                        done = int(50 * bytes_downloaded / total_size) if total_size else 0
+                        sys.stdout.write(
+                            f"\r  [{'=' * done}{' ' * (50 - done)}] {bytes_downloaded / 1024 / 1024:.2f} MB")
+                        sys.stdout.flush()
+            sys.stdout.write("\n")
+
+            # Verify actual downloaded bytes match the Content-Length header (if provided)
+            if total_size < 0 or bytes_downloaded != total_size:
+                raise ValueError(
+                    f"Size mismatch for {output_path.name}: expected {total_size} bytes, got {bytes_downloaded} bytes"
+                )
+
+            self._debug(f"File saved successfully to: {output_path}")
+            return bytes_downloaded
+
+        except (requests.exceptions.RequestException, ValueError) as e:
+            sys.stdout.write("\n")
+            self._error(f"Failed to download file: {e}")
+            raise
+
+
 class KieAIGen(GenAPI):
-    """
-    Base class for kie.ai api
-    """
+    """Subclass now stays lightweight—containing only API constants and headers."""
     API_SERVER = "https://api.kie.ai"
     BASE_API_URL = f"{API_SERVER}/api/v1"
     CREATE_TASK_URL = f"{BASE_API_URL}/jobs/createTask"
     QUERY_TASK_URL = f"{BASE_API_URL}/jobs/recordInfo"
-    UPLOAD_URL = "https://kieai.redpandaai.co/api/file-stream-upload"
+    UPLOAD_URL = f"{BASE_API_URL}/file-stream-upload"
 
-    # upload cache is shared across all instances of kie ai gen subclasses
-    UPLOAD_CACHE = {} 
-    
     def __init__(self, api_key, output_basepath, task_id=None, path_converter_func=lambda x: x):
-        logging.debug(f"KieAIGen(api_key={api_key}, task_id={task_id})")
         super().__init__(output_basepath, task_id=task_id, path_converter_func=path_converter_func)
-        
         self._api_key = api_key
-
-        self._auth_header = {
-            "Authorization": f"Bearer {self._api_key}",
-        }
+        self._auth_header = {"Authorization": f"Bearer {self._api_key}"}
         self._json_header = {
             "Authorization": f"Bearer {self._api_key}",
             "Content-Type": "application/json"
         }
 
-    @handle_http_exceptions
-    def upload_file(self, file_path: str) -> str | None:
-        self._debug(f"KieAIGen.upload_file({file_path}) -- agnostic path")
-        file_path = self._path_converter_func(file_path)
-        self._debug(f"KieAIGen.upload_file({file_path}) -- local os path")
-        if not os.path.exists(file_path):
-            self._error(f"File not found at path: {file_path}")
-            return None
-
-        if file_path in KieAIGen.UPLOAD_CACHE:
-            self._debug(f"{file_path} found in cache file URL: {KieAIGen.UPLOAD_CACHE[file_path]}")
-            return KieAIGen.UPLOAD_CACHE[file_path]
-
-        files = {
-            'file': (os.path.basename(file_path), open(file_path, 'rb')),
-            'uploadPath': (None, 'images/user-uploads'),
-            'fileName': (None, os.path.basename(file_path))
-        }
-        self._info(f"Preparing to upload '{files}'...")
-        response = requests.post(KieAIGen.UPLOAD_URL, headers=self._auth_header, files=files)
-        response.raise_for_status()
-        if self._check_api_response(response):
-            response_data = response.json()["data"]
-
-            # Extract the URL from the JSON response.
-            file_url = response_data.get("downloadUrl")
-            if file_url:
-                self._debug(f"File URL: {file_url}")
-                KieAIGen.UPLOAD_CACHE[file_path] = file_url
-                return KieAIGen.UPLOAD_CACHE[file_path]
-            else:
-                self._error("URL not found in API response.")
-        return None
-
-    def upload_files(self, files):
-        self._debug(f"KieAIGen.upload_files({files})")
-        # upload files and return urls to uploaded files
-        file_urls = list()
-        if not isinstance(files, list):
-            files = [files]
-        for file in files:
-            file_urls.append(self.upload_file(file))
-        return file_urls
 
 class KieAIVideoGen(KieAIGen):
     """
@@ -271,33 +304,6 @@ class KieAIVideoGen(KieAIGen):
         if task_status in [self.TASK_STATUS.generating, self.TASK_STATUS.waiting, self.TASK_STATUS.queuing]:
             return False
         return True
-
-    def _download_file(self, url, output_path):
-        """
-        Downloads a file from a URL to a specified path.
-        Args:
-            url (str): The URL of the file to download.
-            output_path (Path): The path to save the downloaded file.
-        """
-        self._debug(f"KieAIVideoGen._download_file(url={url}, output_path={output_path})")
-        try:
-            with requests.get(url, stream=True) as r:
-                r.raise_for_status()
-                total_size = int(r.headers.get('content-length', 0))
-                bytes_downloaded = 0
-                with open(output_path, 'wb') as f:
-                    for chunk in r.iter_content(chunk_size=8192):
-                        f.write(chunk)
-                        bytes_downloaded += len(chunk)
-                        done = int(50 * bytes_downloaded / total_size) if total_size else 0
-                        sys.stdout.write(
-                            f"\r  [{'=' * done}{' ' * (50 - done)}] {bytes_downloaded / 1024 / 1024:.2f} MB")
-                        sys.stdout.flush()
-            sys.stdout.write("\n")
-            self._debug(f"Video saved successfully to: {output_path}")
-        except requests.exceptions.RequestException as e:
-            sys.stdout.write("\n")
-            self._error(f"Failed to download video: {e}")
 
     def _download_videos(self, video_urls):
         self._debug(f"KieAIVideoGen._download_videos(video_urls={video_urls})")
@@ -542,6 +548,37 @@ def yaml_create_tasks(yaml_path, api_key, generations=1, test=False, path_conver
         kies.append(kie)
 
     return kies
+
+
+def setup_logging(
+        debug: bool = False,
+        log_file: Optional[Union[str, Path]] = "genlab.log"
+) -> logging.Logger:
+    """Configures the root logger for application and test usage."""
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging.DEBUG)
+
+    # Close and remove existing handlers to release file locks on Windows
+    for handler in root_logger.handlers[:]:
+        handler.close()
+        root_logger.removeHandler(handler)
+
+    # Handler 1: Console
+    console_handler = logging.StreamHandler(sys.stdout)
+    console_handler.setLevel(logging.DEBUG if debug else logging.INFO)
+    console_handler.setFormatter(logging.Formatter('[%(levelname)s] %(message)s'))
+    root_logger.addHandler(console_handler)
+
+    # Handler 2: File (Optional)
+    if log_file:
+        file_handler = logging.FileHandler(log_file)
+        file_handler.setLevel(logging.DEBUG)
+        file_handler.setFormatter(
+            logging.Formatter('%(asctime)s [%(levelname)s] %(name)s: %(message)s')
+        )
+        root_logger.addHandler(file_handler)
+
+    return root_logger
         
 def main(path_converter_func=lambda x: x):
     global _TASKS_WAITING_QUEUE
@@ -599,26 +636,10 @@ Example Usage:
     )
     args = parser.parse_args()
 
-    # --- Handler 1: INFO and above to terminal (stdout) ---
-    console_handler = logging.StreamHandler(sys.stdout)
-    if args.debug:
-        console_handler.setLevel(logging.DEBUG)
-    else:
-        console_handler.setLevel(logging.INFO)
-    console_format = logging.Formatter('[%(levelname)s] %(message)s')
-    console_handler.setFormatter(console_format)
-
-    # --- Handler 2: DEBUG and above to file ---
-    file_handler = logging.FileHandler('genlab.log')
-    file_handler.setLevel(logging.DEBUG)
-    file_format = logging.Formatter('%(asctime)s [%(levelname)s] %(name)s: %(message)s')
-    file_handler.setFormatter(file_format)
-
-    # Configure root logger
-    root_logger = logging.getLogger()
-    root_logger.setLevel(logging.DEBUG)
-    root_logger.addHandler(console_handler)
-    root_logger.addHandler(file_handler)
+    setup_logging(
+        debug=args.debug,
+        log_file='genlab.log'
+    )
 
     logging.info(f"----------------------------------------------------------------------------------------")
     logging.info(f"-----------------------------------GENLAB-----------------------------------------------")
