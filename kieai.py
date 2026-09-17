@@ -1,37 +1,42 @@
+import os
 
-
-from . import GenAPI
-from . import handle_http_exceptions
+from . import GenAPI, handle_http_exceptions
 
 class KieAIGen(GenAPI):
-    """Subclass now stays lightweight—containing only API constants and headers."""
+    """
+    Base class for kie.ai API
+
+    You can pass your api key in the environment variable KIE_API_KEY or to the class constructor
+    """
     API_SERVER = "https://api.kie.ai"
     BASE_API_URL = f"{API_SERVER}/api/v1"
     CREATE_TASK_URL = f"{BASE_API_URL}/jobs/createTask"
     QUERY_TASK_URL = f"{BASE_API_URL}/jobs/recordInfo"
-    UPLOAD_URL = f"{BASE_API_URL}/file-stream-upload"
+    UPLOAD_URL = "https://kieai.redpandaai.co/api/file-stream-upload"
+    API_KEY = None
 
-    def __init__(self, api_key, output_basepath, task_id=None, path_converter_func=lambda x: x):
+    def __init__(self, output_basepath, api_key=None, task_id=None, path_converter_func=lambda x: x):
         super().__init__(output_basepath, task_id=task_id, path_converter_func=path_converter_func)
-        self._api_key = api_key
-        self._auth_header = {"Authorization": f"Bearer {self._api_key}"}
-        self._json_header = {
-            "Authorization": f"Bearer {self._api_key}",
-            "Content-Type": "application/json"
-        }
-
-
-class KieAIVideoGen(KieAIGen):
-    """
-    Base class for kie.ai video gen api
-    """
+        if not api_key:
+            try:
+                KieAIGen.API_KEY = os.environ["KIE_API_KEY"]
+            except KeyError:
+                logging.critical("FATAL: KIE_API_KEY environment variable is not set.")
+                logging.critical("Please set your API key, e.g., 'export KIE_API_KEY=\"your_key\"'")
+                sys.exit(-50)
+            self._info("kie.ai api key found in environment variable KIE_API_KEY")
+        else:
+            self._info("kie.ai api key passed in constructor")
+            KieAIGen.API_KEY = api_key
+            
+        self.HEADER = {"Authorization": f"Bearer {KieAIGen.API_KEY}"}
 
     @handle_http_exceptions
     def create_task(self, payload, test=False):
         """
         any field names ending with url or urls are assumed to point to local files that will be uploaded
         """
-        self._debug(f"KieAIVideoGen.create_task({payload})")
+        self._debug(f"KieAIGen.create_task({payload})")
 
         # build the task payload
         task_payload = dict()
@@ -77,7 +82,7 @@ class KieAIVideoGen(KieAIGen):
 
     @handle_http_exceptions
     def _query_task(self):
-        self._debug(f"KieAIVideoGen._query_task()")
+        self._debug(f"KieAIGen._query_task()")
         response = requests.get(f"{KieAIGen.QUERY_TASK_URL}?taskId={self._task_id}", headers=self._auth_header)
         response.raise_for_status()
         if self._check_api_response(response):
@@ -88,7 +93,7 @@ class KieAIVideoGen(KieAIGen):
         """
         returns TASK_STATUS for a task query
         """
-        self._debug(f"KieAIVideoGen._get_task_status({query_task_response})")
+        self._debug(f"KieAIGen._get_task_status({query_task_response})")
         task_response_status = query_task_response['data']['state']
         if "success" in task_response_status.lower():
             return self.TASK_STATUS.completed
@@ -108,15 +113,14 @@ class KieAIVideoGen(KieAIGen):
         self._error(f"Fail message: {query_task_response['data']['failMsg']}")
 
     def _get_result_urls(self, query_task_response):
-        self._debug(f"KieAIVideoGen._get_result_urls({query_task_response})")
+        self._debug(f"KieAIGen._get_result_urls({query_task_response})")
         return json.loads(query_task_response['data']['resultJson'])['resultUrls']
 
-    def is_finished(self, task_status):
-        self._debug(f"KieAIVideoGen._is_finished({task_status})")
-        assert (isinstance(task_status, self.TASK_STATUS))
-        if task_status in [self.TASK_STATUS.generating, self.TASK_STATUS.waiting, self.TASK_STATUS.queuing]:
-            return False
-        return True
+
+class KieAIVideoGen(KieAIGen):
+    """
+    Base class for kie.ai video gen api
+    """
 
     def _download_videos(self, video_urls):
         self._debug(f"KieAIVideoGen._download_videos(video_urls={video_urls})")

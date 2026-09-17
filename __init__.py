@@ -346,6 +346,8 @@ class GenAPI:
         queuing = 5
         unknown = 6
 
+    JSON_HEADER = { "Content-Type": "application/json" }
+
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
         # Automatically guarantees an isolated cache dict for each subclass
@@ -356,6 +358,10 @@ class GenAPI:
         self._output_basepath = Path(output_basepath)
         self._task_id = task_id
         self._path_converter_func = path_converter_func
+
+        # Header sent with all http requests, subclasses should override this as required
+        # typically used for authorisation
+        self.HEADER = {}
 
     def __repr__(self):
         return f"{type(self).__name__}({self._task_id}, {self._output_basepath})"
@@ -379,7 +385,15 @@ class GenAPI:
         self._log_msg(logging.debug, msg)
 
     def _check_api_response(self, response):
-        self._debug(f"{type(self).__name__}._check_api_response({response})")
+        """
+        Basic api response check. Override this method in subclasses for more granular checking.
+        Args:
+            response: the response from the API (json string)
+
+        Returns:
+            bool True if response code is 200, False otherwise.
+        """
+        self._debug(f"GenAPI._check_api_response({response})")
         response_json = response.json()
         if response_json.get('code') == 200:
             self._debug("Request was successful.")
@@ -391,11 +405,33 @@ class GenAPI:
             self._error(f"Unknown error ({response_json})")
         return False
 
+    def is_finished(self, task_status):
+        """
+        Check task status for "finished" status.
+        Args:
+            task_status: the status of the task one of GenAPI.TASK_STATUS
+
+        Returns:
+            bool True if finished (not still running)
+        """
+        self._debug(f"GenAPI._is_finished({task_status})")
+        assert (isinstance(task_status, GenAPI.TASK_STATUS))
+        if task_status in [GenAPI.TASK_STATUS.generating, GenAPI.TASK_STATUS.waiting, GenAPI.TASK_STATUS.queuing]:
+            return False
+        return True
+
     # --- Base Upload & Download Functionality ---
 
     @handle_http_exceptions
     def upload_file(self, file_path: str | Path) -> str | None:
-        """Uploads a file using subclass-specific endpoints and caches."""
+        """
+        Uploads a file via http. Caches upload files to only upload once.
+        Args:
+            file_path: path to the file to upload
+
+        Returns:
+            url of uploaded file
+        """
         self._debug(f"{type(self).__name__}.upload_file({file_path}) -- agnostic path")
         local_path = Path(self._path_converter_func(file_path))
         self._debug(f"{type(self).__name__}.upload_file({local_path}) -- local os path")
@@ -411,10 +447,11 @@ class GenAPI:
             self._debug(f"{cache_key} found in cache file URL: {self.UPLOAD_CACHE[cache_key]}")
             return self.UPLOAD_CACHE[cache_key]
 
-        upload_url = getattr(self, "UPLOAD_URL", None)
-        auth_header = getattr(self, "_auth_header", None)
-        if not upload_url:
+        if not self.UPLOAD_URL:
             raise NotImplementedError(f"Subclass '{type(self).__name__}' must define 'UPLOAD_URL'.")
+
+        if not self.JSON_HEADER:
+            raise NotImplementedError(f"Subclass '{type(self).__name__}' must define 'JSON_HEADER'.")
 
         self._info(f"Preparing to upload '{local_path.name}'...")
 
@@ -425,10 +462,11 @@ class GenAPI:
                 'uploadPath': (None, 'images/user-uploads'),
                 'fileName': (None, local_path.name)
             }
-            response = requests.post(upload_url, headers=auth_header, files=files)
+            response = requests.post(self.UPLOAD_URL, headers=self.HEADER, files=files)
 
         response.raise_for_status()
 
+        # TODO: this response check looks kie.ai specific
         if self._check_api_response(response):
             response_data = response.json().get("data", {})
             file_url = response_data.get("downloadUrl")
@@ -440,6 +478,14 @@ class GenAPI:
         return None
 
     def upload_files(self, files: list | str | Path) -> list[str | None]:
+        """
+        Upload a list of files.
+        Args:
+            files: list of file paths
+
+        Returns:
+            list of urls of uploaded files
+        """
         self._debug(f"{type(self).__name__}.upload_files({files})")
         if not isinstance(files, list):
             files = [files]
@@ -447,6 +493,15 @@ class GenAPI:
 
     @handle_http_exceptions
     def download_file(self, url: str, output_path: str | Path) -> int:
+        """
+        Download a file via http.
+        Args:
+            url: url of the file to download
+            output_path: path to save the downloaded file
+
+        Returns:
+            size of downloaded file in bytes
+        """
         output_path = Path(output_path)
         self._debug(f"{type(self).__name__}.download_file(url={url}, output_path={output_path})")
         try:

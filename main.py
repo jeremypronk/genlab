@@ -10,15 +10,10 @@ import re
 import glob
 from pathlib import Path
 
-# TODO: from . should we improve this?
-from . import NetworkPathConverter
-from . import YamlParamReplacer
-from . import setup_logging
+from . import NetworkPathConverter, YamlParamReplacer, setup_logging
 
 from .kieai import KieAIGen, KieAIVideoGen, KieAIVideoGen_Veo
 
-
-_API_KEY = None
 _TASKS_WAITING_QUEUE = []
 
 _CONFIG_FILENAME = r'config.yaml'
@@ -47,7 +42,7 @@ def yaml_load_payload(yaml_path):
         return None
     return payload
 
-def yaml_connect_to_existing_tasks(yaml_path, api_key, path_converter_func=lambda x: x):
+def yaml_connect_to_existing_tasks(yaml_path, path_converter_func=lambda x: x):
     logging.info(f"yaml_connect_to_existing_tasks: {yaml_path.name}")
 
     task_paths = [f for f in yaml_path.parent.glob(f"{Path(yaml_path).stem}*.task")]
@@ -63,11 +58,11 @@ def yaml_connect_to_existing_tasks(yaml_path, api_key, path_converter_func=lambd
                 payload = configure_yaml(task_path.parent, yaml.safe_load(f))
             logging.info(f"Found existing task to attach to {task_id}.")
 
-            kies.append(kie_factory(payload, api_key, task_path.stem, task_id, path_converter_func=path_converter_func))
+            kies.append(kie_factory(payload, task_path.stem, task_id, path_converter_func=path_converter_func))
 
     return kies
 
-def yaml_create_tasks(yaml_path, api_key, generations=1, test=False, path_converter_func=lambda x: x):
+def yaml_create_tasks(yaml_path, generations=1, test=False, path_converter_func=lambda x: x):
     logging.info(f"yaml_create_tasks: {yaml_path.name}")
 
     # read the payload from the yaml
@@ -103,7 +98,7 @@ def yaml_create_tasks(yaml_path, api_key, generations=1, test=False, path_conver
         output_basepath = task_id_path.stem # remove the extension
 
         # model specific factory creation
-        kie = kie_factory(payload, api_key, output_basepath, path_converter_func=path_converter_func)
+        kie = kie_factory(payload, output_basepath, path_converter_func=path_converter_func)
 
         # start the video gen
         task_id = kie.create_task(payload, test=test)
@@ -183,14 +178,6 @@ Example Usage:
     logging.info(f"----------------------------------------------------------------------------------------")
     logging.info(f"genlab is running: {vars(args)}")
 
-    global _API_KEY
-    try:
-        _API_KEY = os.environ["KIE_API_KEY"]
-    except KeyError:
-        logging.critical("FATAL: KIE_API_KEY environment variable not set.")
-        logging.critical("Please set your API key, e.g., 'export KIE_API_KEY=\"your_key\"'")
-        sys.exit(-50)
-
     if args.download:
         logging.warning("Download mode - will only download videos of existing tasks, no new tasks will be created.")
 
@@ -219,9 +206,9 @@ Example Usage:
     logging.info(f"Found {len(yaml_files)} YAML file(s) to process.")
     for yaml_path in yaml_files:
         if args.download:
-            kies = yaml_connect_to_existing_tasks(yaml_path, _API_KEY, path_converter_func=path_converter_func)
+            kies = yaml_connect_to_existing_tasks(yaml_path, path_converter_func=path_converter_func)
         else:
-            kies = yaml_create_tasks(yaml_path, _API_KEY, generations=args.generations, test=args.test, path_converter_func=path_converter_func)
+            kies = yaml_create_tasks(yaml_path, generations=args.generations, test=args.test, path_converter_func=path_converter_func)
             if len(kies) != args.generations:
                 logging.warning(f"{yaml_path.name} some generations did not start.")
         if kies:
