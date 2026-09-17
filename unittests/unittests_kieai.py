@@ -15,13 +15,8 @@ class TestKieAIGenRealUploadDownload(BaseTestCase):
         # Create a temporary directory to house our test files
         self.temp_dir = tempfile.TemporaryDirectory()
 
-        # 1. Create a dummy params file for the KieAIGen constructor
-        self.params_file_path = Path(self.temp_dir.name) / "dummy_params.yml"
-        with open(self.params_file_path, "w") as f:
-            f.write("dummy_key: dummy_value\n")  # Minimal valid file content
-
         # Initialize KieAIGen with the required params file
-        self.kie = KieAIGen(str(self.params_file_path))
+        self.kie = KieAIGen(Path(self.temp_dir.name))
 
         # 2. Set up paths for the upload/download test
         self.source_file_path = Path(self.temp_dir.name) / "sample.png"
