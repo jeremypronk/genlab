@@ -394,17 +394,23 @@ class GenAPI:
     # --- Base Upload & Download Functionality ---
 
     @handle_http_exceptions
-    def upload_file(self, file_path: str | Path) -> str | None:
+    def upload_file(self, path: str | Path) -> str | None:
         """
         Uploads a file via http. Caches upload files to only upload once.
+        If path is already a url, simply returns path.
         Args:
-            file_path: path to the file to upload
+            path: path to upload
 
         Returns:
             url of uploaded file
         """
-        self._debug(f"GenAPI.upload_file({file_path}) -- agnostic path")
-        local_path = Path(self._path_converter_func(file_path))
+        # check if a url has been passed
+        if urlparse(path).scheme in ("http", "https", "ftp"):
+            return path
+
+        # localise path
+        self._debug(f"GenAPI.upload_file({path}) -- agnostic path")
+        local_path = Path(self._path_converter_func(path))
         self._debug(f"GenAPI.upload_file({local_path}) -- local os path")
 
         if not local_path.exists():

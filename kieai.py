@@ -153,19 +153,27 @@ class KieAIGen(GenAPI):
 #     """
 
 
-# class KieAIVideoGen(KieAIGen):
-#     """
-#     kie.ai http requests based video gen api
-#     """
-#
-    # upload any files in url keys
-    # TODO: should check if it is already a url then no need to upload just skip
-#           def _prep_param(self, ) -> tuple:
-#         if key.endswith('url'):
-#             self.task_payload['input'][key] = self.upload_file(payload[key])
-#         elif key.endswith('urls'):
-#             self.task_payload['input'][key] = self.upload_files(payload[key])
-#
-#         else:
-#             super()._prep_param()
+class KieAIVideoGen(KieAIGen):
+    """
+    kie.ai http requests based video gen api
+    """
 
+    def prep_param(self, param, value) -> tuple:
+        """
+        kie.ai video payload image and video reference params all end in _url (single ref) or _urls (list of refs).
+        Uploads url params if they contain a path to a local file, replacing path value with the new url.
+        (upload_file() handles input urls by simple returning the input path)
+        Args:
+            param task/request parameter
+            value task/request value
+
+        Returns:
+            tuple of task ready param,value pair.
+        """
+        if param.endswith('url'):
+            value = self.upload_file(value)
+        elif param.endswith('urls'):
+            value = self.upload_files(value)
+            if None in value: value = None # fail on any missing input path
+
+        return (param, value)
