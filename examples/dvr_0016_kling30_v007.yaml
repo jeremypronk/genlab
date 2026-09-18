@@ -1,9 +1,0 @@
-model: kling-3.0/video
-prompt: "{{ prompt }}"
-image_urls: "{{ start_image_720p }}"
-sound: false
-multi_shots: false
-kling_elements: []
-duration: "{{ duration }}"
-mode: std
-aspect_ratio: "16:9"

@@ -12,7 +12,7 @@ from pathlib import Path
 
 from . import NetworkPathConverter, YamlParamReplacer, setup_logging
 
-from .kieai import KieAIGen, KieAIVideoGen, KieAIVideoGen_Veo
+from .kieai import KieAIVideoGen
 
 _TASKS_WAITING_QUEUE = []
 
@@ -58,7 +58,7 @@ def yaml_connect_to_existing_tasks(yaml_path, path_converter_func=lambda x: x):
                 payload = configure_yaml(task_path.parent, yaml.safe_load(f))
             logging.info(f"Found existing task to attach to {task_id}.")
 
-            kies.append(kie_factory(payload, task_path.stem, task_id, path_converter_func=path_converter_func))
+            kies.append(KieAIVideoGen(task_path.stem, task_id=task_id, path_converter_func=path_converter_func))
 
     return kies
 
@@ -98,16 +98,22 @@ def yaml_create_tasks(yaml_path, generations=1, test=False, path_converter_func=
         output_basepath = task_id_path.stem # remove the extension
 
         # model specific factory creation
-        kie = kie_factory(payload, output_basepath, path_converter_func=path_converter_func)
+        kie = KieAIVideoGen(output_basepath, path_converter_func=path_converter_func)
 
         # start the video gen
-        task_id = kie.create_task(payload, test=test)
-        if not task_id: continue
-        with open(task_id_path, 'w') as f:
-            f.write(f"{task_id}\n")
-            yaml.dump(payload, f)
+        if kie.prep_task(payload):
+            task_id = kie.submit_task(test=test)
+            if not task_id:
+                logging.error(f"submit_task failed for {payload}.")
+                continue
+            with open(task_id_path, 'w') as f:
+                f.write(f"{task_id}\n")
+                yaml.dump(payload, f)
 
-        kies.append(kie)
+            kies.append(kie)
+
+        else:
+            logging.error(f"prep_task failed for {payload}.")
 
     return kies
 
@@ -229,12 +235,9 @@ Example Usage:
         completed_tasks = []
         for kie in _TASKS_WAITING_QUEUE:
 
-            # try downloading the video
-            status = kie.download_video()
-
-            # is this task finished?
+            (status, response) = kie.query_task()
             if kie.is_finished(status):
-                # remove from the list
+                status = kie.download_result()
                 completed_tasks.append(kie)
 
         # remove completed from the queue (outside loop to avoid corrupting the very list it is checking)
