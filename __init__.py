@@ -10,6 +10,7 @@ import logging
 import requests
 import sys
 from typing import Union, Optional
+from urllib.parse import urlparse, unquote
 
 
 class YamlParamReplacer:
@@ -336,6 +337,11 @@ def setup_logging(
 
     return root_logger
 
+def get_safe_filename(url, default="download"):
+    name = os.path.basename(unquote(urlparse(url).path))
+    name = re.sub(r'[^A-Za-z0-9._-]', '_', name).lstrip('.')
+    return (name or default)[:255]
+
 
 class GenAPI:
     class TASK_STATUS(Enum):
@@ -358,6 +364,7 @@ class GenAPI:
         self._output_basepath = Path(output_basepath)
         self._task_id = task_id
         self._path_converter_func = path_converter_func
+        self._payload = dict()
 
         # Header sent with all http requests, subclasses should override this as required
         # typically used for authorisation
@@ -384,42 +391,6 @@ class GenAPI:
     def _debug(self, msg):
         self._log_msg(logging.debug, msg)
 
-    def _check_api_response(self, response):
-        """
-        Basic api response check. Override this method in subclasses for more granular checking.
-        Args:
-            response: the response from the API (json string)
-
-        Returns:
-            bool True if response code is 200, False otherwise.
-        """
-        self._debug(f"GenAPI._check_api_response({response})")
-        response_json = response.json()
-        if response_json.get('code') == 200:
-            self._debug("Request was successful.")
-            return True
-
-        if 'msg' in response_json:
-            self._error(f"Error: API response code:- {response_json['code']} API response msg:- {response_json['msg']}")
-        else:
-            self._error(f"Unknown error ({response_json})")
-        return False
-
-    def is_finished(self, task_status):
-        """
-        Check task status for "finished" status.
-        Args:
-            task_status: the status of the task one of GenAPI.TASK_STATUS
-
-        Returns:
-            bool True if finished (not still running)
-        """
-        self._debug(f"GenAPI._is_finished({task_status})")
-        assert (isinstance(task_status, GenAPI.TASK_STATUS))
-        if task_status in [GenAPI.TASK_STATUS.generating, GenAPI.TASK_STATUS.waiting, GenAPI.TASK_STATUS.queuing]:
-            return False
-        return True
-
     # --- Base Upload & Download Functionality ---
 
     @handle_http_exceptions
@@ -432,9 +403,9 @@ class GenAPI:
         Returns:
             url of uploaded file
         """
-        self._debug(f"{type(self).__name__}.upload_file({file_path}) -- agnostic path")
+        self._debug(f"GenAPI.upload_file({file_path}) -- agnostic path")
         local_path = Path(self._path_converter_func(file_path))
-        self._debug(f"{type(self).__name__}.upload_file({local_path}) -- local os path")
+        self._debug(f"GenAPI.upload_file({local_path}) -- local os path")
 
         if not local_path.exists():
             self._error(f"File not found at path: {local_path}")
@@ -486,7 +457,7 @@ class GenAPI:
         Returns:
             list of urls of uploaded files
         """
-        self._debug(f"{type(self).__name__}.upload_files({files})")
+        self._debug(f"GenAPI.upload_files({files})")
         if not isinstance(files, list):
             files = [files]
         return [self.upload_file(f) for f in files]
@@ -531,4 +502,81 @@ class GenAPI:
         except (requests.exceptions.RequestException, ValueError) as e:
             sys.stdout.write("\n")
             self._error(f"Failed to download file: {e}")
-            raise
+            raise  
+
+    def _check_api_response(self, response) -> bool:
+        """
+        Basic api response check. Override this method in subclasses for more granular checking.
+        Args:
+            response: the response from the API (json string)
+
+        Returns:
+            bool True if response code is 200, False otherwise.
+        """
+        self._debug(f"GenAPI._check_api_response({response})")
+        response_json = response.json()
+        if response_json.get('code') == 200:
+            self._debug("Request was successful.")
+            return True
+
+        if 'msg' in response_json:
+            self._error(f"Error: API response code:- {response_json['code']} API response msg:- {response_json['msg']}")
+        else:
+            self._error(f"Unknown error ({response_json})")
+        return False
+
+    def is_finished(self, task_status) -> bool:
+        """
+        Check task status for "finished" status.
+        Args:
+            task_status: the status of the task one of GenAPI.TASK_STATUS
+
+        Returns:
+            bool True if finished (not still running)
+        """
+        self._debug(f"GenAPI._is_finished({task_status})")
+        assert (isinstance(task_status, GenAPI.TASK_STATUS))
+        if task_status in [GenAPI.TASK_STATUS.generating, GenAPI.TASK_STATUS.waiting, GenAPI.TASK_STATUS.queuing]:
+            return False
+        return True
+
+    def prep_param(self, param, value) -> tuple:
+        """
+        Can be called for each payload param,value pair when preparing the task/request.
+        Base version simply returns the param,value pair.
+        Override for additional processing, eg to upload local reference and return the url.
+        Args:
+            param task/request parameter
+            value task/request value
+
+        Returns:
+            tuple of task ready param,value pair.
+        """
+        return (param, value)
+
+    def prep_task(self, input_payload) -> bool:
+        """
+        Perform pre task/request operations.
+        Args:
+            dict task/request payload
+
+        Returns:
+            bool success
+        """
+        raise NotImplementedError
+
+    def submit_task(self) -> str:
+        """
+        Submit the task/request.
+        Returns:
+            str task/request id
+        """
+        raise NotImplementedError
+
+    def query_task(self) -> tuple:
+        """
+        Query the status of the task/request.
+        Returns:
+            tuple of (TASK_STATUS, response_json)
+        """
+        raise NotImplementedError

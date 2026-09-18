@@ -8,12 +8,8 @@ import yaml
 import requests
 import logging
 
-
-from genlab.main import NetworkPathConverter
-
-from genlab.main import YamlParamReplacer
-
-from genlab import GenAPI, setup_logging
+from genlab import NetworkPathConverter, YamlParamReplacer, setup_logging
+from genlab import GenAPI
 
 
 class TestLoggingSetup(unittest.TestCase):

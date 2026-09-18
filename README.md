@@ -1,2 +1,4 @@
 # genlab
-Run image to video generation tasks using online providers
+Python gen ai API library
+
+![GenLab](/images/genlab.jpg)
