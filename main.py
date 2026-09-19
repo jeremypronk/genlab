@@ -12,7 +12,7 @@ from pathlib import Path
 
 from . import NetworkPathConverter, YamlParamReplacer, setup_logging
 
-from .kieai import KieAIVideoGen
+from .kieai import KieAIGen
 
 _TASKS_WAITING_QUEUE = []
 
@@ -58,7 +58,7 @@ def yaml_connect_to_existing_tasks(yaml_path, path_converter_func=lambda x: x):
                 payload = configure_yaml(task_path.parent, yaml.safe_load(f))
             logging.info(f"Found existing task to attach to {task_id}.")
 
-            kies.append(KieAIVideoGen(task_path.stem, task_id=task_id, path_converter_func=path_converter_func))
+            kies.append(KieAIGen(task_path.stem, task_id=task_id, path_converter_func=path_converter_func))
 
     return kies
 
@@ -98,7 +98,7 @@ def yaml_create_tasks(yaml_path, generations=1, test=False, path_converter_func=
         output_basepath = task_id_path.stem # remove the extension
 
         # model specific factory creation
-        kie = KieAIVideoGen(output_basepath, path_converter_func=path_converter_func)
+        kie = KieAIGen(output_basepath, path_converter_func=path_converter_func)
 
         # start the video gen
         if kie.prep_task(payload):

@@ -86,6 +86,27 @@ class KieAIGen(GenAPI):
             self._info(f"Task status: {task_status.name}")
 
         return task_status
+
+    def prep_param(self, param, value) -> tuple:
+        """
+        kie.ai legacy image payload params are named image_input and video payload image and video reference params
+        all end in _url (single ref) or _urls (list of refs).
+        Uploads url params if they contain a path to a local file, replacing path value with the new url.
+        (upload_file() handles input urls by simple returning the input path)
+        Args:
+            param task/request parameter
+            value task/request value
+
+        Returns:
+            tuple of task ready param,value pair.
+        """
+        if param.endswith('url'):
+            value = self.upload_file(value) # returns a string
+        elif param.strip().lower() == 'image_input' or param.endswith('urls'):
+            value = self.upload_files(value) # returns a list of strings
+            if None in value: value = None # fail on any missing input path
+
+        return (param, value)
     
     @handle_http_exceptions
     def prep_task(self, input_payload) -> bool:
@@ -146,34 +167,3 @@ class KieAIGen(GenAPI):
             return (self._get_task_status(response_json), response_json)
         return (None, None)
 
-
-# class KieAIImageGen(KieAIGen):
-#     """
-#     kie.ai http requests based image gen api
-#     """
-
-
-class KieAIVideoGen(KieAIGen):
-    """
-    kie.ai http requests based video gen api
-    """
-
-    def prep_param(self, param, value) -> tuple:
-        """
-        kie.ai video payload image and video reference params all end in _url (single ref) or _urls (list of refs).
-        Uploads url params if they contain a path to a local file, replacing path value with the new url.
-        (upload_file() handles input urls by simple returning the input path)
-        Args:
-            param task/request parameter
-            value task/request value
-
-        Returns:
-            tuple of task ready param,value pair.
-        """
-        if param.endswith('url'):
-            value = self.upload_file(value)
-        elif param.endswith('urls'):
-            value = self.upload_files(value)
-            if None in value: value = None # fail on any missing input path
-
-        return (param, value)
