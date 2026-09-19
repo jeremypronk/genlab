@@ -1,0 +1,7 @@
+model: kling/v2-1-standard
+prompt: "{{ prompt }}"
+negative_prompt: "{{ negative_prompt }}"
+image_url: "{{ start_image }}"
+duration: "{{ duration }}"
+cfg_scale: 0.5
+nsfw_checker: false
