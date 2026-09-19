@@ -589,6 +589,17 @@ class TestGenAPI(BaseTestCase):
         self.assertEqual(url2, "https://cdn.test/uploaded.png")
         self.assertEqual(mock_post.call_count, 1)
 
+    @patch("requests.post")
+    def test_upload_file_with_url_no_network_call(self, mock_post):
+        """Verify passing a URL returns the URL directly and prevents network calls."""
+        api = self.SubAPI1(self.workspace)
+        test_url = "https://example.com/existing_image.png"
+
+        result = api.upload_file(test_url)
+
+        self.assertEqual(result, test_url)
+        mock_post.assert_not_called()
+
     def test_upload_file_nonexistent_path(self):
         """Verify uploading a missing file returns None without calling network."""
         api = self.SubAPI1(self.workspace)

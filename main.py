@@ -55,10 +55,15 @@ def yaml_connect_to_existing_tasks(yaml_path, path_converter_func=lambda x: x):
         if not file_paths:
             with open(task_path, 'r') as f:
                 task_id = f.readline().strip()
-                payload = configure_yaml(task_path.parent, yaml.safe_load(f))
+                task_payload = configure_yaml(task_path.parent, yaml.safe_load(f))
             logging.info(f"Found existing task to attach to {task_id}.")
 
-            kies.append(KieAIGen(task_path.stem, task_id=task_id, path_converter_func=path_converter_func))
+            kie = KieAIGen(task_path.stem, path_converter_func=path_converter_func)
+            if task_payload and kie.prep_task(task_payload, task_id=task_id):
+                kies.append(kie)
+
+            else:
+                logging.error(f"prep_task failed for {payload} {task_id}.")
 
     return kies
 

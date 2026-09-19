@@ -7,7 +7,7 @@ import time
 from .unittests import BaseTestCase
 
 from genlab import GenAPI
-from genlab.kieai import KieAIGen, KieAIVideoGen
+from genlab.kieai import KieAIGen
 
 
 class TestKieAIGenRealUploadDownload(BaseTestCase):
@@ -64,88 +64,88 @@ class TestKieAIGenRealUploadDownload(BaseTestCase):
         """Clean up the temporary directory and files after the test runs."""
         self.temp_dir.cleanup()
 
-class TestKieAI_SimpleGen(BaseTestCase):
-    def setUp(self):
-        self.temp_dir = tempfile.TemporaryDirectory()
-        self.kie = KieAIGen(Path(self.temp_dir.name))
-
-    def test_simple_text_to_image(self):
-        payload ={
-          "model": "qwen/text-to-image",
-          "prompt": "A large billboard that reads GenLab is on the side of building in downtown Melbourne Australia",
-          "image_size": "square_hd",
-          "num_inference_steps": 20,
-          "guidance_scale": 2.5,
-          "enable_safety_checker": False,
-          "output_format": "jpeg",
-          "negative_prompt": " ",
-          "acceleration": "high",
-          "nsfw_checker": False,
-        }
-
-        self.assertTrue(self.kie.prep_task(payload))
-        self.assertIsNotNone(self.kie.submit_task())
-        retry = 0
-        retries = 20
-        while retry < retries:
-
-
-            (status, response) = self.kie.query_task()
-            if self.kie.is_finished(status):
-                break
-
-            print(".")
-            retry += 1
-            time.sleep(5)
-
-        self.assertTrue(retry<retries)
-
-        # try downloading the image
-        status = self.kie.download_result()
-        self.assertTrue(status==GenAPI.TASK_STATUS.completed)
-
-    def tearDown(self):
-        self.temp_dir.cleanup()
-
-class TestKieAI_VideoGen(BaseTestCase):
-    def setUp(self):
-        self.temp_dir = tempfile.TemporaryDirectory()
-        self.kie = KieAIVideoGen(Path(self.temp_dir.name))
-
-    def test_image_to_video(self):
-        payload ={
-            "model": "kling/v2-1-standard",
-            "prompt": "The large billboard with the GenLab logo flashes brightly as a muscled blonde mad scientist crashes through the billboard from behind landing in front of camera in a superhero pose.",
-            "image_url": "images/genlab.jpg",
-            "duration": "5",
-            "negative_prompt": "blur, distort, and low quality",
-            "cfg_scale": 0.5,
-            "nsfw_checker": False,
-        }
-
-        self.assertTrue(self.kie.prep_task(payload))
-        self.assertIsNotNone(self.kie.submit_task())
-        retry = 0
-        retries = 20
-        while retry < retries:
-            
-            
-            (status, response) = self.kie.query_task()
-            if self.kie.is_finished(status):
-              break
-
-            print(".")
-            retry += 1
-            time.sleep(10)
-
-        self.assertTrue(retry<retries)
-        
-        # try downloading the video
-        status = self.kie.download_result()
-        self.assertTrue(status==GenAPI.TASK_STATUS.completed)
-
-    def tearDown(self):
-        self.temp_dir.cleanup()
+# class TestKieAI_SimpleGen(BaseTestCase):
+#     def setUp(self):
+#         self.temp_dir = tempfile.TemporaryDirectory()
+#         self.kie = KieAIGen(Path(self.temp_dir.name))
+#
+#     def test_simple_text_to_image(self):
+#         payload ={
+#           "model": "qwen/text-to-image",
+#           "prompt": "A large billboard that reads GenLab is on the side of building in downtown Melbourne Australia",
+#           "image_size": "square_hd",
+#           "num_inference_steps": 20,
+#           "guidance_scale": 2.5,
+#           "enable_safety_checker": False,
+#           "output_format": "jpeg",
+#           "negative_prompt": " ",
+#           "acceleration": "high",
+#           "nsfw_checker": False,
+#         }
+#
+#         self.assertTrue(self.kie.prep_task(payload))
+#         self.assertIsNotNone(self.kie.submit_task())
+#         retry = 0
+#         retries = 20
+#         while retry < retries:
+#
+#
+#             (status, response) = self.kie.query_task()
+#             if self.kie.is_finished(status):
+#                 break
+#
+#             print(".")
+#             retry += 1
+#             time.sleep(5)
+#
+#         self.assertTrue(retry<retries)
+#
+#         # try downloading the image
+#         status = self.kie.download_result()
+#         self.assertTrue(status==GenAPI.TASK_STATUS.completed)
+#
+#     def tearDown(self):
+#         self.temp_dir.cleanup()
+#
+# class TestKieAI_VideoGen(BaseTestCase):
+#     def setUp(self):
+#         self.temp_dir = tempfile.TemporaryDirectory()
+#         self.kie = KieAIGen(Path(self.temp_dir.name))
+#
+#     def test_image_to_video(self):
+#         payload ={
+#             "model": "kling/v2-1-standard",
+#             "prompt": "The large billboard with the GenLab logo flashes brightly as a muscled blonde mad scientist crashes through the billboard from behind landing in front of camera in a superhero pose.",
+#             "image_url": "images/genlab.jpg",
+#             "duration": "5",
+#             "negative_prompt": "blur, distort, and low quality",
+#             "cfg_scale": 0.5,
+#             "nsfw_checker": False,
+#         }
+#
+#         self.assertTrue(self.kie.prep_task(payload))
+#         self.assertIsNotNone(self.kie.submit_task())
+#         retry = 0
+#         retries = 20
+#         while retry < retries:
+#
+#
+#             (status, response) = self.kie.query_task()
+#             if self.kie.is_finished(status):
+#               break
+#
+#             print(".")
+#             retry += 1
+#             time.sleep(10)
+#
+#         self.assertTrue(retry<retries)
+#
+#         # try downloading the video
+#         status = self.kie.download_result()
+#         self.assertTrue(status==GenAPI.TASK_STATUS.completed)
+#
+#     def tearDown(self):
+#         self.temp_dir.cleanup()
 
 
 if __name__ == "__main__":

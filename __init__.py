@@ -205,10 +205,10 @@ class NetworkPathConverter:
 
     def _to_str(self, path) -> str:
         """Converts input (Path, bytes, str) to a standard string."""
-        if isinstance(path, bytes):
-            return path.decode('utf-8')
         if isinstance(path, Path):
             return str(path)
+        if isinstance(path, bytes):
+            return path.decode('utf-8')
         return str(path) if path is not None else ""
 
     def _normalize_internal(self, path_str: str) -> str:
@@ -360,11 +360,11 @@ class GenAPI:
         if "UPLOAD_CACHE" not in cls.__dict__:
             cls.UPLOAD_CACHE = {}
 
-    def __init__(self, output_basepath, task_id=None, path_converter_func=lambda x: x):
+    def __init__(self, output_basepath, path_converter_func=lambda x: x):
         self._output_basepath = Path(output_basepath)
-        self._task_id = task_id
         self._path_converter_func = path_converter_func
         self._payload = dict()
+        self._task_id = None
 
         # Header sent with all http requests, subclasses should override this as required
         # typically used for authorisation
@@ -405,7 +405,7 @@ class GenAPI:
             url of uploaded file
         """
         # check if a url has been passed
-        if urlparse(path).scheme in ("http", "https", "ftp"):
+        if urlparse(str(path)).scheme in ("http", "https", "ftp"):
             return path
 
         # localise path
@@ -508,7 +508,7 @@ class GenAPI:
         except (requests.exceptions.RequestException, ValueError) as e:
             sys.stdout.write("\n")
             self._error(f"Failed to download file: {e}")
-            raise  
+            raise
 
     def _check_api_response(self, response) -> bool:
         """
@@ -560,28 +560,34 @@ class GenAPI:
         """
         return (param, value)
 
-    def prep_task(self, input_payload) -> bool:
+    def prep_task(self, input_payload, task_id=None) -> bool:
         """
         Perform pre task/request operations.
+        Subclass must implement this method.
         Args:
             dict task/request payload
+            task_id task/request id of an existing task/request, will not submit a new task if a task_id is provided.
 
         Returns:
             bool success
         """
-        raise NotImplementedError
+        self._task_id = task_id
 
     def submit_task(self) -> str:
         """
         Submit the task/request.
+        Subclass must implement this method.
         Returns:
             str task/request id
         """
-        raise NotImplementedError
+        if self._task_id:
+            self._warning(f"Attempting re-submit task/request {self._task_id}.")
+            return self._task_id
 
     def query_task(self) -> tuple:
         """
         Query the status of the task/request.
+        Subclass must implement this method.
         Returns:
             tuple of (TASK_STATUS, response_json)
         """
