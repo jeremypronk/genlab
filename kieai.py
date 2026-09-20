@@ -7,8 +7,6 @@ import copy
 from . import GenAPI
 from . import handle_http_exceptions, get_safe_filename
 
-from metadata import write_metadata
-
 
 class KieAIGen(GenAPI):
     """
@@ -78,10 +76,6 @@ class KieAIGen(GenAPI):
 
             self._info(f"Downloading file: {url} --> {output_path}")
             self.download_file(url, output_path)
-
-            self._info(f"Adding task/request metadata to file: {output_path}")
-            # write_metadata(output_path, {'input_payload': self._input_payload, 'task_response_param': query_task_response['data']['param']})
-            write_metadata(output_path, self._input_payload)
 
     def download_result(self):
         self._debug(f"KieAIGen.download_result()")

@@ -3,11 +3,14 @@ import unittest
 import tempfile
 from pathlib import Path
 import time
+import base64
 
 from .unittests import BaseTestCase
 
 from genlab import GenAPI
 from genlab.kieai import KieAIGen
+
+from genlab.metadata import write_metadata
 
 
 class TestKieAIGenRealUploadDownload(BaseTestCase):
@@ -24,9 +27,12 @@ class TestKieAIGenRealUploadDownload(BaseTestCase):
         self.downloaded_file_path = Path(self.temp_dir.name) / "downloaded.png"
 
         # Write dummy binary data to simulate an image/file
-        self.dummy_data = b"dummy file content for KieAIGen testing, ! blah blah **&&"
+        self.dummy_data = base64.b64decode(b"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=")
         with open(self.source_file_path, "wb") as f:
             f.write(self.dummy_data)
+        write_metadata(self.source_file_path, None) # dummy payload to match downloaded file
+        with open(self.source_file_path, "rb") as f: # read the result back as our ground truth
+            self.dummy_data = f.read()
 
     def test_upload_and_download_file(self):
         """

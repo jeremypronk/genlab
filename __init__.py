@@ -12,6 +12,8 @@ import sys
 from typing import Union, Optional
 from urllib.parse import urlparse, unquote
 
+from metadata import write_metadata, read_metadata
+
 
 class YamlParamReplacer:
     """
@@ -281,29 +283,28 @@ class NetworkPathConverter:
         return result_str
 
 
-
 def handle_http_exceptions(func):
     """
     A decorator that wraps a function with a try-except block for common
-    requests and file handling errors. This makes the decorated function
-    cleaner by separating error handling from the main logic.
+    requests errors. Unhandled exceptions are allowed to propagate.
     """
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         try:
             # Attempt to execute the decorated function
             return func(*args, **kwargs)
+
         except requests.exceptions.HTTPError as http_err:
             logging.error(f"HTTP error occurred: {http_err}")
             # Log the response body if available, as it often contains useful error details.
             if http_err.response is not None:
                 logging.error(f"Response Body: {http_err.response.text}")
-        except requests.exceptions.RequestException as req_err:
-            logging.error(f"A request error occurred: {req_err}")
-        except Exception as e:
-            logging.error(f"An unexpected error occurred: {e}")
+            return None
 
-        return None
+        except requests.exceptions.RequestException as req_err:
+            # Catch-all for other requests errors (ConnectionError, Timeout, etc.)
+            logging.error(f"A request error occurred: {req_err}")
+            return None
 
     return wrapper
 
@@ -364,6 +365,7 @@ class GenAPI:
         self._output_basepath = Path(output_basepath)
         self._path_converter_func = path_converter_func
         self._payload = dict()
+        self._input_payload = None
         self._task_id = None
 
         # Header sent with all http requests, subclasses should override this as required
@@ -468,6 +470,37 @@ class GenAPI:
             files = [files]
         return [self.upload_file(f) for f in files]
 
+    def write_payload(self, file_path):
+        """
+        Write payload to file metadata.
+        Only makes sense after prep_task has been run.
+        Args:
+            file_path: path to file to write payload metadata
+
+        Returns:
+            success
+        """
+        self._debug(f"Writing task/request metadata to file: {file_path}")
+        try:
+            write_metadata(file_path, self._input_payload)
+        except ValueError as err:
+            self._error(f"Error ({err}) writing task/request metadata to file: {file_path}")
+            return False
+        return True
+
+    classmethod
+    def read_payload(cls, file_path) -> dict:
+        """
+        Read payload from file metadata.
+        Args:
+            file_path: path to file to read
+
+        Returns:
+            dict payload from file
+        """
+        cls._debug(f"Reading task/request metadata from file: {file_path}")
+        return read_metadata(file_path)
+
     @handle_http_exceptions
     def download_file(self, url: str, output_path: str | Path) -> int:
         """
@@ -501,6 +534,9 @@ class GenAPI:
                 raise ValueError(
                     f"Size mismatch for {output_path.name}: expected {total_size} bytes, got {bytes_downloaded} bytes"
                 )
+
+            # write the payload to the downloaded files metadata
+            self.write_payload(output_path)
 
             self._debug(f"File saved successfully to: {output_path}")
             return bytes_downloaded
@@ -560,22 +596,49 @@ class GenAPI:
         """
         return (param, value)
 
-    def prep_task(self, input_payload, task_id=None) -> bool:
+    def prep_task(self, input_payload) -> bool:
         """
         Perform pre task/request operations.
         Subclass must implement this method.
         Args:
             dict task/request payload
-            task_id task/request id of an existing task/request, will not submit a new task if a task_id is provided.
+
+        Returns:
+            bool success
+        """
+        raise NotImplementedError
+
+    def prep_task_from_file(self, file_path) -> bool:
+        """
+        Perform pre task/request operations reading input payload from the given file.
+        Args:
+            file_path path to the file the task payload metadata embedded
+
+        Returns:
+            bool success
+        """
+        input_payload = read_metadata(file_path)
+        if input_payload:
+            return self.prep_task(input_payload)
+        self._error(f"Input payload could not be found in metadata of file: {file_path}.")
+
+    def prep_task_from_id(self, input_payload, task_id) -> bool:
+        """
+        Perform pre task/request operations for a previously submitted task.
+        Args:
+            dict task/request payload
+            task_id task/request id of the existing task/request
 
         Returns:
             bool success
         """
         self._task_id = task_id
+        return self.prep_task(input_payload)
 
     def submit_task(self) -> str:
         """
         Submit the task/request.
+        Previously submitted tasks (where task_id is already set) will not be re-submitted.
         Subclass must implement this method.
         Returns:
             str task/request id

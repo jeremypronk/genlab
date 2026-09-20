@@ -59,7 +59,7 @@ def yaml_connect_to_existing_tasks(yaml_path, path_converter_func=lambda x: x):
             logging.info(f"Found existing task to attach to {task_id}.")
 
             kie = KieAIGen(task_path.stem, path_converter_func=path_converter_func)
-            if task_payload and kie.prep_task(task_payload, task_id=task_id):
+            if task_payload and kie.prep_task_from_id(task_payload, task_id):
                 kies.append(kie)
 
             else:
