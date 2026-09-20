@@ -9,7 +9,8 @@ from . import handle_http_exceptions, get_safe_filename
 
 class KieAIGen(GenAPI):
     """
-    Base class for kie.ai API
+    Concrete implementation of the kie.ai API
+    https://docs.kie.ai/
 
     You can pass your api key in the environment variable KIE_API_KEY or to the class constructor
     """

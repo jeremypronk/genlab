@@ -1,0 +1,17 @@
+loaders:
+  - type: python
+    search_path: ["."]
+    modules: [".", "kieai"]
+processors:
+  - type: filter
+    skip_empty_modules: true
+    expression: name not in ("YamlParamReplacer", "NetworkPathConverter") and default()
+  - type: google        # or "sphinx" if you use :param: style; "smart" auto-detects
+  - type: crossref
+renderer:
+  type: markdown
+  filename: API.md
+  insert_header_anchors: false
+  descriptive_class_title: false
+  render_toc: true
+  render_toc_title: API
