@@ -6,9 +6,11 @@ from pathlib import Path
 from . import GenAPI
 from . import handle_http_exceptions, get_safe_filename
 
+
 class KieAIGen(GenAPI):
     """
-    Base class for kie.ai API
+    Concrete implementation of the kie.ai API
+    https://docs.kie.ai/
 
     You can pass your api key in the environment variable KIE_API_KEY or to the class constructor
     """
@@ -19,8 +21,10 @@ class KieAIGen(GenAPI):
     UPLOAD_URL = "https://kieai.redpandaai.co/api/file-stream-upload"
     API_KEY = None
 
-    def __init__(self, output_basepath, api_key=None, task_id=None, path_converter_func=lambda x: x):
-        super().__init__(output_basepath, task_id=task_id, path_converter_func=path_converter_func)
+    PLATFORM = "kieai"
+
+    def __init__(self, output_basepath, api_key=None, path_converter_func=lambda x: x):
+        super().__init__(output_basepath, path_converter_func=path_converter_func)
         if not api_key:
             try:
                 KieAIGen.API_KEY = os.environ["KIE_API_KEY"]
@@ -55,16 +59,23 @@ class KieAIGen(GenAPI):
         else:
             return self.TASK_STATUS.unknown
 
-    def _get_result_urls(self, query_task_response):
-        self._debug(f"KieAIVideoGen._get_result_urls({query_task_response})")
-        return json.loads(query_task_response['data']['resultJson'])['resultUrls']
+    def _attach_metadata(self, file, metadata):
+        pass
 
-    def _download(self, urls):
-        self._debug(f"KieAIGen._download(urls={urls})")
+    def _download(self, query_task_response):
+        """
+        For details on the contents of the task response see,
+        https://docs.kie.ai/market/common/get-task-detail
+        Args:
+            query_task_response: kie.ai task response
+        """
+        self._debug(f"KieAIGen._download(query_task_response={query_task_response})")
 
+        urls = json.loads(query_task_response['data']['resultJson'])['resultUrls']
         for url in urls:
             name = get_safe_filename(url)
             output_path = Path(self._output_basepath).with_suffix(Path(name).suffix)
+
             self._info(f"Downloading file: {url} --> {output_path}")
             self.download_file(url, output_path)
 
@@ -72,11 +83,13 @@ class KieAIGen(GenAPI):
         self._debug(f"KieAIGen.download_result()")
 
         (task_status, query_task_response) = self.query_task()
-        if task_status == None:
-            self._error(f"Task state returned None!")
-        elif task_status == GenAPI.TASK_STATUS.completed:
+        if task_status == GenAPI.TASK_STATUS.completed:
             self._info("Generation task complete!")
-            self._download(self._get_result_urls(query_task_response))
+            self._download(query_task_response)
+
+        # generation did not complete...
+        elif task_status == None:
+            self._error(f"Task state returned None!")
         elif task_status == GenAPI.TASK_STATUS.failed:
             self._error("Attempting to download a failed generation!!")
             self._log_failure_msg(query_task_response)
@@ -111,6 +124,7 @@ class KieAIGen(GenAPI):
     @handle_http_exceptions
     def prep_task(self, input_payload) -> bool:
         self._debug(f"KieAIGen.prep_task({input_payload})")
+        super().prep_task(input_payload=input_payload)
 
         # build the task payload
         self._payload = dict()
@@ -141,24 +155,30 @@ class KieAIGen(GenAPI):
         self._debug(f"KieAIGen.submit_task()")
         self._debug(f"task/request payload({self._payload})")
 
-        if test:
+        if super().submit_task(): # check we haven't already sub'd this task/request
+            pass # not sure how pythonic this is
+        elif test:
             # send back a fake task_id
             import uuid
             self._task_id = uuid.uuid4().hex  # alphanumeric (32 chars)
             self._warning(f"Test mode, created a fake task with id: {self._task_id}")
-            return self._task_id
         else:
             response = requests.post(KieAIGen.CREATE_TASK_URL, json=self._payload, headers=self.JSON_HEADER)
             response.raise_for_status()
             if self._check_api_response(response):
                 response_json = response.json()
                 self._task_id = response_json['data']['taskId']
-                return self._task_id
+            else:
+                return None
 
-        return None
+        return self._task_id
 
     @handle_http_exceptions
     def query_task(self) -> tuple:
+        """
+        For details on the contents of the task response see,
+        https://docs.kie.ai/market/common/get-task-detail
+        """
         self._debug(f"KieAIGen.query_task()")
         response = requests.get(f"{KieAIGen.QUERY_TASK_URL}?taskId={self._task_id}", headers=self.HEADER)
         response.raise_for_status()

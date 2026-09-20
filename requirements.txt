@@ -1,2 +1,5 @@
 PyYAML
 requests
+pillow
+piexif
+mutagen
