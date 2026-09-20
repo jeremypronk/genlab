@@ -11,6 +11,7 @@ import requests
 import sys
 from typing import Union, Optional
 from urllib.parse import urlparse, unquote
+import copy
 
 from metadata import write_metadata, read_metadata
 
@@ -353,6 +354,8 @@ class GenAPI:
         queuing = 5
         unknown = 6
 
+    PLATFORM = "GenAPI" # subclass should override this as a metadata identifier for the API implemented
+
     JSON_HEADER = { "Content-Type": "application/json" }
 
     def __init_subclass__(cls, **kwargs):
@@ -482,7 +485,7 @@ class GenAPI:
         """
         self._debug(f"Writing task/request metadata to file: {file_path}")
         try:
-            write_metadata(file_path, self._input_payload)
+            write_metadata(file_path, (self.PLATFORM, self._input_payload))
         except ValueError as err:
             self._error(f"Error ({err}) writing task/request metadata to file: {file_path}")
             return False
@@ -496,10 +499,11 @@ class GenAPI:
             file_path: path to file to read
 
         Returns:
-            dict payload from file
+            tuple of str, dict - platform id str and payload from file
         """
         cls._debug(f"Reading task/request metadata from file: {file_path}")
-        return read_metadata(file_path)
+        platform, input_payload = read_metadata(file_path)
+        return (platform, input_payload)
 
     @handle_http_exceptions
     def download_file(self, url: str, output_path: str | Path) -> int:
@@ -599,14 +603,15 @@ class GenAPI:
     def prep_task(self, input_payload) -> bool:
         """
         Perform pre task/request operations.
-        Subclass must implement this method.
+        Subclass must implement this and also call this function.
         Args:
             dict task/request payload
 
         Returns:
             bool success
         """
-        raise NotImplementedError
+        # save a copy of the original input payload
+        self._input_payload = copy.deepcopy(input_payload)
 
     def prep_task_from_file(self, file_path) -> bool:
         """
@@ -617,6 +622,7 @@ class GenAPI:
         Returns:
             bool success
         """
+        # read the payload for the given file to prep the task
         input_payload = read_metadata(file_path)
         if input_payload:
             return self.prep_task(input_payload)

@@ -672,7 +672,7 @@ class TestGenAPI(BaseTestCase):
         self.assertEqual(destination.read_bytes(), valid_png_bytes)
 
         # 5. Assert payload metadata is readable from destination file
-        self.assertEqual(self.api.read_payload(destination), {'payload': 'test1'})
+        self.assertEqual(self.api.read_payload(destination), (GenAPI.PLATFORM, {'payload': 'test1'}))
 
     # @patch("requests.get")
     # def test_download_file_zero_content_length(self, mock_get):

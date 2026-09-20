@@ -2,7 +2,6 @@ import os
 import requests
 import json
 from pathlib import Path
-import copy
 
 from . import GenAPI
 from . import handle_http_exceptions, get_safe_filename
@@ -20,6 +19,8 @@ class KieAIGen(GenAPI):
     QUERY_TASK_URL = f"{BASE_API_URL}/jobs/recordInfo"
     UPLOAD_URL = "https://kieai.redpandaai.co/api/file-stream-upload"
     API_KEY = None
+
+    PLATFORM = "kieai"
 
     def __init__(self, output_basepath, api_key=None, path_converter_func=lambda x: x):
         super().__init__(output_basepath, path_converter_func=path_converter_func)
@@ -120,12 +121,9 @@ class KieAIGen(GenAPI):
         return (param, value)
     
     @handle_http_exceptions
-    def prep_task(self, input_payload, task_id=None) -> bool:
+    def prep_task(self, input_payload) -> bool:
         self._debug(f"KieAIGen.prep_task({input_payload})")
-        super().prep_task(input_payload=input_payload, task_id=task_id)
-
-        # save a copy of the original input payload
-        self._input_payload = copy.deepcopy(input_payload)
+        super().prep_task(input_payload=input_payload)
 
         # build the task payload
         self._payload = dict()
