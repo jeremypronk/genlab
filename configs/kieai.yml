@@ -1,0 +1,177 @@
+seedance:
+
+  # seedance 2.x
+
+  ".tmpl.2": &2_
+    generate_audio: false
+    web_search: false
+    nsfw_checker: false
+    aspect_ratio: "16:9" # lock this for now, (2.5 has adaptive 2.0 does not)
+    ^prompt: ""
+
+
+  # seedance 2.0 image to video
+
+  ".tmpl.2-i2v": &2-i2v
+    <<: *2_
+    $duration: [4,5,6,7,8,9,10,11,12,13,14,15]
+    ^first_frame_url: ""
+
+  "2.0-i2v-480p":
+    <<: *2-i2v
+    model: bytedance/seedance-2
+    resolution: "480p"
+
+  "2.0-i2v-720p":
+    <<: *2-i2v
+    model: bytedance/seedance-2
+    resolution: "720p"
+
+  "2.0-i2v-1080p":
+    <<: *2-i2v
+    model: bytedance/seedance-2
+    resolution: "1080p"
+
+  "2.0-fast-i2v-480p":
+    <<: *2-i2v
+    model: bytedance/seedance-2-fast
+    resolution: "480p"
+
+  "2.0-fast-i2v-720p":
+    <<: *2-i2v
+    model: bytedance/seedance-2-fast
+    resolution: "720p"
+
+
+  # seedance 2.0 first frame and last frame
+
+  ".tmpl.2-fflf": &2-fflf
+    <<: *2_
+    $duration: [4,5,6,7,8,9,10,11,12,13,14,15]
+    ^first_frame_url: ""
+    ^last_frame_url: ""
+    
+  "2.0-fflf-480p":
+    <<: *2-fflf
+    model: bytedance/seedance-2
+    resolution: "480p"
+
+  "2.0-fflf-720p":
+    <<: *2-fflf
+    model: bytedance/seedance-2
+    resolution: "720p"
+
+  "2.0-fflf-1080p":
+    <<: *2-fflf
+    model: bytedance/seedance-2
+    resolution: "1080p"
+
+  "2.0-fast-fflf-480p":
+    <<: *2-fflf
+    model: bytedance/seedance-2-fast
+    resolution: "480p"
+
+  "2.0-fast-fflf-720p":
+    <<: *2-fflf
+    model: bytedance/seedance-2-fast
+    resolution: "720p"
+
+
+  # seedance 2.5
+    
+  ".tmpl.2.5": &2-5
+    <<: *2_
+    model: bytedance/seedance-2-5
+    $duration: [4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30]
+    output_format: "mp4"
+
+
+  # seedance 2.5 image to video
+
+  ".tmpl.2.5-i2v": &2-5-i2v
+    <<: *2-5
+    ^first_frame_url: ""
+
+  "2.5-i2v-480p":
+    <<: *2-5-i2v
+    resolution: "480p"
+
+
+  # seedance 2.5 first frame and last frame
+
+  ".tmpl.2.5-fflf": &2-5-fflf
+    <<: *2-5
+    ^first_frame_url: ""
+    ^last_frame_url: ""
+
+  "2.5-fflf-480p":
+    <<: *2-5-fflf
+    resolution: "480p"
+
+
+kling:
+
+  # kling 2.1
+
+  "2.1-i2v-std":
+    model: kling/v2-1-standard
+    ^prompt: ""
+    ^negative_prompt: ""
+    ^image_url: ""
+    $duration: [5, 10]
+    cfg_scale: 0.5
+    nsfw_checker: false
+
+
+  # kling 2.5
+
+  "2.5-turbo-i2v-pro":
+    model: kling/v2-5-turbo-image-to-video-pro
+    ^prompt: ""
+    ^negative_prompt: ""
+    ^image_url: ""
+    $duration: [5, 10]
+    aspect_ratio: "16:9"
+    cfg_scale: 0.5
+
+
+  # kling 3.0
+
+  ".tmpl.3.0": &3_0
+    model: kling-3.0/video
+    sound: false
+    multi_shots: false
+    ^prompt: ""
+    $duration: [3,4,5,6,7,8,9,10,11,12,13,14,15]
+
+
+  # kling 3.0 image to video
+
+  ".tmpl.3.0-i2v": &3_0-i2v
+    <<: *3_0
+    ^image_urls: [""] # i2v requires one image, the start frame
+  "3.0-i2v-std":
+    <<: *3_0-i2v
+    mode: std
+  "3.0-i2v-pro":
+    <<: *3_0-i2v
+    mode: pro
+  "3.0-i2v-4K":
+    <<: *3_0-i2v
+    mode: "4K"
+
+
+  # kling 3.0 first frame and last frame
+
+  ".tmpl.3.0-fflf": &3_0-fflf
+    <<: *3_0
+    ^image_urls: ["", ""] # fflf requires two images, the start frame and end frame
+  "3.0-fflf-std":
+    <<: *3_0-fflf
+    mode: std
+  "3.0-fflf-pro":
+    <<: *3_0-fflf
+    mode: pro
+  "3.0-fflf-4K":
+    <<: *3_0-fflf
+    mode: "4K"
