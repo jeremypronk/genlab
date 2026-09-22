@@ -45,31 +45,41 @@ class TestConfigYaml(unittest.TestCase):
 class TestConfigValidation(BaseTestCase):
     def setUp(self):
         self.config = Config()
-        self.config._config = {'kieai': {'kling': {'3.0-fflf-std': {'model': 'crower', '$duration': [1,8,512], '^image_urls': ["", ""]}}}}
+        self.config._config = {'kieai': {'kling': {'3.0-fflf-std': {'model': 'crower', '$duration': [1,8,512], '^first_frame': "", '^last_frame': "", '?image_urls': ["@first_frame", "@last_frame"]}}}}
     
     def test_configs(self):
-        with self.assertRaises(ValueError):
-            self.config.build_payload('kieai', 'kling', '3.0-fflf-std', {"prompt": "yada yada yada", "duration": 8, "image_urls": ["yo_yo_ma"]}) # image_urls wrong type
+        with self.assertRaises(KeyError):
+            self.config.build_payload('kieai', 'kling', '3.0-fflf-std', {"prompt": "yada yada yada", "duration": 8, "first_frame": "c:/first.png"}) # missing last_frame
 
         with self.assertRaises(ValueError):
-            self.config.build_payload('kieai', 'kling', '3.0-fflf-std', {"prompt": "yada yada yada", "duration": 1001, "image_urls": ["yo_yo_ma", "latex"]}) # duration enum invalid
+            self.config.build_payload('kieai', 'kling', '3.0-fflf-std', {"prompt": "yada yada yada", "duration": 4, "first_frame": "c:/first.png", "last_frame": "last.jpg"}) # duration enum invalid
 
         with self.assertRaises(KeyError):
-            self.config.build_payload('topaz', 'kling', '3.0-fflf-std', {"prompt": "yada yada yada", "duration": 8, "image_urls": ["yo_yo_ma"]}) # api type invalid
+            self.config.build_payload('topaz', 'kling', '3.0-fflf-std', {"prompt": "yada yada yada", "duration": 8, "first_frame": "c:/first.png", "last_frame": "last.jpg"}) # api type invalid
 
 
 class TestPayload(BaseTestCase):
     def setUp(self):
         self.config = Config()
         self.config._config = {'kieai': {
-            'kling': {'3.0-fflf-std': {'model': 'crower', '$duration': [1, 8, 512], '^image_urls': ["", ""]}}}}
+            'kling': {'3.0-fflf-std': {'model': 'crower', '$duration': [1, 8, 512], '^first_frame': "", '^last_frame': "", '?image_urls': ["@first_frame", "@last_frame"]}}}}
 
     def test_payload(self):
-        payload_no_extras = self.config.build_payload('kieai', 'kling', '3.0-fflf-std', {"prompt": "yada yada yada", "duration": 8, "image_urls": ["yo_yo_ma", "fright_night"]}, include_extra_params=False)
-        self.assertEqual(payload_no_extras, {'model': 'crower',"duration": 8, "image_urls": ["yo_yo_ma", "fright_night"]})
+        payload_no_extras = self.config.build_payload('kieai', 'kling', '3.0-fflf-std',
+                                                      {
+                                                          "prompt": "yada yada yada",
+                                                          "duration": 8,
+                                                          "first_frame": "c:/first.png",
+                                                          "last_frame": "last.jpg"}, include_extra_params=False)
+        self.assertEqual(payload_no_extras, {'model': 'crower',"duration": 8, "image_urls": ["c:/first.png", "last.jpg"]})
         
-        payload = self.config.build_payload('kieai', 'kling', '3.0-fflf-std', {"prompt": "yada yada yada", "duration": 8, "image_urls": ["yo_yo_ma", "fright_night"]}, include_extra_params=True)
-        self.assertEqual(payload, {'model': 'crower',"duration": 8, "image_urls": ["yo_yo_ma", "fright_night"], "prompt": "yada yada yada"})
+        payload = self.config.build_payload('kieai', 'kling', '3.0-fflf-std',
+                                                      {
+                                                          "prompt": "yada yada yada",
+                                                          "duration": 8,
+                                                          "first_frame": "c:/first.png",
+                                                          "last_frame": "last.jpg"}, include_extra_params=True)
+        self.assertEqual(payload, {'model': 'crower',"duration": 8, "image_urls": ["c:/first.png", "last.jpg"], "prompt": "yada yada yada"})
 
 
 class TestConfigs(BaseTestCase):
@@ -82,17 +92,23 @@ class TestConfigs(BaseTestCase):
     def test_kie_kling(self):
         payload = self.config.build_payload('kieai', 'kling', '3.0-fflf-pro',
                                             {"prompt": "into the black", "duration": 4,
-                                             "image_urls": ["c:/1.png", "d:/2.jpg"]}, include_extra_params=True)
-        self.assertEqual(payload, {"model": "kling-3.0/video", "duration": 4, "image_urls": ["c:/1.png", "d:/2.jpg"], "prompt": "into the black", "mode": "pro", "sound": False, "multi_shots": False})
+                                                          "first_frame": "c:/first.png",
+                                                          "last_frame": "last.jpg"}, include_extra_params=False)
+        self.assertEqual(payload, {"model": "kling-3.0/video", "duration": 4,
+                                   "image_urls": ["c:/first.png", "last.jpg"],
+                                   "prompt": "into the black",
+                                   "mode": "pro",
+                                   "sound": False,
+                                   "multi_shots": False})
 
     def test_kie_seedance(self):
         payload = self.config.build_payload('kieai', 'seedance', '2.0-fast-fflf-480p',
                                             {
                                                 "prompt": "into the black",
                                                 "duration": 9,
-                                                "first_frame_url": "c:/1.png",
-                                                "last_frame_url": "d:/2.jpg", 
-                                            }, include_extra_params=True)
+                                                "first_frame": "c:/1.png",
+                                                "last_frame": "d:/2.jpg",
+                                            }, include_extra_params=False)
         self.assertEqual(payload, {
             "model": "bytedance/seedance-2-fast",
             "duration": 9,
@@ -103,8 +119,28 @@ class TestConfigs(BaseTestCase):
             "web_search": False,
             "nsfw_checker": False,
             "aspect_ratio": "16:9",
-            "generate_audio": False, 
+            "generate_audio": False,
         }, )
+
+    def test_nano(self):
+        payload = self.config.build_payload('kieai', 'image', 'nano-banana-pro-i2i-2K',
+                                            {"prompt": "into the black",
+                                                      "image": "c:/first.png"}, include_extra_params=False)
+        self.assertEqual(payload, {"model": "nano-banana-pro",
+                                   "image_input": "c:/first.png",
+                                   "prompt": "into the black",
+                                   "aspect_ratio": "auto",
+                                   "resolution": "2K",
+                                   "output_format": "png"})
+
+    def test_gpt(self):
+        payload = self.config.build_payload('kieai', 'gpt-image', '2.5-sunburst-t2i-4K',
+                                            {"prompt": "into the black"}, include_extra_params=False)
+        self.assertEqual(payload, {"model": "gpt-image-2-5-sunburst-text-to-image",
+                                   "prompt": "into the black",
+                                   "aspect_ratio": "16:9",
+                                   "resolution": "4K",
+                                   "background": "auto"})
 
 
 if __name__ == "__main__":

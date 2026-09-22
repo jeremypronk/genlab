@@ -12,35 +12,35 @@ from pathlib import Path
 
 from . import NetworkPathConverter, YamlParamReplacer, setup_logging
 
+from .config import Config
+
 from .kieai import KieAIGen
 
 _TASKS_WAITING_QUEUE = []
 
-_CONFIG_FILENAME = r'config.yaml'
+# _CONFIG_FILENAME = r'config.yaml'
 
+config = Config()
+config.load("configs")
 
+# def configure_yaml(path, yaaml):
+#     # replace tokens with values from the config file located in the same dir
+#     logging.debug(f"configure_yaml(f{path})")
+#     config_file_path = os.path.join(path,_CONFIG_FILENAME)
+#     if config_file_path:
+#         logging.debug(f"Loading config: {config_file_path}")
+#         return YamlParamReplacer(config_file_path).replace_tokens(yaaml)
+#     return yaaml
 
-def configure_yaml(path, yaaml):
-    # replace tokens with values from the config file located in the same dir
-    logging.debug(f"configure_yaml(f{path})")
-    config_file_path = os.path.join(path,_CONFIG_FILENAME)
-    if config_file_path:
-        logging.debug(f"Loading config: {config_file_path}")
-        return YamlParamReplacer(config_file_path).replace_tokens(yaaml)
-    return yaaml
-
-def yaml_load_payload(yaml_path):
-    # read the payload from the yaml
+def load_genlab(genlab_path: Path, api: str, type: str, model: str):
     try:
-        with open(yaml_path, 'r') as f:
-            payload = configure_yaml(yaml_path.parent, yaml.safe_load(f))
-        if not isinstance(payload, dict):
-            logging.error(f"SKIPPED: YAML file '{yaml_path.name}' is empty or invalid.")
-            return None
+        with open(genlab_path, 'r') as f:
+            params = yaml.safe_load(f)
     except (yaml.YAMLError, FileNotFoundError) as e:
-        logging.error(f"SKIPPED: Could not read or parse YAML file '{yaml_path.name}': {e}")
+        logging.error(f"SKIPPED: Could not read or parse genlab yaml file '{genlab_pathname}': {e}")
         return None
-    return payload
+
+    return config.build_payload(api, type, model, params)
 
 def yaml_connect_to_existing_tasks(yaml_path, path_converter_func=lambda x: x):
     logging.info(f"yaml_connect_to_existing_tasks: {yaml_path.name}")

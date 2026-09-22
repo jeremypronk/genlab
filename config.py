@@ -12,10 +12,15 @@ class Config:
 
     # template elements are culled (used as references in yaml build)
     TEMPLATE_ELEMENT_PREFIX = ".tmpl."
+
     # ^ (caret) prepending key is a required param
     REQUIRED_ELEMENT_PREFIX = "^"
-    # $ (dollar sing) prepending key is a required param and an enum
+    # $ (dollar) prepending key is a required param and an enum
     ENUM_ELEMENT_PREFIX     = "$"
+    # ? (question) prepending key is a param with referenced values (see REF_VALUE_PREFIX)
+    REF_ELEMENT_PREFIX      = "?"
+    # @ (at symbol) prepends reference element name
+    REF_VALUE_PREFIX        = "@"
 
     def __init__(self, ):
         self._config = {}
@@ -59,6 +64,23 @@ class Config:
             config_text = config_file.read_text(encoding="utf-8")
             config_yaml = yaml.safe_load(config_text)
             self._config[config_name] = strip(config_yaml, depth=1, prefix=Config.TEMPLATE_ELEMENT_PREFIX) # remove template entries
+            
+            # remove default entries
+            # (defaults should only be used for template entries)
+            for type in self._config[config_name].copy():
+                if type.startswith('default'):
+                    del(self._config[config_name][type])
+
+        # check the loaded config is valid
+        for api in self._config:
+            if not self._config[api]:
+                raise IndexError(f"(Config.load) config for \"{api}\" empty")
+            for type in self._config[api]:
+                if not self._config[api][type]:
+                    raise IndexError(f"(Config.load) config for \"{api}\" type \"{type}\" empty")
+                for model in self._config[api][type]:
+                    if not self._config[api][type][model]:
+                        raise IndexError(f"(Config.load) config for \"{api}\" type\"{type}\" model \"{model}\" empty")
 
         return self._config.keys()
 
@@ -90,9 +112,11 @@ class Config:
         if model not in self._config[api][type]:
             raise KeyError(f'Model of type "{model}" was not found.')
 
+
         # build the payload
         payload = {}
-        for config_param, config_value in self._config[api][type][model].items():
+        model_config = copy.deepcopy(self._config[api][type][model]) # make a complete copy to avoid referencing the config db
+        for config_param, config_value in model_config.items():
 
             # handle input params
             if config_param[0] in [Config.REQUIRED_ELEMENT_PREFIX, Config.ENUM_ELEMENT_PREFIX]:
@@ -100,7 +124,7 @@ class Config:
 
                 # check required params are preset
                 if param not in params:
-                    raise ValueError(f"required param {param} is missing")
+                    raise KeyError(f"required param {param} is missing")
 
                 # check enum params are valid
                 if config_param[0] == Config.ENUM_ELEMENT_PREFIX and params[param] not in config_value:
@@ -123,8 +147,46 @@ class Config:
                 payload[config_param] = config_value
 
 
-        # find input params that are not listed in the config
-        extra_params = list(set(params.keys()) - set(payload.keys()))
+        # handle referenced param values
+        for param, value in payload.copy().items():
+
+            # connect reference element
+            if param[0] == Config.REF_ELEMENT_PREFIX:
+                ref_param = param[1:]
+                payload[ref_param] = payload.pop(param) # remove the REF_ELEMENT_PREFIX from the param name
+
+                # if a list need to check each time for reference link
+                if isinstance(value, (list, tuple)):
+                    for i, v in enumerate(value):
+                        if v[0] == Config.REF_VALUE_PREFIX: # is this a referenced value?
+                            param_ref = v[1:] # referenced param name
+                            payload[ref_param][i] = payload[param_ref] # use the value from the referenced param
+                            del(payload[param_ref]) # remove the referenced param
+
+                        else:
+                            # just use the value, no reference found
+                            payload[ref_param][i] = v
+
+                # is it a reference line ?
+                elif isinstance(value, str):
+                    if value[0] == Config.REF_VALUE_PREFIX:  # is this a referenced value? (if not there is not point to this)
+                        param_ref = value[1:]  # referenced param name
+                        payload[ref_param] = payload[param_ref]  # use the value from the referenced param
+                        del(payload[param_ref]) # remove the referenced param
+
+                    else:
+                        # just use the value, no reference found
+                        payload[ref_param] = value
+
+
+        # find input params that are not listed in the config (not including reference params)
+        all_extra_params = list(set(params.keys()) - set(payload.keys()))
+        # and remove extras that have been referenced
+        extra_params = []
+        for extra_param in all_extra_params:
+            if f"^{extra_param}" not in self._config[api][type][model]:
+                extra_params.append(extra_param)
+        # any left?
         if extra_params:
 
             if include_extra_params:
