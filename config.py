@@ -37,6 +37,17 @@ class Config:
                     config_str += f"\t\t{model}\n"
         return config_str
 
+    @property
+    def apis(self):
+        return list(self._config.keys())
+
+    @property
+    def types(self):
+        types = set()
+        for api in self._config:
+            types.update(self._config[api].keys())
+        return types
+
     def load(self, config_path: Path):
         """
         Loads all config yamls found in the provided path.

@@ -86,7 +86,7 @@ gpt-image:
     <<: *gpt-image
     <<: *i2i
     aspect_ratio: "auto"
-    ?image_input: "@image"
+    ?input_urls: ["@image"]
 
   "2.5-sunburst-i2i-2K":
     <<: *gpt-image-2_5-sunburst-i2i
