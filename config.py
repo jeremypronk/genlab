@@ -4,6 +4,7 @@ import logging
 import yaml
 from pathlib import Path
 
+
 class Config:
     """
     Configurable interface for gen ai api parameter task/request payloads.
@@ -38,15 +39,48 @@ class Config:
         return config_str
 
     @property
-    def apis(self):
+    def apis(self) -> list:
+        """
+        List of all provider APIs currently loaded.
+        Returns:
+            list of str
+        """
         return list(self._config.keys())
 
     @property
-    def types(self):
+    def all_types(self) -> list:
+        """
+        List of all types ACROSS ALL APIs currently loaded.
+        Returns:
+            list of str
+        """
         types = set()
         for api in self._config:
             types.update(self._config[api].keys())
-        return types
+        return list(types)
+
+    def types(self, api: str) -> list:
+        """
+        List of types available for the given api
+        Args:
+            api:
+                API name
+        Returns:
+            list of str
+        """
+        return list(self._config[api].keys())
+
+    def models(self, api: str, type: str) -> list:
+        """
+        List of models available for the given api and type
+        Args:
+            api:
+                API name
+                type name
+        Returns:
+            list of str
+        """
+        return list(self._config[api][type])
 
     def load(self, config_path: Path):
         """

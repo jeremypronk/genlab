@@ -87,7 +87,7 @@ class TestConfigs(BaseTestCase):
         self.config = Config()
         self.config.load("configs")
 
-        print(self.config)
+        # print(self.config)
 
     def test_kie_kling(self):
         payload = self.config.build_payload('kieai', 'kling', '3.0-fflf-pro',
@@ -141,6 +141,11 @@ class TestConfigs(BaseTestCase):
                                    "aspect_ratio": "16:9",
                                    "resolution": "4K",
                                    "background": "auto"})
+
+    def test_configs(self):
+        self.assertTrue("kieai" in self.config.apis)
+        self.assertTrue("kling" in self.config.types(api='kieai'))
+        self.assertTrue("2.5-fflf-720p" in self.config.models(api='kieai', type='seedance'))
 
 
 if __name__ == "__main__":

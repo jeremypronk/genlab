@@ -18,20 +18,11 @@ from .kieai import KieAIGen
 
 _TASKS_WAITING_QUEUE = []
 
-# _CONFIG_FILENAME = r'config.yaml'
 BASE_DIR = Path(__file__).resolve().parent
 
 config = Config()
 config.load(os.path.join(BASE_DIR, 'configs'))
 
-# def configure_yaml(path, yaaml):
-#     # replace tokens with values from the config file located in the same dir
-#     logging.debug(f"configure_yaml(f{path})")
-#     config_file_path = os.path.join(path,_CONFIG_FILENAME)
-#     if config_file_path:
-#         logging.debug(f"Loading config: {config_file_path}")
-#         return YamlParamReplacer(config_file_path).replace_tokens(yaaml)
-#     return yaaml
 
 def load_genlab(genlab_path: Path, api: str, type: str, model: str):
     try:
@@ -161,7 +152,7 @@ Example Usage:
     )
     parser.add_argument(
         "-t", "--type",
-        choices=config.types,
+        choices=config.all_types,
         required = True,
         help="Gen AI type",
     )
