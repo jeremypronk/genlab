@@ -1,6 +1,0 @@
-model: nano-banana-pro
-prompt: "{{ prompt }}"
-image_input: "{{ image }}"
-aspect_ratio: "auto"
-resolution: "2K"
-output_format: "jpg"

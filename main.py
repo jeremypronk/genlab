@@ -12,78 +12,70 @@ from pathlib import Path
 
 from . import NetworkPathConverter, YamlParamReplacer, setup_logging
 
+from .config import Config
+
 from .kieai import KieAIGen
 
 _TASKS_WAITING_QUEUE = []
 
-_CONFIG_FILENAME = r'config.yaml'
+BASE_DIR = Path(__file__).resolve().parent
+
+config = Config()
+config.load(os.path.join(BASE_DIR, 'configs'))
 
 
-
-def configure_yaml(path, yaaml):
-    # replace tokens with values from the config file located in the same dir
-    logging.debug(f"configure_yaml(f{path})")
-    config_file_path = os.path.join(path,_CONFIG_FILENAME)
-    if config_file_path:
-        logging.debug(f"Loading config: {config_file_path}")
-        return YamlParamReplacer(config_file_path).replace_tokens(yaaml)
-    return yaaml
-
-def yaml_load_payload(yaml_path):
-    # read the payload from the yaml
+def load_genlab(genlab_path: Path, api: str, type: str, model: str):
     try:
-        with open(yaml_path, 'r') as f:
-            payload = configure_yaml(yaml_path.parent, yaml.safe_load(f))
-        if not isinstance(payload, dict):
-            logging.error(f"SKIPPED: YAML file '{yaml_path.name}' is empty or invalid.")
-            return None
+        with open(genlab_path, 'r') as f:
+            params = yaml.safe_load(f)
     except (yaml.YAMLError, FileNotFoundError) as e:
-        logging.error(f"SKIPPED: Could not read or parse YAML file '{yaml_path.name}': {e}")
+        logging.error(f"SKIPPED: Could not read or parse genlab yaml file '{genlab_pathname}': {e}")
         return None
-    return payload
 
-def yaml_connect_to_existing_tasks(yaml_path, path_converter_func=lambda x: x):
-    logging.info(f"yaml_connect_to_existing_tasks: {yaml_path.name}")
+    return config.build_payload(api, type, model, params)
 
-    task_paths = [f for f in yaml_path.parent.glob(f"{Path(yaml_path).stem}*.task")]
-    kies = []
-    for task_path in task_paths:
-        excluded = {'.yaml', '.yml', '.task'}
-        file_paths = [f for f in task_path.parent.glob(f"{task_path.stem}.*") if
-                      f.suffix.lower() not in excluded]
-        logging.debug(f"Found task sidecar possible video files: {file_paths}")
-        if not file_paths:
-            with open(task_path, 'r') as f:
-                task_id = f.readline().strip()
-                task_payload = configure_yaml(task_path.parent, yaml.safe_load(f))
-            logging.info(f"Found existing task to attach to {task_id}.")
+# def yaml_connect_to_existing_tasks(yaml_path, path_converter_func=lambda x: x):
+#     logging.info(f"yaml_connect_to_existing_tasks: {yaml_path.name}")
+#
+#     task_paths = [f for f in yaml_path.parent.glob(f"{Path(yaml_path).stem}*.task")]
+#     kies = []
+#     for task_path in task_paths:
+#         excluded = {'.yaml', '.yml', '.task'}
+#         file_paths = [f for f in task_path.parent.glob(f"{task_path.stem}.*") if
+#                       f.suffix.lower() not in excluded]
+#         logging.debug(f"Found task sidecar possible video files: {file_paths}")
+#         if not file_paths:
+#             with open(task_path, 'r') as f:
+#                 task_id = f.readline().strip()
+#                 task_payload = configure_yaml(task_path.parent, yaml.safe_load(f))
+#             logging.info(f"Found existing task to attach to {task_id}.")
+#
+#             kie = KieAIGen(task_path.stem, path_converter_func=path_converter_func)
+#             if task_payload and kie.prep_task_from_id(task_payload, task_id):
+#                 kies.append(kie)
+#
+#             else:
+#                 logging.error(f"prep_task failed for {payload} {task_id}.")
+#
+#     return kies
 
-            kie = KieAIGen(task_path.stem, path_converter_func=path_converter_func)
-            if task_payload and kie.prep_task_from_id(task_payload, task_id):
-                kies.append(kie)
+def create_tasks(genlab_path, api, type, model, generations=1, test=False, path_converter_func=lambda x: x):
+    logging.info(f"create_tasks: {genlab_path.name}")
 
-            else:
-                logging.error(f"prep_task failed for {payload} {task_id}.")
-
-    return kies
-
-def yaml_create_tasks(yaml_path, generations=1, test=False, path_converter_func=lambda x: x):
-    logging.info(f"yaml_create_tasks: {yaml_path.name}")
-
-    # read the payload from the yaml
-    payload = yaml_load_payload(yaml_path)
+    # read the payload from the genlab file (yaml)
+    payload = load_genlab(genlab_path, api=api, type=type, model=model)
     if not payload:
         return None
     logging.debug(f"Pre-Payload: f{payload}")
 
     # check we're not forcing a seed and running multiple generations
     if generations>1 and any('seed' in key.lower() for key in payload):
-        logging.error(f"SKIPPED: Requested multiple generates with a seed value, doesn't seem right! '{yaml_path.name}'")
+        logging.error(f"SKIPPED: Requested multiple generates with a seed value, doesn't seem right! '{genlab_path.name}'")
         return None
 
     # find existing generations
     task_gens_dict = {}
-    for f in yaml_path.parent.glob(f"{yaml_path.stem}*.task"):
+    for f in genlab_path.parent.glob(f"{genlab_path.stem}*.task"):
         if f.is_file() and (m := re.search(r'_(\d{5})$', f.stem)):
             logging.debug(f"Found existing generation file '{f}'")
             task_gens_dict[int(m.group(1))] = f
@@ -99,7 +91,7 @@ def yaml_create_tasks(yaml_path, generations=1, test=False, path_converter_func=
     for generation in range(start_generation, start_generation+generations):
         logging.info(f"Generation: {generation}")
 
-        task_id_path = yaml_path.with_stem(f"{yaml_path.stem}_{generation:05d}").with_suffix(".task")
+        task_id_path = genlab_path.with_stem(f"{genlab_path.stem}_{generation:05d}").with_suffix(".task")
         output_basepath = task_id_path.stem # remove the extension
 
         # model specific factory creation
@@ -127,7 +119,7 @@ def main(path_converter_func=lambda x: x):
     global _TASKS_WAITING_QUEUE
     
     parser = argparse.ArgumentParser(
-        description="Generate videos from YAML files using the kie.ai API.",
+        description="Submit Gen AI tasks to API services from GENLAB task files.",
         formatter_class=argparse.RawTextHelpFormatter,
         epilog="""
 Local image files are uploaded with parameter handling as follows:
@@ -137,30 +129,48 @@ Local image files are uploaded with parameter handling as follows:
  
 Example Usage:
   - Process a single file:
-    ./genlab.py my_video.yaml
+    ./genlab.py portrait.genlab
 
   - Process multiple files:
-    ./genlab.py project/vid1.yaml project/vid2.yaml
+    ./genlab.py project/vid1.genlab project/vid2.genlab
 
-  - Process all .yaml/.yml files in a directory:
-    ./genlab.py /path/to/yamls/
+  - Process all .genlab files in a directory:
+    ./genlab.py /path/to/genlabs/
 """
     )
     parser.add_argument(
         "paths",
         metavar="PATH",
         nargs="+",
-        help="One or more paths to .yaml files or directories containing them."
+        help="One or more paths to .genlab files or directories containing them."
     )
     parser.add_argument(
-        "-g", "--generations",
+        "-a", "--api",
+        choices=config.apis,
+        required = True,
+        help="Gen AI API",
+    )
+    parser.add_argument(
+        "-t", "--type",
+        choices=config.all_types,
+        required = True,
+        help="Gen AI type",
+    )
+    parser.add_argument(
+        "-m", "--model",
+        type=str,
+        required = True,
+        help="Gen AI model config",
+    )
+    parser.add_argument(
+        "-g", "--generations", "-s", "-seeds",
         type=int, default=1,
-        help="Number of video versions to generate per yaml (also known as number of seeds)."
+        help="Number of tasks/requests per genlab (also known as number of seeds)."
     )
     parser.add_argument(
         "-d", "--download",
         action="store_true",
-        help="Download the video files of existing tasks (do not create any new tasks, --generations is ignored)."
+        help="Download the result files of existing tasks/requests (do not create any new tasks, --generations is ignored)."
     )
     parser.add_argument(
         "--retry_wait_secs",
@@ -173,9 +183,9 @@ Example Usage:
         help="Enable debug level logging to show detailed request information."
     )
     parser.add_argument(
-        "--test",
+        "--dryrun",
         action="store_true",
-        help="Test, do everything but actually submit a generation task."
+        help="Dry run, do everything but actually submit a generation task."
     )
     args = parser.parse_args()
 
@@ -192,40 +202,46 @@ Example Usage:
     if args.download:
         logging.warning("Download mode - will only download videos of existing tasks, no new tasks will be created.")
 
-    yaml_files = []
+    genlab_files = []
     for path_str in args.paths:
         for path in [Path(p) for p in glob.glob(path_str)]:
             if path.is_dir():
-                yaml_files.extend(sorted(path.glob("*.yaml")))
-                yaml_files.extend(sorted(path.glob("*.yml")))
-            elif path.is_file() and path.suffix.lower() in [".yaml", ".yml"]:
-                yaml_files.append(path)
+                genlab_files.extend(sorted(path.glob("*.genlab")))
+            elif path.is_file() and path.suffix.lower() in [".genlab", ]:
+                genlab_files.append(path)
             else:
                 logging.warning(f"Path '{path_str}' is not a valid file or directory. Ignoring.")
 
-    # filter out known yamls
-    check_yaml_files = yaml_files
-    yaml_files = []
-    for yaml_file in check_yaml_files:
-        if yaml_file.name not in [_CONFIG_FILENAME]:
-            yaml_files.append(yaml_file)
+    # # filter out known yamls
+    # check_yaml_files = genlab_files
+    # genlab_files = []
+    # for genlab_file in check_yaml_files:
+    #     if genlab_file.name not in [_CONFIG_FILENAME]:
+    #         genlab_files.append(genlab_file)
 
-    if not yaml_files:
-        logging.error("No .yaml or .yml files found in the specified paths.")
+    if not genlab_files:
+        logging.error("No .genlab files found in the specified paths.")
         sys.exit(1)
 
-    logging.info(f"Found {len(yaml_files)} YAML file(s) to process.")
-    for yaml_path in yaml_files:
+    logging.info(f"Found {len(genlab_files)} genlab file(s) to process.")
+    for genlab_path in genlab_files:
         if args.download:
-            kies = yaml_connect_to_existing_tasks(yaml_path, path_converter_func=path_converter_func)
+            kies = yaml_connect_to_existing_tasks(genlab_path, path_converter_func=path_converter_func)
         else:
-            kies = yaml_create_tasks(yaml_path, generations=args.generations, test=args.test, path_converter_func=path_converter_func)
+            #kies = create_tasks(genlab_path, generations=args.generations, test=args.dryrun, path_converter_func=path_converter_func)
+            kies = create_tasks(genlab_path,
+                                api=args.api,
+                                type=args.type,
+                                model=args.model,
+                                generations=args.generations,
+                                test=args.dryrun,
+                                path_converter_func=path_converter_func)
             if len(kies) != args.generations:
-                logging.warning(f"{yaml_path.name} some generations did not start.")
+                logging.warning(f"{genlab_path.name} some generations did not start.")
         if kies:
             _TASKS_WAITING_QUEUE.extend(kies)
         elif not args.download:
-            logging.warning(f"{yaml_path} failed or nothing to do!")
+            logging.warning(f"{genlab_path} failed or nothing to do!")
 
     if not _TASKS_WAITING_QUEUE:
         logging.error(f"Nothing to do!")

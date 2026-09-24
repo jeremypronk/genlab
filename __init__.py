@@ -13,7 +13,7 @@ from typing import Union, Optional
 from urllib.parse import urlparse, unquote
 import copy
 
-from metadata import write_metadata, read_metadata
+from .metadata import write_metadata, read_metadata
 
 
 class YamlParamReplacer:

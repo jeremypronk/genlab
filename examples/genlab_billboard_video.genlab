@@ -1,4 +1,4 @@
 prompt: The GenLab billboard flashes different colours as the logo dances around.
 negative_prompt: cartoon, animated, fake, unrealistic, slow, low quality, unrealistic lighting, CGI, oversaturated, compression artifacts
-start_image: images/genlab.jpg
+first_frame: genlab_billboard_edit_00000.png
 duration: 5

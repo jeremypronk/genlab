@@ -1,0 +1,307 @@
+
+# reference anchors (&) need to be unique across the entire
+# reference anchors cannot have . chars (replace with underscore)
+# param/element/key names can have . chars
+
+# .tmpl. template elements are culled (used as references in yaml build)
+# ^ (caret) prepending key is a required param
+# $ (dollar) prepending key is a required param and an enum
+# ? (question) prepending key is a param with referenced values (see REF_VALUE_PREFIX)
+# @ (at symbol) prepends reference element name
+
+
+
+
+defaults-image:
+
+  # for default templates only, it will be removed after load
+
+  ".tmpl.t2i": &t2i
+    ^prompt: ""
+
+  ".tmpl.i2i": &i2i
+    ^prompt: ""
+    ^image: ""
+
+
+image:
+
+  # Google Nano Banana PRO
+
+  .tmpl.nano-banana-pro: &nano-banana-pro
+    model: nano-banana-pro
+    output_format: "png"
+
+  .tmpl.nano-banana-pro-t2i: &nano-banana-pro-t2i
+    <<: *nano-banana-pro
+    <<: *t2i
+    aspect_ratio: "16:9"
+
+  nano-banana-pro-t2i-2K:
+    <<: *nano-banana-pro-t2i
+    resolution: "2K"
+
+  nano-banana-pro-t2i-4K:
+    <<: *nano-banana-pro-t2i
+    resolution: "4K"
+
+  .tmpl.nano-banana-pro-i2i: &nano-banana-pro-i2i
+    <<: *nano-banana-pro
+    <<: *i2i
+    aspect_ratio: "auto"
+    ?image_input: "@image"
+
+  nano-banana-pro-i2i-2K:
+    <<: *nano-banana-pro-i2i
+    resolution: "2K"
+
+  nano-banana-pro-i2i-4K:
+    <<: *nano-banana-pro-i2i
+    resolution: "4K"
+
+
+gpt-image:
+
+  # GPT Image 2.5
+
+  .tmpl.gpt-image: &gpt-image
+    background: "auto"
+
+  .tmpl.2.5-sunburst-t2i: &gpt-image-2_5-sunburst-t2i
+    model: gpt-image-2-5-sunburst-text-to-image
+    <<: *gpt-image
+    <<: *t2i
+    aspect_ratio: "16:9"
+
+  "2.5-sunburst-t2i-2K":
+    <<: *gpt-image-2_5-sunburst-t2i
+    resolution: "2K"
+
+  "2.5-sunburst-t2i-4K":
+    <<: *gpt-image-2_5-sunburst-t2i
+    resolution: "4K"
+
+  .tmpl.2.5-sunburst-i2i: &gpt-image-2_5-sunburst-i2i
+    model: gpt-image-2-5-sunburst-image-to-image
+    <<: *gpt-image
+    <<: *i2i
+    aspect_ratio: "auto"
+    ?input_urls: ["@image"]
+
+  "2.5-sunburst-i2i-2K":
+    <<: *gpt-image-2_5-sunburst-i2i
+    resolution: "2K"
+
+  "2.5-sunburst-i2i-4K":
+    <<: *gpt-image-2_5-sunburst-i2i
+    resolution: "4K"
+
+
+
+
+
+defaults-video:
+
+  # for default templates only, it will be removed after load
+
+  ".tmpl.i2v": &i2v
+    ^first_frame: ""
+
+  ".tmpl.fflf": &fflf
+    ^first_frame: ""
+    ^last_frame: ""
+
+
+seedance:
+
+  # seedance 2.x
+
+  ".tmpl.2": &seedance2_
+    generate_audio: false
+    web_search: false
+    nsfw_checker: false
+    aspect_ratio: "16:9" # lock this for now, (2.5 has adaptive 2.0 does not)
+    ^prompt: ""
+
+
+  # seedance 2.0 image to video
+
+  ".tmpl.2-i2v": &seedance2-i2v
+    <<: *seedance2_
+    <<: *i2v
+    ?first_frame_url: "@first_frame"
+    $duration: [4,5,6,7,8,9,10,11,12,13,14,15]
+
+  "2.0-i2v-480p":
+    <<: *seedance2-i2v
+    model: bytedance/seedance-2
+    resolution: "480p"
+
+  "2.0-i2v-720p":
+    <<: *seedance2-i2v
+    model: bytedance/seedance-2
+    resolution: "720p"
+
+  "2.0-i2v-1080p":
+    <<: *seedance2-i2v
+    model: bytedance/seedance-2
+    resolution: "1080p"
+
+  "2.0-fast-i2v-480p":
+    <<: *seedance2-i2v
+    model: bytedance/seedance-2-fast
+    resolution: "480p"
+
+  "2.0-fast-i2v-720p":
+    <<: *seedance2-i2v
+    model: bytedance/seedance-2-fast
+    resolution: "720p"
+
+
+  # seedance 2.0 first frame and last frame
+
+  ".tmpl.2-fflf": &seedance2-fflf
+    <<: *seedance2_
+    <<: *fflf
+    ?first_frame_url: "@first_frame"
+    ?last_frame_url: "@last_frame"
+    $duration: [4,5,6,7,8,9,10,11,12,13,14,15]
+    
+  "2.0-fflf-480p":
+    <<: *seedance2-fflf
+    model: bytedance/seedance-2
+    resolution: "480p"
+
+  "2.0-fflf-720p":
+    <<: *seedance2-fflf
+    model: bytedance/seedance-2
+    resolution: "720p"
+
+  "2.0-fflf-1080p":
+    <<: *seedance2-fflf
+    model: bytedance/seedance-2
+    resolution: "1080p"
+
+  "2.0-fast-fflf-480p":
+    <<: *seedance2-fflf
+    model: bytedance/seedance-2-fast
+    resolution: "480p"
+
+  "2.0-fast-fflf-720p":
+    <<: *seedance2-fflf
+    model: bytedance/seedance-2-fast
+    resolution: "720p"
+
+
+  # seedance 2.5
+    
+  ".tmpl.2.5": &seedance2-5
+    <<: *seedance2_
+    model: bytedance/seedance-2-5
+    $duration: [4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30]
+    output_format: "mp4"
+
+
+  # seedance 2.5 image to video
+
+  ".tmpl.2.5-i2v": &seedance2-5-i2v
+    <<: *seedance2-5
+    <<: *i2v
+    ?first_frame_url: "@first_frame"
+
+  "2.5-i2v-480p":
+    <<: *seedance2-5-i2v
+    resolution: "480p"
+
+  "2.5-i2v-720p":
+    <<: *seedance2-5-i2v
+    resolution: "720p"
+
+
+  # seedance 2.5 first frame and last frame
+
+  ".tmpl.2.5-fflf": &seedance2-5-fflf
+    <<: *seedance2-5
+    <<: *fflf
+    ?first_frame_url: "@first_frame"
+    ?last_frame_url: "@last_frame"
+
+  "2.5-fflf-480p":
+    <<: *seedance2-5-fflf
+    resolution: "480p"
+
+  "2.5-fflf-720p":
+    <<: *seedance2-5-fflf
+    resolution: "720p"
+
+
+kling:
+
+  # kling 2.1
+
+  "2.1-i2v-std":
+    model: kling/v2-1-standard
+    ^prompt: ""
+    ^negative_prompt: ""
+    <<: *i2v
+    ?image_url: "@first_frame"
+    $duration: [5, 10]
+    cfg_scale: 0.5
+    nsfw_checker: false
+
+
+  # kling 2.5
+
+  "2.5-turbo-i2v-pro":
+    model: kling/v2-5-turbo-image-to-video-pro
+    ^prompt: ""
+    ^negative_prompt: ""
+    <<: *i2v
+    ?image_url: "@first_frame"
+    $duration: [5, 10]
+    aspect_ratio: "16:9"
+    cfg_scale: 0.5
+
+
+  # kling 3.0
+
+  ".tmpl.3.0": &kling3_0
+    model: kling-3.0/video
+    sound: false
+    multi_shots: false
+    ^prompt: ""
+    $duration: [3,4,5,6,7,8,9,10,11,12,13,14,15]
+
+
+  # kling 3.0 image to video
+
+  ".tmpl.3.0-i2v": &kling3_0-i2v
+    <<: *kling3_0
+    <<: *i2v
+    ?image_urls: ["@first_frame"]
+  "3.0-i2v-std":
+    <<: *kling3_0-i2v
+    mode: std
+  "3.0-i2v-pro":
+    <<: *kling3_0-i2v
+    mode: pro
+  "3.0-i2v-4K":
+    <<: *kling3_0-i2v
+    mode: "4K"
+
+
+  # kling 3.0 first frame and last frame
+
+  ".tmpl.3.0-fflf": &kling3_0-fflf
+    <<: *kling3_0
+    <<: *fflf
+    ?image_urls: ["@first_frame", "@last_frame"]
+  "3.0-fflf-std":
+    <<: *kling3_0-fflf
+    mode: std
+  "3.0-fflf-pro":
+    <<: *kling3_0-fflf
+    mode: pro
+  "3.0-fflf-4K":
+    <<: *kling3_0-fflf
+    mode: "4K"
