@@ -2,7 +2,7 @@
   "name": "genlab-ext",
   "displayName": "genlab-ext",
   "description": "GenLab vscode extension",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "engines": {
     "vscode": "^1.138.0"
   },
@@ -12,6 +12,12 @@
   "activationEvents": ["onStartupFinished"],
   "main": "./dist/extension.js",
   "contributes": {
+    "languages": [
+      {
+        "id": "yaml",
+        "extensions": [".genlab"]
+      }
+    ],
     "commands": [
       {
         "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_t2i_2K",
