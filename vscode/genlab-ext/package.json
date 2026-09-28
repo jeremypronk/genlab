@@ -2,7 +2,7 @@
   "name": "genlab-ext",
   "displayName": "genlab-ext",
   "description": "GenLab vscode extension",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "engines": {
     "vscode": "^1.138.0"
   },
@@ -20,124 +20,428 @@
     ],
     "commands": [
       {
-        "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_t2i_2K",
-        "title": "nano-banana-pro-t2i-2K"
+        "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_t2i_2K_x1",
+        "title": "x1"
       },
       {
-        "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_t2i_4K",
-        "title": "nano-banana-pro-t2i-4K"
+        "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_t2i_2K_x2",
+        "title": "x2"
       },
       {
-        "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_i2i_2K",
-        "title": "nano-banana-pro-i2i-2K"
+        "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_t2i_2K_x4",
+        "title": "x4"
       },
       {
-        "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_i2i_4K",
-        "title": "nano-banana-pro-i2i-4K"
+        "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_t2i_2K_x6",
+        "title": "x6"
       },
       {
-        "command": "scriptRunner.cmd.kieai_gpt_image_2_5_sunburst_t2i_2K",
-        "title": "2.5-sunburst-t2i-2K"
+        "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_t2i_2K_x10",
+        "title": "x10"
       },
       {
-        "command": "scriptRunner.cmd.kieai_gpt_image_2_5_sunburst_t2i_4K",
-        "title": "2.5-sunburst-t2i-4K"
+        "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_t2i_4K_x1",
+        "title": "x1"
       },
       {
-        "command": "scriptRunner.cmd.kieai_gpt_image_2_5_sunburst_i2i_2K",
-        "title": "2.5-sunburst-i2i-2K"
+        "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_t2i_4K_x2",
+        "title": "x2"
       },
       {
-        "command": "scriptRunner.cmd.kieai_gpt_image_2_5_sunburst_i2i_4K",
-        "title": "2.5-sunburst-i2i-4K"
+        "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_t2i_4K_x4",
+        "title": "x4"
       },
       {
-        "command": "scriptRunner.cmd.kieai_seedance_2_0_i2v_480p",
-        "title": "2.0-i2v-480p"
+        "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_t2i_4K_x6",
+        "title": "x6"
       },
       {
-        "command": "scriptRunner.cmd.kieai_seedance_2_0_i2v_720p",
-        "title": "2.0-i2v-720p"
+        "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_t2i_4K_x10",
+        "title": "x10"
       },
       {
-        "command": "scriptRunner.cmd.kieai_seedance_2_0_i2v_1080p",
-        "title": "2.0-i2v-1080p"
+        "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_i2i_2K_x1",
+        "title": "x1"
       },
       {
-        "command": "scriptRunner.cmd.kieai_seedance_2_0_fast_i2v_480p",
-        "title": "2.0-fast-i2v-480p"
+        "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_i2i_2K_x2",
+        "title": "x2"
       },
       {
-        "command": "scriptRunner.cmd.kieai_seedance_2_0_fast_i2v_720p",
-        "title": "2.0-fast-i2v-720p"
+        "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_i2i_2K_x4",
+        "title": "x4"
       },
       {
-        "command": "scriptRunner.cmd.kieai_seedance_2_0_fflf_480p",
-        "title": "2.0-fflf-480p"
+        "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_i2i_2K_x6",
+        "title": "x6"
       },
       {
-        "command": "scriptRunner.cmd.kieai_seedance_2_0_fflf_720p",
-        "title": "2.0-fflf-720p"
+        "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_i2i_2K_x10",
+        "title": "x10"
       },
       {
-        "command": "scriptRunner.cmd.kieai_seedance_2_0_fflf_1080p",
-        "title": "2.0-fflf-1080p"
+        "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_i2i_4K_x1",
+        "title": "x1"
       },
       {
-        "command": "scriptRunner.cmd.kieai_seedance_2_0_fast_fflf_480p",
-        "title": "2.0-fast-fflf-480p"
+        "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_i2i_4K_x2",
+        "title": "x2"
       },
       {
-        "command": "scriptRunner.cmd.kieai_seedance_2_0_fast_fflf_720p",
-        "title": "2.0-fast-fflf-720p"
+        "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_i2i_4K_x4",
+        "title": "x4"
       },
       {
-        "command": "scriptRunner.cmd.kieai_seedance_2_5_i2v_480p",
-        "title": "2.5-i2v-480p"
+        "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_i2i_4K_x6",
+        "title": "x6"
       },
       {
-        "command": "scriptRunner.cmd.kieai_seedance_2_5_i2v_720p",
-        "title": "2.5-i2v-720p"
+        "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_i2i_4K_x10",
+        "title": "x10"
       },
       {
-        "command": "scriptRunner.cmd.kieai_seedance_2_5_fflf_480p",
-        "title": "2.5-fflf-480p"
+        "command": "scriptRunner.cmd.kieai_gpt_image_2_5_sunburst_t2i_2K_x1",
+        "title": "x1"
       },
       {
-        "command": "scriptRunner.cmd.kieai_seedance_2_5_fflf_720p",
-        "title": "2.5-fflf-720p"
+        "command": "scriptRunner.cmd.kieai_gpt_image_2_5_sunburst_t2i_2K_x2",
+        "title": "x2"
       },
       {
-        "command": "scriptRunner.cmd.kieai_kling_2_1_i2v_std",
-        "title": "2.1-i2v-std"
+        "command": "scriptRunner.cmd.kieai_gpt_image_2_5_sunburst_t2i_2K_x4",
+        "title": "x4"
       },
       {
-        "command": "scriptRunner.cmd.kieai_kling_2_5_turbo_i2v_pro",
-        "title": "2.5-turbo-i2v-pro"
+        "command": "scriptRunner.cmd.kieai_gpt_image_2_5_sunburst_t2i_2K_x6",
+        "title": "x6"
       },
       {
-        "command": "scriptRunner.cmd.kieai_kling_3_0_i2v_std",
-        "title": "3.0-i2v-std"
+        "command": "scriptRunner.cmd.kieai_gpt_image_2_5_sunburst_t2i_2K_x10",
+        "title": "x10"
       },
       {
-        "command": "scriptRunner.cmd.kieai_kling_3_0_i2v_pro",
-        "title": "3.0-i2v-pro"
+        "command": "scriptRunner.cmd.kieai_gpt_image_2_5_sunburst_t2i_4K_x1",
+        "title": "x1"
       },
       {
-        "command": "scriptRunner.cmd.kieai_kling_3_0_i2v_4K",
-        "title": "3.0-i2v-4K"
+        "command": "scriptRunner.cmd.kieai_gpt_image_2_5_sunburst_t2i_4K_x2",
+        "title": "x2"
       },
       {
-        "command": "scriptRunner.cmd.kieai_kling_3_0_fflf_std",
-        "title": "3.0-fflf-std"
+        "command": "scriptRunner.cmd.kieai_gpt_image_2_5_sunburst_t2i_4K_x4",
+        "title": "x4"
       },
       {
-        "command": "scriptRunner.cmd.kieai_kling_3_0_fflf_pro",
-        "title": "3.0-fflf-pro"
+        "command": "scriptRunner.cmd.kieai_gpt_image_2_5_sunburst_t2i_4K_x6",
+        "title": "x6"
       },
       {
-        "command": "scriptRunner.cmd.kieai_kling_3_0_fflf_4K",
-        "title": "3.0-fflf-4K"
+        "command": "scriptRunner.cmd.kieai_gpt_image_2_5_sunburst_t2i_4K_x10",
+        "title": "x10"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_gpt_image_2_5_sunburst_i2i_2K_x1",
+        "title": "x1"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_gpt_image_2_5_sunburst_i2i_2K_x2",
+        "title": "x2"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_gpt_image_2_5_sunburst_i2i_2K_x4",
+        "title": "x4"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_gpt_image_2_5_sunburst_i2i_2K_x6",
+        "title": "x6"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_gpt_image_2_5_sunburst_i2i_2K_x10",
+        "title": "x10"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_gpt_image_2_5_sunburst_i2i_4K_x1",
+        "title": "x1"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_gpt_image_2_5_sunburst_i2i_4K_x2",
+        "title": "x2"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_gpt_image_2_5_sunburst_i2i_4K_x4",
+        "title": "x4"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_gpt_image_2_5_sunburst_i2i_4K_x6",
+        "title": "x6"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_gpt_image_2_5_sunburst_i2i_4K_x10",
+        "title": "x10"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_seedance_2_0_i2v_480p_x1",
+        "title": "x1"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_seedance_2_0_i2v_480p_x2",
+        "title": "x2"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_seedance_2_0_i2v_480p_x3",
+        "title": "x3"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_seedance_2_0_i2v_720p_x1",
+        "title": "x1"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_seedance_2_0_i2v_720p_x2",
+        "title": "x2"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_seedance_2_0_i2v_720p_x3",
+        "title": "x3"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_seedance_2_0_i2v_1080p_x1",
+        "title": "x1"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_seedance_2_0_i2v_1080p_x2",
+        "title": "x2"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_seedance_2_0_i2v_1080p_x3",
+        "title": "x3"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_seedance_2_0_fast_i2v_480p_x1",
+        "title": "x1"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_seedance_2_0_fast_i2v_480p_x2",
+        "title": "x2"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_seedance_2_0_fast_i2v_480p_x3",
+        "title": "x3"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_seedance_2_0_fast_i2v_720p_x1",
+        "title": "x1"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_seedance_2_0_fast_i2v_720p_x2",
+        "title": "x2"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_seedance_2_0_fast_i2v_720p_x3",
+        "title": "x3"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_seedance_2_0_fflf_480p_x1",
+        "title": "x1"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_seedance_2_0_fflf_480p_x2",
+        "title": "x2"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_seedance_2_0_fflf_480p_x3",
+        "title": "x3"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_seedance_2_0_fflf_720p_x1",
+        "title": "x1"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_seedance_2_0_fflf_720p_x2",
+        "title": "x2"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_seedance_2_0_fflf_720p_x3",
+        "title": "x3"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_seedance_2_0_fflf_1080p_x1",
+        "title": "x1"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_seedance_2_0_fflf_1080p_x2",
+        "title": "x2"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_seedance_2_0_fflf_1080p_x3",
+        "title": "x3"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_seedance_2_0_fast_fflf_480p_x1",
+        "title": "x1"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_seedance_2_0_fast_fflf_480p_x2",
+        "title": "x2"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_seedance_2_0_fast_fflf_480p_x3",
+        "title": "x3"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_seedance_2_0_fast_fflf_720p_x1",
+        "title": "x1"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_seedance_2_0_fast_fflf_720p_x2",
+        "title": "x2"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_seedance_2_0_fast_fflf_720p_x3",
+        "title": "x3"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_seedance_2_5_i2v_480p_x1",
+        "title": "x1"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_seedance_2_5_i2v_480p_x2",
+        "title": "x2"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_seedance_2_5_i2v_480p_x3",
+        "title": "x3"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_seedance_2_5_i2v_720p_x1",
+        "title": "x1"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_seedance_2_5_i2v_720p_x2",
+        "title": "x2"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_seedance_2_5_i2v_720p_x3",
+        "title": "x3"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_seedance_2_5_fflf_480p_x1",
+        "title": "x1"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_seedance_2_5_fflf_480p_x2",
+        "title": "x2"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_seedance_2_5_fflf_480p_x3",
+        "title": "x3"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_seedance_2_5_fflf_720p_x1",
+        "title": "x1"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_seedance_2_5_fflf_720p_x2",
+        "title": "x2"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_seedance_2_5_fflf_720p_x3",
+        "title": "x3"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_kling_2_1_i2v_std_x1",
+        "title": "x1"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_kling_2_1_i2v_std_x2",
+        "title": "x2"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_kling_2_1_i2v_std_x3",
+        "title": "x3"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_kling_2_5_turbo_i2v_pro_x1",
+        "title": "x1"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_kling_2_5_turbo_i2v_pro_x2",
+        "title": "x2"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_kling_2_5_turbo_i2v_pro_x3",
+        "title": "x3"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_kling_3_0_i2v_std_x1",
+        "title": "x1"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_kling_3_0_i2v_std_x2",
+        "title": "x2"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_kling_3_0_i2v_std_x3",
+        "title": "x3"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_kling_3_0_i2v_pro_x1",
+        "title": "x1"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_kling_3_0_i2v_pro_x2",
+        "title": "x2"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_kling_3_0_i2v_pro_x3",
+        "title": "x3"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_kling_3_0_i2v_4K_x1",
+        "title": "x1"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_kling_3_0_i2v_4K_x2",
+        "title": "x2"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_kling_3_0_i2v_4K_x3",
+        "title": "x3"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_kling_3_0_fflf_std_x1",
+        "title": "x1"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_kling_3_0_fflf_std_x2",
+        "title": "x2"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_kling_3_0_fflf_std_x3",
+        "title": "x3"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_kling_3_0_fflf_pro_x1",
+        "title": "x1"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_kling_3_0_fflf_pro_x2",
+        "title": "x2"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_kling_3_0_fflf_pro_x3",
+        "title": "x3"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_kling_3_0_fflf_4K_x1",
+        "title": "x1"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_kling_3_0_fflf_4K_x2",
+        "title": "x2"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_kling_3_0_fflf_4K_x3",
+        "title": "x3"
       }
     ],
     "submenus": [
@@ -146,16 +450,136 @@
         "label": "kieai image"
       },
       {
+        "id": "scriptRunner.menu.kieai_image_nano_banana_pro_t2i_2K",
+        "label": "nano-banana-pro-t2i-2K"
+      },
+      {
+        "id": "scriptRunner.menu.kieai_image_nano_banana_pro_t2i_4K",
+        "label": "nano-banana-pro-t2i-4K"
+      },
+      {
+        "id": "scriptRunner.menu.kieai_image_nano_banana_pro_i2i_2K",
+        "label": "nano-banana-pro-i2i-2K"
+      },
+      {
+        "id": "scriptRunner.menu.kieai_image_nano_banana_pro_i2i_4K",
+        "label": "nano-banana-pro-i2i-4K"
+      },
+      {
         "id": "scriptRunner.menu.kieai_gpt_image",
         "label": "kieai gpt-image"
+      },
+      {
+        "id": "scriptRunner.menu.kieai_gpt_image_2_5_sunburst_t2i_2K",
+        "label": "2.5-sunburst-t2i-2K"
+      },
+      {
+        "id": "scriptRunner.menu.kieai_gpt_image_2_5_sunburst_t2i_4K",
+        "label": "2.5-sunburst-t2i-4K"
+      },
+      {
+        "id": "scriptRunner.menu.kieai_gpt_image_2_5_sunburst_i2i_2K",
+        "label": "2.5-sunburst-i2i-2K"
+      },
+      {
+        "id": "scriptRunner.menu.kieai_gpt_image_2_5_sunburst_i2i_4K",
+        "label": "2.5-sunburst-i2i-4K"
       },
       {
         "id": "scriptRunner.menu.kieai_seedance",
         "label": "kieai seedance"
       },
       {
+        "id": "scriptRunner.menu.kieai_seedance_2_0_i2v_480p",
+        "label": "2.0-i2v-480p"
+      },
+      {
+        "id": "scriptRunner.menu.kieai_seedance_2_0_i2v_720p",
+        "label": "2.0-i2v-720p"
+      },
+      {
+        "id": "scriptRunner.menu.kieai_seedance_2_0_i2v_1080p",
+        "label": "2.0-i2v-1080p"
+      },
+      {
+        "id": "scriptRunner.menu.kieai_seedance_2_0_fast_i2v_480p",
+        "label": "2.0-fast-i2v-480p"
+      },
+      {
+        "id": "scriptRunner.menu.kieai_seedance_2_0_fast_i2v_720p",
+        "label": "2.0-fast-i2v-720p"
+      },
+      {
+        "id": "scriptRunner.menu.kieai_seedance_2_0_fflf_480p",
+        "label": "2.0-fflf-480p"
+      },
+      {
+        "id": "scriptRunner.menu.kieai_seedance_2_0_fflf_720p",
+        "label": "2.0-fflf-720p"
+      },
+      {
+        "id": "scriptRunner.menu.kieai_seedance_2_0_fflf_1080p",
+        "label": "2.0-fflf-1080p"
+      },
+      {
+        "id": "scriptRunner.menu.kieai_seedance_2_0_fast_fflf_480p",
+        "label": "2.0-fast-fflf-480p"
+      },
+      {
+        "id": "scriptRunner.menu.kieai_seedance_2_0_fast_fflf_720p",
+        "label": "2.0-fast-fflf-720p"
+      },
+      {
+        "id": "scriptRunner.menu.kieai_seedance_2_5_i2v_480p",
+        "label": "2.5-i2v-480p"
+      },
+      {
+        "id": "scriptRunner.menu.kieai_seedance_2_5_i2v_720p",
+        "label": "2.5-i2v-720p"
+      },
+      {
+        "id": "scriptRunner.menu.kieai_seedance_2_5_fflf_480p",
+        "label": "2.5-fflf-480p"
+      },
+      {
+        "id": "scriptRunner.menu.kieai_seedance_2_5_fflf_720p",
+        "label": "2.5-fflf-720p"
+      },
+      {
         "id": "scriptRunner.menu.kieai_kling",
         "label": "kieai kling"
+      },
+      {
+        "id": "scriptRunner.menu.kieai_kling_2_1_i2v_std",
+        "label": "2.1-i2v-std"
+      },
+      {
+        "id": "scriptRunner.menu.kieai_kling_2_5_turbo_i2v_pro",
+        "label": "2.5-turbo-i2v-pro"
+      },
+      {
+        "id": "scriptRunner.menu.kieai_kling_3_0_i2v_std",
+        "label": "3.0-i2v-std"
+      },
+      {
+        "id": "scriptRunner.menu.kieai_kling_3_0_i2v_pro",
+        "label": "3.0-i2v-pro"
+      },
+      {
+        "id": "scriptRunner.menu.kieai_kling_3_0_i2v_4K",
+        "label": "3.0-i2v-4K"
+      },
+      {
+        "id": "scriptRunner.menu.kieai_kling_3_0_fflf_std",
+        "label": "3.0-fflf-std"
+      },
+      {
+        "id": "scriptRunner.menu.kieai_kling_3_0_fflf_pro",
+        "label": "3.0-fflf-pro"
+      },
+      {
+        "id": "scriptRunner.menu.kieai_kling_3_0_fflf_4K",
+        "label": "3.0-fflf-4K"
       }
     ],
     "menus": {
@@ -179,100 +603,584 @@
       ],
       "scriptRunner.menu.kieai_image": [
         {
-          "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_t2i_2K"
+          "submenu": "scriptRunner.menu.kieai_image_nano_banana_pro_t2i_2K"
         },
         {
-          "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_t2i_4K"
+          "submenu": "scriptRunner.menu.kieai_image_nano_banana_pro_t2i_4K"
         },
         {
-          "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_i2i_2K"
+          "submenu": "scriptRunner.menu.kieai_image_nano_banana_pro_i2i_2K"
         },
         {
-          "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_i2i_4K"
+          "submenu": "scriptRunner.menu.kieai_image_nano_banana_pro_i2i_4K"
+        }
+      ],
+      "scriptRunner.menu.kieai_image_nano_banana_pro_t2i_2K": [
+        {
+          "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_t2i_2K_x1",
+          "group": "0"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_t2i_2K_x2",
+          "group": "1"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_t2i_2K_x4",
+          "group": "2"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_t2i_2K_x6",
+          "group": "3"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_t2i_2K_x10",
+          "group": "4"
+        }
+      ],
+      "scriptRunner.menu.kieai_image_nano_banana_pro_t2i_4K": [
+        {
+          "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_t2i_4K_x1",
+          "group": "0"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_t2i_4K_x2",
+          "group": "1"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_t2i_4K_x4",
+          "group": "2"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_t2i_4K_x6",
+          "group": "3"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_t2i_4K_x10",
+          "group": "4"
+        }
+      ],
+      "scriptRunner.menu.kieai_image_nano_banana_pro_i2i_2K": [
+        {
+          "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_i2i_2K_x1",
+          "group": "0"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_i2i_2K_x2",
+          "group": "1"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_i2i_2K_x4",
+          "group": "2"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_i2i_2K_x6",
+          "group": "3"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_i2i_2K_x10",
+          "group": "4"
+        }
+      ],
+      "scriptRunner.menu.kieai_image_nano_banana_pro_i2i_4K": [
+        {
+          "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_i2i_4K_x1",
+          "group": "0"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_i2i_4K_x2",
+          "group": "1"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_i2i_4K_x4",
+          "group": "2"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_i2i_4K_x6",
+          "group": "3"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_i2i_4K_x10",
+          "group": "4"
         }
       ],
       "scriptRunner.menu.kieai_gpt_image": [
         {
-          "command": "scriptRunner.cmd.kieai_gpt_image_2_5_sunburst_t2i_2K"
+          "submenu": "scriptRunner.menu.kieai_gpt_image_2_5_sunburst_t2i_2K"
         },
         {
-          "command": "scriptRunner.cmd.kieai_gpt_image_2_5_sunburst_t2i_4K"
+          "submenu": "scriptRunner.menu.kieai_gpt_image_2_5_sunburst_t2i_4K"
         },
         {
-          "command": "scriptRunner.cmd.kieai_gpt_image_2_5_sunburst_i2i_2K"
+          "submenu": "scriptRunner.menu.kieai_gpt_image_2_5_sunburst_i2i_2K"
         },
         {
-          "command": "scriptRunner.cmd.kieai_gpt_image_2_5_sunburst_i2i_4K"
+          "submenu": "scriptRunner.menu.kieai_gpt_image_2_5_sunburst_i2i_4K"
+        }
+      ],
+      "scriptRunner.menu.kieai_gpt_image_2_5_sunburst_t2i_2K": [
+        {
+          "command": "scriptRunner.cmd.kieai_gpt_image_2_5_sunburst_t2i_2K_x1",
+          "group": "0"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_gpt_image_2_5_sunburst_t2i_2K_x2",
+          "group": "1"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_gpt_image_2_5_sunburst_t2i_2K_x4",
+          "group": "2"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_gpt_image_2_5_sunburst_t2i_2K_x6",
+          "group": "3"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_gpt_image_2_5_sunburst_t2i_2K_x10",
+          "group": "4"
+        }
+      ],
+      "scriptRunner.menu.kieai_gpt_image_2_5_sunburst_t2i_4K": [
+        {
+          "command": "scriptRunner.cmd.kieai_gpt_image_2_5_sunburst_t2i_4K_x1",
+          "group": "0"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_gpt_image_2_5_sunburst_t2i_4K_x2",
+          "group": "1"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_gpt_image_2_5_sunburst_t2i_4K_x4",
+          "group": "2"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_gpt_image_2_5_sunburst_t2i_4K_x6",
+          "group": "3"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_gpt_image_2_5_sunburst_t2i_4K_x10",
+          "group": "4"
+        }
+      ],
+      "scriptRunner.menu.kieai_gpt_image_2_5_sunburst_i2i_2K": [
+        {
+          "command": "scriptRunner.cmd.kieai_gpt_image_2_5_sunburst_i2i_2K_x1",
+          "group": "0"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_gpt_image_2_5_sunburst_i2i_2K_x2",
+          "group": "1"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_gpt_image_2_5_sunburst_i2i_2K_x4",
+          "group": "2"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_gpt_image_2_5_sunburst_i2i_2K_x6",
+          "group": "3"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_gpt_image_2_5_sunburst_i2i_2K_x10",
+          "group": "4"
+        }
+      ],
+      "scriptRunner.menu.kieai_gpt_image_2_5_sunburst_i2i_4K": [
+        {
+          "command": "scriptRunner.cmd.kieai_gpt_image_2_5_sunburst_i2i_4K_x1",
+          "group": "0"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_gpt_image_2_5_sunburst_i2i_4K_x2",
+          "group": "1"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_gpt_image_2_5_sunburst_i2i_4K_x4",
+          "group": "2"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_gpt_image_2_5_sunburst_i2i_4K_x6",
+          "group": "3"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_gpt_image_2_5_sunburst_i2i_4K_x10",
+          "group": "4"
         }
       ],
       "scriptRunner.menu.kieai_seedance": [
         {
-          "command": "scriptRunner.cmd.kieai_seedance_2_0_i2v_480p"
+          "submenu": "scriptRunner.menu.kieai_seedance_2_0_i2v_480p"
         },
         {
-          "command": "scriptRunner.cmd.kieai_seedance_2_0_i2v_720p"
+          "submenu": "scriptRunner.menu.kieai_seedance_2_0_i2v_720p"
         },
         {
-          "command": "scriptRunner.cmd.kieai_seedance_2_0_i2v_1080p"
+          "submenu": "scriptRunner.menu.kieai_seedance_2_0_i2v_1080p"
         },
         {
-          "command": "scriptRunner.cmd.kieai_seedance_2_0_fast_i2v_480p"
+          "submenu": "scriptRunner.menu.kieai_seedance_2_0_fast_i2v_480p"
         },
         {
-          "command": "scriptRunner.cmd.kieai_seedance_2_0_fast_i2v_720p"
+          "submenu": "scriptRunner.menu.kieai_seedance_2_0_fast_i2v_720p"
         },
         {
-          "command": "scriptRunner.cmd.kieai_seedance_2_0_fflf_480p"
+          "submenu": "scriptRunner.menu.kieai_seedance_2_0_fflf_480p"
         },
         {
-          "command": "scriptRunner.cmd.kieai_seedance_2_0_fflf_720p"
+          "submenu": "scriptRunner.menu.kieai_seedance_2_0_fflf_720p"
         },
         {
-          "command": "scriptRunner.cmd.kieai_seedance_2_0_fflf_1080p"
+          "submenu": "scriptRunner.menu.kieai_seedance_2_0_fflf_1080p"
         },
         {
-          "command": "scriptRunner.cmd.kieai_seedance_2_0_fast_fflf_480p"
+          "submenu": "scriptRunner.menu.kieai_seedance_2_0_fast_fflf_480p"
         },
         {
-          "command": "scriptRunner.cmd.kieai_seedance_2_0_fast_fflf_720p"
+          "submenu": "scriptRunner.menu.kieai_seedance_2_0_fast_fflf_720p"
         },
         {
-          "command": "scriptRunner.cmd.kieai_seedance_2_5_i2v_480p"
+          "submenu": "scriptRunner.menu.kieai_seedance_2_5_i2v_480p"
         },
         {
-          "command": "scriptRunner.cmd.kieai_seedance_2_5_i2v_720p"
+          "submenu": "scriptRunner.menu.kieai_seedance_2_5_i2v_720p"
         },
         {
-          "command": "scriptRunner.cmd.kieai_seedance_2_5_fflf_480p"
+          "submenu": "scriptRunner.menu.kieai_seedance_2_5_fflf_480p"
         },
         {
-          "command": "scriptRunner.cmd.kieai_seedance_2_5_fflf_720p"
+          "submenu": "scriptRunner.menu.kieai_seedance_2_5_fflf_720p"
+        }
+      ],
+      "scriptRunner.menu.kieai_seedance_2_0_i2v_480p": [
+        {
+          "command": "scriptRunner.cmd.kieai_seedance_2_0_i2v_480p_x1",
+          "group": "0"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_seedance_2_0_i2v_480p_x2",
+          "group": "1"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_seedance_2_0_i2v_480p_x3",
+          "group": "2"
+        }
+      ],
+      "scriptRunner.menu.kieai_seedance_2_0_i2v_720p": [
+        {
+          "command": "scriptRunner.cmd.kieai_seedance_2_0_i2v_720p_x1",
+          "group": "0"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_seedance_2_0_i2v_720p_x2",
+          "group": "1"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_seedance_2_0_i2v_720p_x3",
+          "group": "2"
+        }
+      ],
+      "scriptRunner.menu.kieai_seedance_2_0_i2v_1080p": [
+        {
+          "command": "scriptRunner.cmd.kieai_seedance_2_0_i2v_1080p_x1",
+          "group": "0"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_seedance_2_0_i2v_1080p_x2",
+          "group": "1"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_seedance_2_0_i2v_1080p_x3",
+          "group": "2"
+        }
+      ],
+      "scriptRunner.menu.kieai_seedance_2_0_fast_i2v_480p": [
+        {
+          "command": "scriptRunner.cmd.kieai_seedance_2_0_fast_i2v_480p_x1",
+          "group": "0"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_seedance_2_0_fast_i2v_480p_x2",
+          "group": "1"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_seedance_2_0_fast_i2v_480p_x3",
+          "group": "2"
+        }
+      ],
+      "scriptRunner.menu.kieai_seedance_2_0_fast_i2v_720p": [
+        {
+          "command": "scriptRunner.cmd.kieai_seedance_2_0_fast_i2v_720p_x1",
+          "group": "0"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_seedance_2_0_fast_i2v_720p_x2",
+          "group": "1"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_seedance_2_0_fast_i2v_720p_x3",
+          "group": "2"
+        }
+      ],
+      "scriptRunner.menu.kieai_seedance_2_0_fflf_480p": [
+        {
+          "command": "scriptRunner.cmd.kieai_seedance_2_0_fflf_480p_x1",
+          "group": "0"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_seedance_2_0_fflf_480p_x2",
+          "group": "1"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_seedance_2_0_fflf_480p_x3",
+          "group": "2"
+        }
+      ],
+      "scriptRunner.menu.kieai_seedance_2_0_fflf_720p": [
+        {
+          "command": "scriptRunner.cmd.kieai_seedance_2_0_fflf_720p_x1",
+          "group": "0"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_seedance_2_0_fflf_720p_x2",
+          "group": "1"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_seedance_2_0_fflf_720p_x3",
+          "group": "2"
+        }
+      ],
+      "scriptRunner.menu.kieai_seedance_2_0_fflf_1080p": [
+        {
+          "command": "scriptRunner.cmd.kieai_seedance_2_0_fflf_1080p_x1",
+          "group": "0"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_seedance_2_0_fflf_1080p_x2",
+          "group": "1"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_seedance_2_0_fflf_1080p_x3",
+          "group": "2"
+        }
+      ],
+      "scriptRunner.menu.kieai_seedance_2_0_fast_fflf_480p": [
+        {
+          "command": "scriptRunner.cmd.kieai_seedance_2_0_fast_fflf_480p_x1",
+          "group": "0"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_seedance_2_0_fast_fflf_480p_x2",
+          "group": "1"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_seedance_2_0_fast_fflf_480p_x3",
+          "group": "2"
+        }
+      ],
+      "scriptRunner.menu.kieai_seedance_2_0_fast_fflf_720p": [
+        {
+          "command": "scriptRunner.cmd.kieai_seedance_2_0_fast_fflf_720p_x1",
+          "group": "0"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_seedance_2_0_fast_fflf_720p_x2",
+          "group": "1"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_seedance_2_0_fast_fflf_720p_x3",
+          "group": "2"
+        }
+      ],
+      "scriptRunner.menu.kieai_seedance_2_5_i2v_480p": [
+        {
+          "command": "scriptRunner.cmd.kieai_seedance_2_5_i2v_480p_x1",
+          "group": "0"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_seedance_2_5_i2v_480p_x2",
+          "group": "1"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_seedance_2_5_i2v_480p_x3",
+          "group": "2"
+        }
+      ],
+      "scriptRunner.menu.kieai_seedance_2_5_i2v_720p": [
+        {
+          "command": "scriptRunner.cmd.kieai_seedance_2_5_i2v_720p_x1",
+          "group": "0"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_seedance_2_5_i2v_720p_x2",
+          "group": "1"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_seedance_2_5_i2v_720p_x3",
+          "group": "2"
+        }
+      ],
+      "scriptRunner.menu.kieai_seedance_2_5_fflf_480p": [
+        {
+          "command": "scriptRunner.cmd.kieai_seedance_2_5_fflf_480p_x1",
+          "group": "0"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_seedance_2_5_fflf_480p_x2",
+          "group": "1"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_seedance_2_5_fflf_480p_x3",
+          "group": "2"
+        }
+      ],
+      "scriptRunner.menu.kieai_seedance_2_5_fflf_720p": [
+        {
+          "command": "scriptRunner.cmd.kieai_seedance_2_5_fflf_720p_x1",
+          "group": "0"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_seedance_2_5_fflf_720p_x2",
+          "group": "1"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_seedance_2_5_fflf_720p_x3",
+          "group": "2"
         }
       ],
       "scriptRunner.menu.kieai_kling": [
         {
-          "command": "scriptRunner.cmd.kieai_kling_2_1_i2v_std"
+          "submenu": "scriptRunner.menu.kieai_kling_2_1_i2v_std"
         },
         {
-          "command": "scriptRunner.cmd.kieai_kling_2_5_turbo_i2v_pro"
+          "submenu": "scriptRunner.menu.kieai_kling_2_5_turbo_i2v_pro"
         },
         {
-          "command": "scriptRunner.cmd.kieai_kling_3_0_i2v_std"
+          "submenu": "scriptRunner.menu.kieai_kling_3_0_i2v_std"
         },
         {
-          "command": "scriptRunner.cmd.kieai_kling_3_0_i2v_pro"
+          "submenu": "scriptRunner.menu.kieai_kling_3_0_i2v_pro"
         },
         {
-          "command": "scriptRunner.cmd.kieai_kling_3_0_i2v_4K"
+          "submenu": "scriptRunner.menu.kieai_kling_3_0_i2v_4K"
         },
         {
-          "command": "scriptRunner.cmd.kieai_kling_3_0_fflf_std"
+          "submenu": "scriptRunner.menu.kieai_kling_3_0_fflf_std"
         },
         {
-          "command": "scriptRunner.cmd.kieai_kling_3_0_fflf_pro"
+          "submenu": "scriptRunner.menu.kieai_kling_3_0_fflf_pro"
         },
         {
-          "command": "scriptRunner.cmd.kieai_kling_3_0_fflf_4K"
+          "submenu": "scriptRunner.menu.kieai_kling_3_0_fflf_4K"
+        }
+      ],
+      "scriptRunner.menu.kieai_kling_2_1_i2v_std": [
+        {
+          "command": "scriptRunner.cmd.kieai_kling_2_1_i2v_std_x1",
+          "group": "0"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_kling_2_1_i2v_std_x2",
+          "group": "1"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_kling_2_1_i2v_std_x3",
+          "group": "2"
+        }
+      ],
+      "scriptRunner.menu.kieai_kling_2_5_turbo_i2v_pro": [
+        {
+          "command": "scriptRunner.cmd.kieai_kling_2_5_turbo_i2v_pro_x1",
+          "group": "0"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_kling_2_5_turbo_i2v_pro_x2",
+          "group": "1"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_kling_2_5_turbo_i2v_pro_x3",
+          "group": "2"
+        }
+      ],
+      "scriptRunner.menu.kieai_kling_3_0_i2v_std": [
+        {
+          "command": "scriptRunner.cmd.kieai_kling_3_0_i2v_std_x1",
+          "group": "0"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_kling_3_0_i2v_std_x2",
+          "group": "1"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_kling_3_0_i2v_std_x3",
+          "group": "2"
+        }
+      ],
+      "scriptRunner.menu.kieai_kling_3_0_i2v_pro": [
+        {
+          "command": "scriptRunner.cmd.kieai_kling_3_0_i2v_pro_x1",
+          "group": "0"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_kling_3_0_i2v_pro_x2",
+          "group": "1"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_kling_3_0_i2v_pro_x3",
+          "group": "2"
+        }
+      ],
+      "scriptRunner.menu.kieai_kling_3_0_i2v_4K": [
+        {
+          "command": "scriptRunner.cmd.kieai_kling_3_0_i2v_4K_x1",
+          "group": "0"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_kling_3_0_i2v_4K_x2",
+          "group": "1"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_kling_3_0_i2v_4K_x3",
+          "group": "2"
+        }
+      ],
+      "scriptRunner.menu.kieai_kling_3_0_fflf_std": [
+        {
+          "command": "scriptRunner.cmd.kieai_kling_3_0_fflf_std_x1",
+          "group": "0"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_kling_3_0_fflf_std_x2",
+          "group": "1"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_kling_3_0_fflf_std_x3",
+          "group": "2"
+        }
+      ],
+      "scriptRunner.menu.kieai_kling_3_0_fflf_pro": [
+        {
+          "command": "scriptRunner.cmd.kieai_kling_3_0_fflf_pro_x1",
+          "group": "0"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_kling_3_0_fflf_pro_x2",
+          "group": "1"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_kling_3_0_fflf_pro_x3",
+          "group": "2"
+        }
+      ],
+      "scriptRunner.menu.kieai_kling_3_0_fflf_4K": [
+        {
+          "command": "scriptRunner.cmd.kieai_kling_3_0_fflf_4K_x1",
+          "group": "0"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_kling_3_0_fflf_4K_x2",
+          "group": "1"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_kling_3_0_fflf_4K_x3",
+          "group": "2"
         }
       ]
     }

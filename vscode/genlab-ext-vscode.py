@@ -10,26 +10,6 @@ import genlab.config
 BASE_DIR = Path(genlab.__file__).resolve().parent
 
 
-#
-# # 1. Define your 3-level deep menu structure
-# # The keys are the menu labels. The final string values are the arguments passed to your script.
-# menu_definition = {
-#     "kieai image": {
-#         "Format": {
-#             "nano-banana-pro-t2i-2K": "--api kieai --type image --model nano-banana-pro-t2i-2K",
-#             "Format XML": "--format xml"
-#         },
-#         "Validate": {
-#             "Strict Mode": "--validate strict",
-#             "Loose Mode": "--validate loose"
-#         }
-#     },
-#     "kieai kling 3.0": {
-#         "3.0-i2v-std": "--api kieai --type kling --model 3.0-i2v-std",
-#         "3.0-i2v-pro": "--api kieai --type kling --model 3.0-i2v-pro",
-#     }
-# }
-
 def menu_definitaion() -> dict:
     config = genlab.config.Config()
     config.load(os.path.join(BASE_DIR, 'configs'))
@@ -49,7 +29,15 @@ def menu_definitaion() -> dict:
             sub_menu_name = f"{api} {type}"
             menu_definition[sub_menu_name] = {}
             for model in config.models(api, type):
-                menu_definition[sub_menu_name][model] = f"--api {api} --type {type} --model {model}"
+                menu_definition[sub_menu_name][model] = {}
+                if 'image' in sub_menu_name:
+                    # some beefy seed counts for images
+                    seeds = [1, 2, 4, 6, 10]
+                else:
+                    # assume video, 3 is probably max
+                    seeds = [1, 2, 3]
+                for i, num_seeds in enumerate(seeds):
+                    menu_definition[sub_menu_name][model][f"x{num_seeds}@{i}"] = f"--api {api} --type {type} --model {model} --generations {num_seeds}"
 
     from pprint import pprint
     print(menu_definition)
@@ -70,6 +58,12 @@ def sanitize_id(text):
 
 def process_node(node, parent_menu_id, path_prefix=""):
     for key, value in node.items():
+
+        # an @ symbol in the menu item name signifies a grouping for ordering
+        group = None
+        if "@" in key:
+            group = key.split("@")[1]
+            key = key.split("@")[0]
         safe_key = sanitize_id(key)
         
         if isinstance(value, dict):
@@ -105,7 +99,10 @@ def process_node(node, parent_menu_id, path_prefix=""):
             # Attach this command to its parent menu
             if parent_menu_id not in menus:
                 menus[parent_menu_id] = []
-            menus[parent_menu_id].append({"command": command_id})
+            if group:
+                menus[parent_menu_id].append({"command": command_id, "group": group})
+            else:
+                menus[parent_menu_id].append({"command": command_id})
             
             # Generate the TypeScript registration code
             ts_registrations.append(
