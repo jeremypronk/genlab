@@ -12,6 +12,8 @@ from pathlib import Path
 
 from . import NetworkPathConverter, YamlParamReplacer, setup_logging
 
+from . import GenAPI
+
 from .config import Config
 
 from .kieai import KieAIGen
@@ -264,7 +266,10 @@ Example Usage:
 
             (status, response) = kie.query_task()
             if kie.is_finished(status):
-                status = kie.download_result()
+                if status == GenAPI.TASK_STATUS.completed:
+                    status = kie.download_result()
+                else:
+                    logging.error(f"{genlab_path.name} completed but in a failed on unknown status. Check the log for details.")
                 completed_tasks.append(kie)
 
         # remove completed from the queue (outside loop to avoid corrupting the very list it is checking)
