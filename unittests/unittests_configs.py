@@ -45,7 +45,7 @@ class TestConfigYaml(unittest.TestCase):
 class TestConfigValidation(BaseTestCase):
     def setUp(self):
         self.config = Config()
-        self.config._config = {'kieai': {'kling': {'3.0-fflf-std': {'model': 'crower', '$duration': [1,8,512], '^first_frame': "", '^last_frame': "", '?image_urls': ["@first_frame", "@last_frame"]}}}}
+        self.config._config = {'kieai': {'kling': {'3.0-fflf-std': {'model': 'crower', '$duration': [1,8,512], '+first_frame': "", '^last_frame': "", '?image_urls': ["@first_frame", "@last_frame"]}}}}
     
     def test_configs(self):
         with self.assertRaises(KeyError):
@@ -57,12 +57,14 @@ class TestConfigValidation(BaseTestCase):
         with self.assertRaises(KeyError):
             self.config.build_payload('topaz', 'kling', '3.0-fflf-std', {"prompt": "yada yada yada", "duration": 8, "first_frame": "c:/first.png", "last_frame": "last.jpg"}) # api type invalid
 
+        self.assertIsNotNone(self.config.build_payload('kieai', 'kling', '3.0-fflf-std', {"prompt": "yada yada yada", "duration": 8, "last_frame": "c:/last.png"})) # no optional first frame
+
 
 class TestPayload(BaseTestCase):
     def setUp(self):
         self.config = Config()
         self.config._config = {'kieai': {
-            'kling': {'3.0-fflf-std': {'model': 'crower', '$duration': [1, 8, 512], '^first_frame': "", '^last_frame': "", '?image_urls': ["@first_frame", "@last_frame"]}}}}
+            'kling': {'3.0-fflf-std': {'model': 'crower', '$duration': [1, 8, 512], '^first_frame': "", '+last_frame': "", '?image_urls': ["@first_frame", "@last_frame"]}}}}
 
     def test_payload(self):
         payload_no_extras = self.config.build_payload('kieai', 'kling', '3.0-fflf-std',
@@ -71,7 +73,7 @@ class TestPayload(BaseTestCase):
                                                           "duration": 8,
                                                           "first_frame": "c:/first.png",
                                                           "last_frame": "last.jpg"}, include_extra_params=False)
-        self.assertEqual(payload_no_extras, {'model': 'crower',"duration": 8, "image_urls": ["c:/first.png", "last.jpg"]})
+        self.assertEqual(payload_no_extras, {'model': 'crower', "duration": 8, "image_urls": ["c:/first.png", "last.jpg"]})
         
         payload = self.config.build_payload('kieai', 'kling', '3.0-fflf-std',
                                                       {
@@ -79,7 +81,14 @@ class TestPayload(BaseTestCase):
                                                           "duration": 8,
                                                           "first_frame": "c:/first.png",
                                                           "last_frame": "last.jpg"}, include_extra_params=True)
-        self.assertEqual(payload, {'model': 'crower',"duration": 8, "image_urls": ["c:/first.png", "last.jpg"], "prompt": "yada yada yada"})
+        self.assertEqual(payload, {'model': 'crower', "duration": 8, "image_urls": ["c:/first.png", "last.jpg"], "prompt": "yada yada yada"})
+
+        payload = self.config.build_payload('kieai', 'kling', '3.0-fflf-std',
+                                                      {
+                                                          "prompt": "yada yada yada",
+                                                          "duration": 8,
+                                                          "first_frame": "c:/first.png"}, include_extra_params=False)
+        self.assertEqual(payload, {'model': 'crower', "duration": 8, "image_urls": ["c:/first.png"]})
 
 
 class TestConfigs(BaseTestCase):

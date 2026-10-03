@@ -409,6 +409,11 @@ class GenAPI:
         Returns:
             url of uploaded file
         """
+        # check we have a path
+        if not path:
+            self._warning("No path provided")
+            return None
+
         # check if a url has been passed
         if urlparse(str(path)).scheme in ("http", "https", "ftp"):
             return path

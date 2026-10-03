@@ -111,6 +111,16 @@ defaults-video:
     ^first_frame: ""
     ^last_frame: ""
 
+  ".tmpl.ref": &ref
+    ^reference_image_1: ""
+    +reference_image_2: ""
+    +reference_image_3: ""
+    +reference_image_4: ""
+    +reference_image_5: ""
+    ^reference_video_1: ""
+    +reference_video_2: ""
+    +reference_video_3: ""
+
 
 seedance:
 
@@ -121,6 +131,7 @@ seedance:
     web_search: false
     nsfw_checker: false
     aspect_ratio: "16:9" # lock this for now, (2.5 has adaptive 2.0 does not)
+    $duration: [4,5,6,7,8,9,10,11,12,13,14,15]
     ^prompt: ""
 
 
@@ -130,7 +141,6 @@ seedance:
     <<: *seedance2_
     <<: *i2v
     ?first_frame_url: "@first_frame"
-    $duration: [4,5,6,7,8,9,10,11,12,13,14,15]
 
   "2.0-i2v-480p":
     <<: *seedance2-i2v
@@ -165,7 +175,6 @@ seedance:
     <<: *fflf
     ?first_frame_url: "@first_frame"
     ?last_frame_url: "@last_frame"
-    $duration: [4,5,6,7,8,9,10,11,12,13,14,15]
     
   "2.0-fflf-480p":
     <<: *seedance2-fflf
@@ -189,6 +198,35 @@ seedance:
 
   "2.0-fast-fflf-720p":
     <<: *seedance2-fflf
+    model: bytedance/seedance-2-fast
+    resolution: "720p"
+
+
+  # seedance 2.0 reference image and reference video
+
+  ".tmpl.2-ref": &seedance2-ref
+    <<: *seedance2_
+    <<: *ref
+    ?reference_image_urls: ["@reference_image_1", "@reference_image_2", "@reference_image_3", "@reference_image_4", "@reference_image_5"]
+    ?reference_video_urls: ["@reference_video_1", "@reference_video_2", "@reference_video_3"]
+
+  "2.0-ref-480p":
+    <<: *seedance2-ref
+    model: bytedance/seedance-2
+    resolution: "480p"
+
+  "2.0-ref-720p":
+    <<: *seedance2-ref
+    model: bytedance/seedance-2
+    resolution: "720p"
+
+  "2.0-fast-ref-480p":
+    <<: *seedance2-ref
+    model: bytedance/seedance-2-fast
+    resolution: "480p"
+
+  "2.0-fast-ref-720p":
+    <<: *seedance2-ref
     model: bytedance/seedance-2-fast
     resolution: "720p"
 
@@ -233,6 +271,24 @@ seedance:
   "2.5-fflf-720p":
     <<: *seedance2-5-fflf
     resolution: "720p"
+
+
+  # seedance 2.5 reference image and reference video
+
+  ".tmpl.2.5-ref": &seedance2-5-ref
+    <<: *seedance2-5
+    <<: *ref
+    ?reference_image_urls: ["@reference_image_1", "@reference_image_2", "@reference_image_3", "@reference_image_4", "@reference_image_5"]
+    ?reference_video_urls: ["@reference_video_1", "@reference_video_2", "@reference_video_3"]
+
+  "2.5-ref-480p":
+    <<: *seedance2-5-ref
+    resolution: "480p"
+
+  "2.5-ref-720p":
+    <<: *seedance2-5-ref
+    resolution: "720p"
+
 
 
 kling:

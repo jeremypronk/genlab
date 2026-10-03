@@ -62,10 +62,16 @@ def load_genlab(genlab_path: Path, api: str, type: str, model: str):
 def create_tasks(genlab_path, api, type, model, generations=1, test=False, path_converter_func=lambda x: x):
     logging.info(f"create_tasks: {genlab_path.name}")
 
+    payload = None
+
     # read the payload from the genlab file (yaml)
-    payload = load_genlab(genlab_path, api=api, type=type, model=model)
+    try:
+        payload = load_genlab(genlab_path, api=api, type=type, model=model)
+    except (KeyError, ValueError) as e:
+        logging.warning(f"SKIPPED: {genlab_path.name} - {e}")
     if not payload:
-        return None
+        return
+
     logging.debug(f"Pre-Payload: f{payload}")
 
     # check we're not forcing a seed and running multiple generations
@@ -228,7 +234,6 @@ Example Usage:
         if args.download:
             kies = yaml_connect_to_existing_tasks(genlab_path, path_converter_func=path_converter_func)
         else:
-            #kies = create_tasks(genlab_path, generations=args.generations, test=args.dryrun, path_converter_func=path_converter_func)
             kies = create_tasks(genlab_path,
                                 api=args.api,
                                 type=args.type,
@@ -236,15 +241,16 @@ Example Usage:
                                 generations=args.generations,
                                 test=args.dryrun,
                                 path_converter_func=path_converter_func)
+
+        if kies:
             if len(kies) != args.generations:
                 logging.warning(f"{genlab_path.name} some generations did not start.")
-        if kies:
             _TASKS_WAITING_QUEUE.extend(kies)
-        elif not args.download:
-            logging.warning(f"{genlab_path} failed or nothing to do!")
+        else:
+            logging.warning(f"{genlab_path} failed to start!")
 
     if not _TASKS_WAITING_QUEUE:
-        logging.error(f"Nothing to do!")
+        logging.error(f"Nothing to do check the log!")
         exit(-67)
         
     logging.info("Waiting for all tasks to be completed.")
