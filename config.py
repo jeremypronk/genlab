@@ -9,6 +9,8 @@ class Config:
     """
     Configurable interface for gen ai api parameter task/request payloads.
 
+    Parameters with no prepending key are always included in the payload as specified in the config.
+    See below for handling details of parameters with a prepended special key.
     """
 
     # template elements are culled (used as references in yaml build)
@@ -16,6 +18,8 @@ class Config:
 
     # ^ (caret) prepending key is a required param
     REQUIRED_ELEMENT_PREFIX = "^"
+    # + (plus) prepending key is an optional param, will only be included if specified
+    OPTIONAL_ELEMENT_PREFIX = "+"
     # $ (dollar) prepending key is a required param and an enum
     ENUM_ELEMENT_PREFIX     = "$"
     # ? (question) prepending key is a param with referenced values (see REF_VALUE_PREFIX)
@@ -163,7 +167,7 @@ class Config:
         model_config = copy.deepcopy(self._config[api][type][model]) # make a complete copy to avoid referencing the config db
         for config_param, config_value in model_config.items():
 
-            # handle input params
+            # handle required input params
             if config_param[0] in [Config.REQUIRED_ELEMENT_PREFIX, Config.ENUM_ELEMENT_PREFIX]:
                 param = config_param[1:]
 
@@ -186,6 +190,16 @@ class Config:
                 # copy in the param,value
                 payload[param] = params[param]
 
+            # handle optional input params
+            elif config_param[0] in Config.OPTIONAL_ELEMENT_PREFIX:
+                param = config_param[1:]
+
+                if param in params:
+                    # copy in the param,value
+                    payload[param] = params[param]
+                else:
+                    pass # optional so nothing to do if it isnt specified
+
             else:
 
                 # use the config setting
@@ -193,44 +207,57 @@ class Config:
 
 
         # handle referenced param values
+        # IF THE REFERENCE PARAM DOESNT EXIST, IT WAS OPTIONAL AND NOT SPECIFIED,
+        # therefore the reference param is (or element if a list) is also optional
         for param, value in payload.copy().items():
 
             # connect reference element
             if param[0] == Config.REF_ELEMENT_PREFIX:
                 ref_param = param[1:]
-                payload[ref_param] = payload.pop(param) # remove the REF_ELEMENT_PREFIX from the param name
 
-                # if a list need to check each time for reference link
+                # remove the ref param, we will recreate it
+                del (payload[param])
+
+                # create the absolute param
                 if isinstance(value, (list, tuple)):
-                    for i, v in enumerate(value):
-                        if v[0] == Config.REF_VALUE_PREFIX: # is this a referenced value?
+                    # if a list need to check each time for reference link
+                    payload[ref_param] = []
+
+                    for v in value:
+                        # is this a referenced value?
+                        if v[0] == Config.REF_VALUE_PREFIX:
                             param_ref = v[1:] # referenced param name
-                            payload[ref_param][i] = payload[param_ref] # use the value from the referenced param
-                            del(payload[param_ref]) # remove the referenced param
+                            # check the ref param exists (if not must been optional, nothing to do)
+                            if param_ref in payload:
+                                payload[ref_param].append(payload[param_ref]) # use the value from the referenced param
+                                del(payload[param_ref]) # remove the referenced param
 
                         else:
-                            # just use the value, no reference found
-                            payload[ref_param][i] = v
+                            # not a reference, just use the value
+                            payload[ref_param].append(v)
 
-                # is it a reference line ?
                 elif isinstance(value, str):
+                    # is it a reference string?
                     if value[0] == Config.REF_VALUE_PREFIX:  # is this a referenced value? (if not there is not point to this)
                         param_ref = value[1:]  # referenced param name
-                        payload[ref_param] = payload[param_ref]  # use the value from the referenced param
-                        del(payload[param_ref]) # remove the referenced param
+                        # check the ref param exists (if not must been optional, nothing to do)
+                        if param_ref in payload:
+                            payload[ref_param] = payload[param_ref]  # use the value from the referenced param
+                            del(payload[param_ref]) # remove the referenced param
 
                     else:
                         # just use the value, no reference found
                         payload[ref_param] = value
 
 
-        # find input params that are not listed in the config (not including reference params)
-        all_extra_params = list(set(params.keys()) - set(payload.keys()))
-        # and remove extras that have been referenced
-        extra_params = []
-        for extra_param in all_extra_params:
-            if f"^{extra_param}" not in self._config[api][type][model]:
-                extra_params.append(extra_param)
+        # find difference, which would be extra params PLUS any keyed params
+        extra_params = list(set(params.keys()) - set(payload.keys()))
+        # handle keyed params
+        for extra_param in extra_params.copy():
+            for param_key in [Config.REQUIRED_ELEMENT_PREFIX, Config.ENUM_ELEMENT_PREFIX, Config.OPTIONAL_ELEMENT_PREFIX]:
+                keyed_param = f"{param_key}{extra_param}"
+                if keyed_param in self._config[api][type][model]:
+                    extra_params.remove(extra_param)
         # any left?
         if extra_params:
 

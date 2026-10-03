@@ -1,0 +1,4 @@
+prompt: Adjust @Video1 so the time of day transitions from day at the beginning to night as seen in the reference image @Image1. Do not change anything in @Video1 except for the lighting.
+reference_image_1: genlab_billboard_night_edit_00000.png
+reference_video_1: genlab_billboard_video_00000.mp4
+duration: 4
