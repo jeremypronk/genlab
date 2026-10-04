@@ -378,6 +378,14 @@ class GenAPI:
     def __repr__(self):
         return f"{type(self).__name__}({self._task_id}, {self._output_basepath})"
 
+    @property
+    def basepath(self):
+        """
+        The full path of the task output without extension.
+        This is the path to which results will be written.
+        """
+        return self._output_basepath
+
     def _name(self):
         return self._output_basepath.stem
 
@@ -528,6 +536,8 @@ class GenAPI:
                 r.raise_for_status()
                 total_size = int(r.headers.get('content-length', -1))
                 bytes_downloaded = 0
+                if output_path.exists():
+                    self._warning(f"Output file already exists, overwriting! {output_path}")
                 with open(output_path, 'wb') as f:
                     for chunk in r.iter_content(chunk_size=8192):
                         f.write(chunk)

@@ -43,17 +43,18 @@ def api_task_factory(api, output_basepath, path_converter_func=lambda x: x):
         logging.error(f"Unknown api task {api}.")
         return
 
+# TODO: is there a point to connecting to an existing task other than to download?
+# TODO: prep_task doesn't need to be run just for download, it may even upload inputs which is not required at all for only download
 def connect_to_existing_tasks(genlab_path, api, path_converter_func=lambda x: x):
     logging.info(f"connect_to_existing_tasks: {genlab_path.name}")
 
-    task_paths = [f for f in genlab_path.parent.glob(f"{genlab_path.stem}*.task")]
+    # check each existing task associated with this genlab file
     api_tasks = []
+    task_paths = [f for f in genlab_path.parent.glob(f"{genlab_path.stem}*.task")]
     for task_path in task_paths:
-        excluded = {'.genlab', '.yaml', '.yml', '.task'}
-        file_paths = [f for f in task_path.parent.glob(f"{task_path.stem}.*") if
-                      f.suffix.lower() not in excluded]
-        logging.debug(f"Found task sidecar possible video files: {file_paths}")
-        if not file_paths:
+
+        # the .complete file signals the task has previously completed
+        if not task_path.with_suffix(".complete").exists():
 
             with open(task_path, 'r') as f:
                 task_id = f.readline().strip()
@@ -67,6 +68,9 @@ def connect_to_existing_tasks(genlab_path, api, path_converter_func=lambda x: x)
 
             else:
                 logging.error(f"prep_task failed for {payload} {task_id}.")
+
+        else:
+            logging.warning(f"Skipping completed task {task_path.stem}. Delete the .complete file if you would like to force connecting to an existing task.")
 
     return api_tasks
 
@@ -271,7 +275,8 @@ Example Usage:
             (status, response) = api_task.query_task()
             if api_task.is_finished(status):
                 if status == GenAPI.TASK_STATUS.completed:
-                    status = api_task.download_result()
+                    api_task.download_result()
+                    api_task.basepath.with_suffix('.complete').touch() # completed successfully
                 else:
                     logging.error(f"{genlab_path.name} completed but in a failed on unknown status. Check the log for details.")
                 completed_tasks.append(api_task)
