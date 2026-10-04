@@ -24,9 +24,17 @@ def menu_definitaion() -> dict:
     #             menu_definition[api][type][model] = f"--api {api} --type {type} --model {model}"
 
     # flatter menu depth
+    menu_top_level_order = 0
+
     for api in config.apis:
+
+        # create a download item per api
+        menu_definition[f"{api} task download@genlab{menu_top_level_order:02d}"] = f"--api {api} --download"
+
+        # now create the task/request items for each model and type
         for type in config.types(api):
-            sub_menu_name = f"{api} {type}"
+            sub_menu_name = f"{api} {type}@genlab{menu_top_level_order:02d}"
+            menu_top_level_order += 1
             menu_definition[sub_menu_name] = {}
             for model in config.models(api, type):
                 menu_definition[sub_menu_name][model] = {}
@@ -37,10 +45,11 @@ def menu_definitaion() -> dict:
                     # assume video, 3 is probably max
                     seeds = [1, 2, 3]
                 for i, num_seeds in enumerate(seeds):
-                    menu_definition[sub_menu_name][model][f"x{num_seeds}@{i}"] = f"--api {api} --type {type} --model {model} --generations {num_seeds}"
+                    menu_definition[sub_menu_name][model][f"x{num_seeds}@{i:02d}"] = f"--api {api} --type {type} --model {model} --generations {num_seeds}"
 
-    from pprint import pprint
-    print(menu_definition)
+
+    # from pprint import pprint
+    # print(menu_definition)
 
     return menu_definition
 
@@ -77,9 +86,6 @@ def process_node(node, parent_menu_id, path_prefix=""):
             
             # Attach this submenu to its parent
             menu_entry = {"submenu": submenu_id}
-            if parent_menu_id == "explorer/context":
-                menu_entry["group"] = "genlab" # custom group goes to end of the menu
-            
             if parent_menu_id not in menus:
                 menus[parent_menu_id] = []
             menus[parent_menu_id].append(menu_entry)

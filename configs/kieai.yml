@@ -5,6 +5,7 @@
 
 # .tmpl. template elements are culled (used as references in yaml build)
 # ^ (caret) prepending key is a required param
+# + (plus) prepending key is an optional param, will only be included if specified in the payload
 # $ (dollar) prepending key is a required param and an enum
 # ? (question) prepending key is a param with referenced values (see REF_VALUE_PREFIX)
 # @ (at symbol) prepends reference element name

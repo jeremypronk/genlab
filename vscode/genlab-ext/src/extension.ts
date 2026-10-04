@@ -33,6 +33,9 @@ export function activate(context: vscode.ExtensionContext) {
 	// This line of code will only be executed once when your extension is activated
 	console.log('Congratulations, your extension "genlab-ext" is now active!');
 
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_task_download', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api kieai --download');
+    }));
     context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_image_nano_banana_pro_t2i_2K_x1', (uri: vscode.Uri) => {
         runPythonScript(uri, '--api kieai --type image --model nano-banana-pro-t2i-2K --generations 1');
     }));
@@ -243,6 +246,42 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_seedance_2_0_fast_fflf_720p_x3', (uri: vscode.Uri) => {
         runPythonScript(uri, '--api kieai --type seedance --model 2.0-fast-fflf-720p --generations 3');
     }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_seedance_2_0_ref_480p_x1', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api kieai --type seedance --model 2.0-ref-480p --generations 1');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_seedance_2_0_ref_480p_x2', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api kieai --type seedance --model 2.0-ref-480p --generations 2');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_seedance_2_0_ref_480p_x3', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api kieai --type seedance --model 2.0-ref-480p --generations 3');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_seedance_2_0_ref_720p_x1', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api kieai --type seedance --model 2.0-ref-720p --generations 1');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_seedance_2_0_ref_720p_x2', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api kieai --type seedance --model 2.0-ref-720p --generations 2');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_seedance_2_0_ref_720p_x3', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api kieai --type seedance --model 2.0-ref-720p --generations 3');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_seedance_2_0_fast_ref_480p_x1', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api kieai --type seedance --model 2.0-fast-ref-480p --generations 1');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_seedance_2_0_fast_ref_480p_x2', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api kieai --type seedance --model 2.0-fast-ref-480p --generations 2');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_seedance_2_0_fast_ref_480p_x3', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api kieai --type seedance --model 2.0-fast-ref-480p --generations 3');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_seedance_2_0_fast_ref_720p_x1', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api kieai --type seedance --model 2.0-fast-ref-720p --generations 1');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_seedance_2_0_fast_ref_720p_x2', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api kieai --type seedance --model 2.0-fast-ref-720p --generations 2');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_seedance_2_0_fast_ref_720p_x3', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api kieai --type seedance --model 2.0-fast-ref-720p --generations 3');
+    }));
     context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_seedance_2_5_i2v_480p_x1', (uri: vscode.Uri) => {
         runPythonScript(uri, '--api kieai --type seedance --model 2.5-i2v-480p --generations 1');
     }));
@@ -278,6 +317,24 @@ export function activate(context: vscode.ExtensionContext) {
     }));
     context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_seedance_2_5_fflf_720p_x3', (uri: vscode.Uri) => {
         runPythonScript(uri, '--api kieai --type seedance --model 2.5-fflf-720p --generations 3');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_seedance_2_5_ref_480p_x1', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api kieai --type seedance --model 2.5-ref-480p --generations 1');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_seedance_2_5_ref_480p_x2', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api kieai --type seedance --model 2.5-ref-480p --generations 2');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_seedance_2_5_ref_480p_x3', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api kieai --type seedance --model 2.5-ref-480p --generations 3');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_seedance_2_5_ref_720p_x1', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api kieai --type seedance --model 2.5-ref-720p --generations 1');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_seedance_2_5_ref_720p_x2', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api kieai --type seedance --model 2.5-ref-720p --generations 2');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_seedance_2_5_ref_720p_x3', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api kieai --type seedance --model 2.5-ref-720p --generations 3');
     }));
     context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_kling_2_1_i2v_std_x1', (uri: vscode.Uri) => {
         runPythonScript(uri, '--api kieai --type kling --model 2.1-i2v-std --generations 1');

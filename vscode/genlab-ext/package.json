@@ -2,7 +2,7 @@
   "name": "genlab-ext",
   "displayName": "genlab-ext",
   "description": "GenLab vscode extension",
-  "version": "0.0.3",
+  "version": "0.0.5",
   "engines": {
     "vscode": "^1.138.0"
   },
@@ -19,6 +19,10 @@
       }
     ],
     "commands": [
+      {
+        "command": "scriptRunner.cmd.kieai_task_download",
+        "title": "kieai task download"
+      },
       {
         "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_t2i_2K_x1",
         "title": "x1"
@@ -300,6 +304,54 @@
         "title": "x3"
       },
       {
+        "command": "scriptRunner.cmd.kieai_seedance_2_0_ref_480p_x1",
+        "title": "x1"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_seedance_2_0_ref_480p_x2",
+        "title": "x2"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_seedance_2_0_ref_480p_x3",
+        "title": "x3"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_seedance_2_0_ref_720p_x1",
+        "title": "x1"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_seedance_2_0_ref_720p_x2",
+        "title": "x2"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_seedance_2_0_ref_720p_x3",
+        "title": "x3"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_seedance_2_0_fast_ref_480p_x1",
+        "title": "x1"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_seedance_2_0_fast_ref_480p_x2",
+        "title": "x2"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_seedance_2_0_fast_ref_480p_x3",
+        "title": "x3"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_seedance_2_0_fast_ref_720p_x1",
+        "title": "x1"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_seedance_2_0_fast_ref_720p_x2",
+        "title": "x2"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_seedance_2_0_fast_ref_720p_x3",
+        "title": "x3"
+      },
+      {
         "command": "scriptRunner.cmd.kieai_seedance_2_5_i2v_480p_x1",
         "title": "x1"
       },
@@ -345,6 +397,30 @@
       },
       {
         "command": "scriptRunner.cmd.kieai_seedance_2_5_fflf_720p_x3",
+        "title": "x3"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_seedance_2_5_ref_480p_x1",
+        "title": "x1"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_seedance_2_5_ref_480p_x2",
+        "title": "x2"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_seedance_2_5_ref_480p_x3",
+        "title": "x3"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_seedance_2_5_ref_720p_x1",
+        "title": "x1"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_seedance_2_5_ref_720p_x2",
+        "title": "x2"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_seedance_2_5_ref_720p_x3",
         "title": "x3"
       },
       {
@@ -530,6 +606,22 @@
         "label": "2.0-fast-fflf-720p"
       },
       {
+        "id": "scriptRunner.menu.kieai_seedance_2_0_ref_480p",
+        "label": "2.0-ref-480p"
+      },
+      {
+        "id": "scriptRunner.menu.kieai_seedance_2_0_ref_720p",
+        "label": "2.0-ref-720p"
+      },
+      {
+        "id": "scriptRunner.menu.kieai_seedance_2_0_fast_ref_480p",
+        "label": "2.0-fast-ref-480p"
+      },
+      {
+        "id": "scriptRunner.menu.kieai_seedance_2_0_fast_ref_720p",
+        "label": "2.0-fast-ref-720p"
+      },
+      {
         "id": "scriptRunner.menu.kieai_seedance_2_5_i2v_480p",
         "label": "2.5-i2v-480p"
       },
@@ -544,6 +636,14 @@
       {
         "id": "scriptRunner.menu.kieai_seedance_2_5_fflf_720p",
         "label": "2.5-fflf-720p"
+      },
+      {
+        "id": "scriptRunner.menu.kieai_seedance_2_5_ref_480p",
+        "label": "2.5-ref-480p"
+      },
+      {
+        "id": "scriptRunner.menu.kieai_seedance_2_5_ref_720p",
+        "label": "2.5-ref-720p"
       },
       {
         "id": "scriptRunner.menu.kieai_kling",
@@ -585,20 +685,20 @@
     "menus": {
       "explorer/context": [
         {
-          "submenu": "scriptRunner.menu.kieai_image",
-          "group": "genlab"
+          "command": "scriptRunner.cmd.kieai_task_download",
+          "group": "genlab00"
         },
         {
-          "submenu": "scriptRunner.menu.kieai_gpt_image",
-          "group": "genlab"
+          "submenu": "scriptRunner.menu.kieai_image"
         },
         {
-          "submenu": "scriptRunner.menu.kieai_seedance",
-          "group": "genlab"
+          "submenu": "scriptRunner.menu.kieai_gpt_image"
         },
         {
-          "submenu": "scriptRunner.menu.kieai_kling",
-          "group": "genlab"
+          "submenu": "scriptRunner.menu.kieai_seedance"
+        },
+        {
+          "submenu": "scriptRunner.menu.kieai_kling"
         }
       ],
       "scriptRunner.menu.kieai_image": [
@@ -618,89 +718,89 @@
       "scriptRunner.menu.kieai_image_nano_banana_pro_t2i_2K": [
         {
           "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_t2i_2K_x1",
-          "group": "0"
+          "group": "00"
         },
         {
           "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_t2i_2K_x2",
-          "group": "1"
+          "group": "01"
         },
         {
           "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_t2i_2K_x4",
-          "group": "2"
+          "group": "02"
         },
         {
           "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_t2i_2K_x6",
-          "group": "3"
+          "group": "03"
         },
         {
           "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_t2i_2K_x10",
-          "group": "4"
+          "group": "04"
         }
       ],
       "scriptRunner.menu.kieai_image_nano_banana_pro_t2i_4K": [
         {
           "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_t2i_4K_x1",
-          "group": "0"
+          "group": "00"
         },
         {
           "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_t2i_4K_x2",
-          "group": "1"
+          "group": "01"
         },
         {
           "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_t2i_4K_x4",
-          "group": "2"
+          "group": "02"
         },
         {
           "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_t2i_4K_x6",
-          "group": "3"
+          "group": "03"
         },
         {
           "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_t2i_4K_x10",
-          "group": "4"
+          "group": "04"
         }
       ],
       "scriptRunner.menu.kieai_image_nano_banana_pro_i2i_2K": [
         {
           "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_i2i_2K_x1",
-          "group": "0"
+          "group": "00"
         },
         {
           "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_i2i_2K_x2",
-          "group": "1"
+          "group": "01"
         },
         {
           "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_i2i_2K_x4",
-          "group": "2"
+          "group": "02"
         },
         {
           "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_i2i_2K_x6",
-          "group": "3"
+          "group": "03"
         },
         {
           "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_i2i_2K_x10",
-          "group": "4"
+          "group": "04"
         }
       ],
       "scriptRunner.menu.kieai_image_nano_banana_pro_i2i_4K": [
         {
           "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_i2i_4K_x1",
-          "group": "0"
+          "group": "00"
         },
         {
           "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_i2i_4K_x2",
-          "group": "1"
+          "group": "01"
         },
         {
           "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_i2i_4K_x4",
-          "group": "2"
+          "group": "02"
         },
         {
           "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_i2i_4K_x6",
-          "group": "3"
+          "group": "03"
         },
         {
           "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_i2i_4K_x10",
-          "group": "4"
+          "group": "04"
         }
       ],
       "scriptRunner.menu.kieai_gpt_image": [
@@ -720,89 +820,89 @@
       "scriptRunner.menu.kieai_gpt_image_2_5_sunburst_t2i_2K": [
         {
           "command": "scriptRunner.cmd.kieai_gpt_image_2_5_sunburst_t2i_2K_x1",
-          "group": "0"
+          "group": "00"
         },
         {
           "command": "scriptRunner.cmd.kieai_gpt_image_2_5_sunburst_t2i_2K_x2",
-          "group": "1"
+          "group": "01"
         },
         {
           "command": "scriptRunner.cmd.kieai_gpt_image_2_5_sunburst_t2i_2K_x4",
-          "group": "2"
+          "group": "02"
         },
         {
           "command": "scriptRunner.cmd.kieai_gpt_image_2_5_sunburst_t2i_2K_x6",
-          "group": "3"
+          "group": "03"
         },
         {
           "command": "scriptRunner.cmd.kieai_gpt_image_2_5_sunburst_t2i_2K_x10",
-          "group": "4"
+          "group": "04"
         }
       ],
       "scriptRunner.menu.kieai_gpt_image_2_5_sunburst_t2i_4K": [
         {
           "command": "scriptRunner.cmd.kieai_gpt_image_2_5_sunburst_t2i_4K_x1",
-          "group": "0"
+          "group": "00"
         },
         {
           "command": "scriptRunner.cmd.kieai_gpt_image_2_5_sunburst_t2i_4K_x2",
-          "group": "1"
+          "group": "01"
         },
         {
           "command": "scriptRunner.cmd.kieai_gpt_image_2_5_sunburst_t2i_4K_x4",
-          "group": "2"
+          "group": "02"
         },
         {
           "command": "scriptRunner.cmd.kieai_gpt_image_2_5_sunburst_t2i_4K_x6",
-          "group": "3"
+          "group": "03"
         },
         {
           "command": "scriptRunner.cmd.kieai_gpt_image_2_5_sunburst_t2i_4K_x10",
-          "group": "4"
+          "group": "04"
         }
       ],
       "scriptRunner.menu.kieai_gpt_image_2_5_sunburst_i2i_2K": [
         {
           "command": "scriptRunner.cmd.kieai_gpt_image_2_5_sunburst_i2i_2K_x1",
-          "group": "0"
+          "group": "00"
         },
         {
           "command": "scriptRunner.cmd.kieai_gpt_image_2_5_sunburst_i2i_2K_x2",
-          "group": "1"
+          "group": "01"
         },
         {
           "command": "scriptRunner.cmd.kieai_gpt_image_2_5_sunburst_i2i_2K_x4",
-          "group": "2"
+          "group": "02"
         },
         {
           "command": "scriptRunner.cmd.kieai_gpt_image_2_5_sunburst_i2i_2K_x6",
-          "group": "3"
+          "group": "03"
         },
         {
           "command": "scriptRunner.cmd.kieai_gpt_image_2_5_sunburst_i2i_2K_x10",
-          "group": "4"
+          "group": "04"
         }
       ],
       "scriptRunner.menu.kieai_gpt_image_2_5_sunburst_i2i_4K": [
         {
           "command": "scriptRunner.cmd.kieai_gpt_image_2_5_sunburst_i2i_4K_x1",
-          "group": "0"
+          "group": "00"
         },
         {
           "command": "scriptRunner.cmd.kieai_gpt_image_2_5_sunburst_i2i_4K_x2",
-          "group": "1"
+          "group": "01"
         },
         {
           "command": "scriptRunner.cmd.kieai_gpt_image_2_5_sunburst_i2i_4K_x4",
-          "group": "2"
+          "group": "02"
         },
         {
           "command": "scriptRunner.cmd.kieai_gpt_image_2_5_sunburst_i2i_4K_x6",
-          "group": "3"
+          "group": "03"
         },
         {
           "command": "scriptRunner.cmd.kieai_gpt_image_2_5_sunburst_i2i_4K_x10",
-          "group": "4"
+          "group": "04"
         }
       ],
       "scriptRunner.menu.kieai_seedance": [
@@ -837,6 +937,18 @@
           "submenu": "scriptRunner.menu.kieai_seedance_2_0_fast_fflf_720p"
         },
         {
+          "submenu": "scriptRunner.menu.kieai_seedance_2_0_ref_480p"
+        },
+        {
+          "submenu": "scriptRunner.menu.kieai_seedance_2_0_ref_720p"
+        },
+        {
+          "submenu": "scriptRunner.menu.kieai_seedance_2_0_fast_ref_480p"
+        },
+        {
+          "submenu": "scriptRunner.menu.kieai_seedance_2_0_fast_ref_720p"
+        },
+        {
           "submenu": "scriptRunner.menu.kieai_seedance_2_5_i2v_480p"
         },
         {
@@ -847,202 +959,292 @@
         },
         {
           "submenu": "scriptRunner.menu.kieai_seedance_2_5_fflf_720p"
+        },
+        {
+          "submenu": "scriptRunner.menu.kieai_seedance_2_5_ref_480p"
+        },
+        {
+          "submenu": "scriptRunner.menu.kieai_seedance_2_5_ref_720p"
         }
       ],
       "scriptRunner.menu.kieai_seedance_2_0_i2v_480p": [
         {
           "command": "scriptRunner.cmd.kieai_seedance_2_0_i2v_480p_x1",
-          "group": "0"
+          "group": "00"
         },
         {
           "command": "scriptRunner.cmd.kieai_seedance_2_0_i2v_480p_x2",
-          "group": "1"
+          "group": "01"
         },
         {
           "command": "scriptRunner.cmd.kieai_seedance_2_0_i2v_480p_x3",
-          "group": "2"
+          "group": "02"
         }
       ],
       "scriptRunner.menu.kieai_seedance_2_0_i2v_720p": [
         {
           "command": "scriptRunner.cmd.kieai_seedance_2_0_i2v_720p_x1",
-          "group": "0"
+          "group": "00"
         },
         {
           "command": "scriptRunner.cmd.kieai_seedance_2_0_i2v_720p_x2",
-          "group": "1"
+          "group": "01"
         },
         {
           "command": "scriptRunner.cmd.kieai_seedance_2_0_i2v_720p_x3",
-          "group": "2"
+          "group": "02"
         }
       ],
       "scriptRunner.menu.kieai_seedance_2_0_i2v_1080p": [
         {
           "command": "scriptRunner.cmd.kieai_seedance_2_0_i2v_1080p_x1",
-          "group": "0"
+          "group": "00"
         },
         {
           "command": "scriptRunner.cmd.kieai_seedance_2_0_i2v_1080p_x2",
-          "group": "1"
+          "group": "01"
         },
         {
           "command": "scriptRunner.cmd.kieai_seedance_2_0_i2v_1080p_x3",
-          "group": "2"
+          "group": "02"
         }
       ],
       "scriptRunner.menu.kieai_seedance_2_0_fast_i2v_480p": [
         {
           "command": "scriptRunner.cmd.kieai_seedance_2_0_fast_i2v_480p_x1",
-          "group": "0"
+          "group": "00"
         },
         {
           "command": "scriptRunner.cmd.kieai_seedance_2_0_fast_i2v_480p_x2",
-          "group": "1"
+          "group": "01"
         },
         {
           "command": "scriptRunner.cmd.kieai_seedance_2_0_fast_i2v_480p_x3",
-          "group": "2"
+          "group": "02"
         }
       ],
       "scriptRunner.menu.kieai_seedance_2_0_fast_i2v_720p": [
         {
           "command": "scriptRunner.cmd.kieai_seedance_2_0_fast_i2v_720p_x1",
-          "group": "0"
+          "group": "00"
         },
         {
           "command": "scriptRunner.cmd.kieai_seedance_2_0_fast_i2v_720p_x2",
-          "group": "1"
+          "group": "01"
         },
         {
           "command": "scriptRunner.cmd.kieai_seedance_2_0_fast_i2v_720p_x3",
-          "group": "2"
+          "group": "02"
         }
       ],
       "scriptRunner.menu.kieai_seedance_2_0_fflf_480p": [
         {
           "command": "scriptRunner.cmd.kieai_seedance_2_0_fflf_480p_x1",
-          "group": "0"
+          "group": "00"
         },
         {
           "command": "scriptRunner.cmd.kieai_seedance_2_0_fflf_480p_x2",
-          "group": "1"
+          "group": "01"
         },
         {
           "command": "scriptRunner.cmd.kieai_seedance_2_0_fflf_480p_x3",
-          "group": "2"
+          "group": "02"
         }
       ],
       "scriptRunner.menu.kieai_seedance_2_0_fflf_720p": [
         {
           "command": "scriptRunner.cmd.kieai_seedance_2_0_fflf_720p_x1",
-          "group": "0"
+          "group": "00"
         },
         {
           "command": "scriptRunner.cmd.kieai_seedance_2_0_fflf_720p_x2",
-          "group": "1"
+          "group": "01"
         },
         {
           "command": "scriptRunner.cmd.kieai_seedance_2_0_fflf_720p_x3",
-          "group": "2"
+          "group": "02"
         }
       ],
       "scriptRunner.menu.kieai_seedance_2_0_fflf_1080p": [
         {
           "command": "scriptRunner.cmd.kieai_seedance_2_0_fflf_1080p_x1",
-          "group": "0"
+          "group": "00"
         },
         {
           "command": "scriptRunner.cmd.kieai_seedance_2_0_fflf_1080p_x2",
-          "group": "1"
+          "group": "01"
         },
         {
           "command": "scriptRunner.cmd.kieai_seedance_2_0_fflf_1080p_x3",
-          "group": "2"
+          "group": "02"
         }
       ],
       "scriptRunner.menu.kieai_seedance_2_0_fast_fflf_480p": [
         {
           "command": "scriptRunner.cmd.kieai_seedance_2_0_fast_fflf_480p_x1",
-          "group": "0"
+          "group": "00"
         },
         {
           "command": "scriptRunner.cmd.kieai_seedance_2_0_fast_fflf_480p_x2",
-          "group": "1"
+          "group": "01"
         },
         {
           "command": "scriptRunner.cmd.kieai_seedance_2_0_fast_fflf_480p_x3",
-          "group": "2"
+          "group": "02"
         }
       ],
       "scriptRunner.menu.kieai_seedance_2_0_fast_fflf_720p": [
         {
           "command": "scriptRunner.cmd.kieai_seedance_2_0_fast_fflf_720p_x1",
-          "group": "0"
+          "group": "00"
         },
         {
           "command": "scriptRunner.cmd.kieai_seedance_2_0_fast_fflf_720p_x2",
-          "group": "1"
+          "group": "01"
         },
         {
           "command": "scriptRunner.cmd.kieai_seedance_2_0_fast_fflf_720p_x3",
-          "group": "2"
+          "group": "02"
+        }
+      ],
+      "scriptRunner.menu.kieai_seedance_2_0_ref_480p": [
+        {
+          "command": "scriptRunner.cmd.kieai_seedance_2_0_ref_480p_x1",
+          "group": "00"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_seedance_2_0_ref_480p_x2",
+          "group": "01"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_seedance_2_0_ref_480p_x3",
+          "group": "02"
+        }
+      ],
+      "scriptRunner.menu.kieai_seedance_2_0_ref_720p": [
+        {
+          "command": "scriptRunner.cmd.kieai_seedance_2_0_ref_720p_x1",
+          "group": "00"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_seedance_2_0_ref_720p_x2",
+          "group": "01"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_seedance_2_0_ref_720p_x3",
+          "group": "02"
+        }
+      ],
+      "scriptRunner.menu.kieai_seedance_2_0_fast_ref_480p": [
+        {
+          "command": "scriptRunner.cmd.kieai_seedance_2_0_fast_ref_480p_x1",
+          "group": "00"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_seedance_2_0_fast_ref_480p_x2",
+          "group": "01"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_seedance_2_0_fast_ref_480p_x3",
+          "group": "02"
+        }
+      ],
+      "scriptRunner.menu.kieai_seedance_2_0_fast_ref_720p": [
+        {
+          "command": "scriptRunner.cmd.kieai_seedance_2_0_fast_ref_720p_x1",
+          "group": "00"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_seedance_2_0_fast_ref_720p_x2",
+          "group": "01"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_seedance_2_0_fast_ref_720p_x3",
+          "group": "02"
         }
       ],
       "scriptRunner.menu.kieai_seedance_2_5_i2v_480p": [
         {
           "command": "scriptRunner.cmd.kieai_seedance_2_5_i2v_480p_x1",
-          "group": "0"
+          "group": "00"
         },
         {
           "command": "scriptRunner.cmd.kieai_seedance_2_5_i2v_480p_x2",
-          "group": "1"
+          "group": "01"
         },
         {
           "command": "scriptRunner.cmd.kieai_seedance_2_5_i2v_480p_x3",
-          "group": "2"
+          "group": "02"
         }
       ],
       "scriptRunner.menu.kieai_seedance_2_5_i2v_720p": [
         {
           "command": "scriptRunner.cmd.kieai_seedance_2_5_i2v_720p_x1",
-          "group": "0"
+          "group": "00"
         },
         {
           "command": "scriptRunner.cmd.kieai_seedance_2_5_i2v_720p_x2",
-          "group": "1"
+          "group": "01"
         },
         {
           "command": "scriptRunner.cmd.kieai_seedance_2_5_i2v_720p_x3",
-          "group": "2"
+          "group": "02"
         }
       ],
       "scriptRunner.menu.kieai_seedance_2_5_fflf_480p": [
         {
           "command": "scriptRunner.cmd.kieai_seedance_2_5_fflf_480p_x1",
-          "group": "0"
+          "group": "00"
         },
         {
           "command": "scriptRunner.cmd.kieai_seedance_2_5_fflf_480p_x2",
-          "group": "1"
+          "group": "01"
         },
         {
           "command": "scriptRunner.cmd.kieai_seedance_2_5_fflf_480p_x3",
-          "group": "2"
+          "group": "02"
         }
       ],
       "scriptRunner.menu.kieai_seedance_2_5_fflf_720p": [
         {
           "command": "scriptRunner.cmd.kieai_seedance_2_5_fflf_720p_x1",
-          "group": "0"
+          "group": "00"
         },
         {
           "command": "scriptRunner.cmd.kieai_seedance_2_5_fflf_720p_x2",
-          "group": "1"
+          "group": "01"
         },
         {
           "command": "scriptRunner.cmd.kieai_seedance_2_5_fflf_720p_x3",
-          "group": "2"
+          "group": "02"
+        }
+      ],
+      "scriptRunner.menu.kieai_seedance_2_5_ref_480p": [
+        {
+          "command": "scriptRunner.cmd.kieai_seedance_2_5_ref_480p_x1",
+          "group": "00"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_seedance_2_5_ref_480p_x2",
+          "group": "01"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_seedance_2_5_ref_480p_x3",
+          "group": "02"
+        }
+      ],
+      "scriptRunner.menu.kieai_seedance_2_5_ref_720p": [
+        {
+          "command": "scriptRunner.cmd.kieai_seedance_2_5_ref_720p_x1",
+          "group": "00"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_seedance_2_5_ref_720p_x2",
+          "group": "01"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_seedance_2_5_ref_720p_x3",
+          "group": "02"
         }
       ],
       "scriptRunner.menu.kieai_kling": [
@@ -1074,113 +1276,113 @@
       "scriptRunner.menu.kieai_kling_2_1_i2v_std": [
         {
           "command": "scriptRunner.cmd.kieai_kling_2_1_i2v_std_x1",
-          "group": "0"
+          "group": "00"
         },
         {
           "command": "scriptRunner.cmd.kieai_kling_2_1_i2v_std_x2",
-          "group": "1"
+          "group": "01"
         },
         {
           "command": "scriptRunner.cmd.kieai_kling_2_1_i2v_std_x3",
-          "group": "2"
+          "group": "02"
         }
       ],
       "scriptRunner.menu.kieai_kling_2_5_turbo_i2v_pro": [
         {
           "command": "scriptRunner.cmd.kieai_kling_2_5_turbo_i2v_pro_x1",
-          "group": "0"
+          "group": "00"
         },
         {
           "command": "scriptRunner.cmd.kieai_kling_2_5_turbo_i2v_pro_x2",
-          "group": "1"
+          "group": "01"
         },
         {
           "command": "scriptRunner.cmd.kieai_kling_2_5_turbo_i2v_pro_x3",
-          "group": "2"
+          "group": "02"
         }
       ],
       "scriptRunner.menu.kieai_kling_3_0_i2v_std": [
         {
           "command": "scriptRunner.cmd.kieai_kling_3_0_i2v_std_x1",
-          "group": "0"
+          "group": "00"
         },
         {
           "command": "scriptRunner.cmd.kieai_kling_3_0_i2v_std_x2",
-          "group": "1"
+          "group": "01"
         },
         {
           "command": "scriptRunner.cmd.kieai_kling_3_0_i2v_std_x3",
-          "group": "2"
+          "group": "02"
         }
       ],
       "scriptRunner.menu.kieai_kling_3_0_i2v_pro": [
         {
           "command": "scriptRunner.cmd.kieai_kling_3_0_i2v_pro_x1",
-          "group": "0"
+          "group": "00"
         },
         {
           "command": "scriptRunner.cmd.kieai_kling_3_0_i2v_pro_x2",
-          "group": "1"
+          "group": "01"
         },
         {
           "command": "scriptRunner.cmd.kieai_kling_3_0_i2v_pro_x3",
-          "group": "2"
+          "group": "02"
         }
       ],
       "scriptRunner.menu.kieai_kling_3_0_i2v_4K": [
         {
           "command": "scriptRunner.cmd.kieai_kling_3_0_i2v_4K_x1",
-          "group": "0"
+          "group": "00"
         },
         {
           "command": "scriptRunner.cmd.kieai_kling_3_0_i2v_4K_x2",
-          "group": "1"
+          "group": "01"
         },
         {
           "command": "scriptRunner.cmd.kieai_kling_3_0_i2v_4K_x3",
-          "group": "2"
+          "group": "02"
         }
       ],
       "scriptRunner.menu.kieai_kling_3_0_fflf_std": [
         {
           "command": "scriptRunner.cmd.kieai_kling_3_0_fflf_std_x1",
-          "group": "0"
+          "group": "00"
         },
         {
           "command": "scriptRunner.cmd.kieai_kling_3_0_fflf_std_x2",
-          "group": "1"
+          "group": "01"
         },
         {
           "command": "scriptRunner.cmd.kieai_kling_3_0_fflf_std_x3",
-          "group": "2"
+          "group": "02"
         }
       ],
       "scriptRunner.menu.kieai_kling_3_0_fflf_pro": [
         {
           "command": "scriptRunner.cmd.kieai_kling_3_0_fflf_pro_x1",
-          "group": "0"
+          "group": "00"
         },
         {
           "command": "scriptRunner.cmd.kieai_kling_3_0_fflf_pro_x2",
-          "group": "1"
+          "group": "01"
         },
         {
           "command": "scriptRunner.cmd.kieai_kling_3_0_fflf_pro_x3",
-          "group": "2"
+          "group": "02"
         }
       ],
       "scriptRunner.menu.kieai_kling_3_0_fflf_4K": [
         {
           "command": "scriptRunner.cmd.kieai_kling_3_0_fflf_4K_x1",
-          "group": "0"
+          "group": "00"
         },
         {
           "command": "scriptRunner.cmd.kieai_kling_3_0_fflf_4K_x2",
-          "group": "1"
+          "group": "01"
         },
         {
           "command": "scriptRunner.cmd.kieai_kling_3_0_fflf_4K_x3",
-          "group": "2"
+          "group": "02"
         }
       ]
     }
