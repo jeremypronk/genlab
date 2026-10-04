@@ -12,6 +12,7 @@ import sys
 from typing import Union, Optional
 from urllib.parse import urlparse, unquote
 import copy
+import av
 
 from .metadata import write_metadata, read_metadata
 
@@ -344,6 +345,54 @@ def get_safe_filename(url, default="download"):
     name = re.sub(r'[^A-Za-z0-9._-]', '_', name).lstrip('.')
     return (name or default)[:255]
 
+def video_to_mp4(src, dst=None, overwrite=False):
+    """Remux the video streams of `src` into an MP4 without re-encoding.
+
+    Audio, subtitle and data streams are dropped. Returns the output Path.
+    Raises an exception (and leaves no partial output) if the video codec
+    can't be stored in MP4 or the file can't be read.
+    """
+    src = Path(src)
+    dst = Path(dst) if dst else src.with_suffix(".mp4")
+
+    if not src.is_file():
+        raise FileNotFoundError(src)
+    if dst.resolve() == src.resolve():
+        raise ValueError("Output path would overwrite the input file")
+    if dst.exists() and not overwrite:
+        raise FileExistsError(f"{dst} already exists (pass overwrite=True)")
+
+    # Write to a temp file first so a failure never clobbers an existing dst.
+    tmp = dst.with_name(dst.name + ".part")
+
+    try:
+        with av.open(str(src)) as inp:
+            video_streams = list(inp.streams.video)
+            if not video_streams:
+                raise ValueError("No video streams found")
+
+            with av.open(
+                str(tmp), "w", format="mp4",
+                options={"movflags": "+faststart"},
+            ) as out:
+                # Map each input video stream to an output stream (codec copied).
+                stream_map = {
+                    s.index: out.add_stream_from_template(s) for s in video_streams
+                }
+
+                for packet in inp.demux(*video_streams):
+                    if packet.dts is None:
+                        continue  # flush packet
+                    packet.stream = stream_map[packet.stream.index]
+                    out.mux(packet)
+
+        tmp.replace(dst)
+    except Exception:
+        tmp.unlink(missing_ok=True)
+        raise
+
+    return dst
+
 
 class GenAPI:
     class TASK_STATUS(Enum):
@@ -554,10 +603,19 @@ class GenAPI:
                     f"Size mismatch for {output_path.name}: expected {total_size} bytes, got {bytes_downloaded} bytes"
                 )
 
+            # Did we get an mov ?
+            if output_path.suffix.lower() == ".mov":
+                self._debug("Converting downloaded MOV to MP4")
+                try:
+                    # Try and convert to mp4 (without re-encoding)
+                    output_path = video_to_mp4(output_path, overwrite=True)
+                except (FileNotFoundError, ValueError, FileExistsError) as e:
+                    self._warning(f"Failed to convert downloaded MOV to MP4: {e}")
+
             # write the payload to the downloaded files metadata
             self.write_payload(output_path)
 
-            self._debug(f"File saved successfully to: {output_path}")
+            self._info(f"File saved successfully to: {output_path}")
             return bytes_downloaded
 
         except (requests.exceptions.RequestException, ValueError) as e:

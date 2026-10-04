@@ -74,6 +74,7 @@ def connect_to_existing_tasks(genlab_path, api, path_converter_func=lambda x: x)
 
     return api_tasks
 
+# TODO: possible race condition when starting multiple request from the same genlab - write the empty .task file first !?
 def create_tasks(genlab_path, api, type, model, generations=1, test=False, path_converter_func=lambda x: x):
     logging.info(f"create_tasks: {genlab_path.name}")
 
@@ -106,6 +107,11 @@ def create_tasks(genlab_path, api, type, model, generations=1, test=False, path_
     if task_gens_dict:
         start_generation = max(task_gens_dict.keys())+1
     logging.info(f"Generation start index: {start_generation}.")
+
+    # create the task files immediately to (hopefully) avoid race conditions
+    logging.info(f"Creating task files")
+    for generation in range(start_generation, start_generation+generations):
+        genlab_path.with_stem(f"{genlab_path.stem}_{generation:05d}").with_suffix(".task").touch()
 
     # create a task for each generation
     api_tasks = []
