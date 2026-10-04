@@ -36,30 +36,39 @@ def load_genlab(genlab_path: Path, api: str, type: str, model: str):
 
     return config.build_payload(api, type, model, params)
 
-# def yaml_connect_to_existing_tasks(yaml_path, path_converter_func=lambda x: x):
-#     logging.info(f"yaml_connect_to_existing_tasks: {yaml_path.name}")
-#
-#     task_paths = [f for f in yaml_path.parent.glob(f"{Path(yaml_path).stem}*.task")]
-#     kies = []
-#     for task_path in task_paths:
-#         excluded = {'.yaml', '.yml', '.task'}
-#         file_paths = [f for f in task_path.parent.glob(f"{task_path.stem}.*") if
-#                       f.suffix.lower() not in excluded]
-#         logging.debug(f"Found task sidecar possible video files: {file_paths}")
-#         if not file_paths:
-#             with open(task_path, 'r') as f:
-#                 task_id = f.readline().strip()
-#                 task_payload = configure_yaml(task_path.parent, yaml.safe_load(f))
-#             logging.info(f"Found existing task to attach to {task_id}.")
-#
-#             kie = KieAIGen(task_path.stem, path_converter_func=path_converter_func)
-#             if task_payload and kie.prep_task_from_id(task_payload, task_id):
-#                 kies.append(kie)
-#
-#             else:
-#                 logging.error(f"prep_task failed for {payload} {task_id}.")
-#
-#     return kies
+def api_task_factory(api, output_basepath, path_converter_func=lambda x: x):
+    if api == "kieai":
+        return KieAIGen(output_basepath, path_converter_func=path_converter_func)
+    else:
+        logging.error(f"Unknown api task {api}.")
+        return
+
+def connect_to_existing_tasks(genlab_path, api, path_converter_func=lambda x: x):
+    logging.info(f"connect_to_existing_tasks: {genlab_path.name}")
+
+    task_paths = [f for f in genlab_path.parent.glob(f"{genlab_path.stem}*.task")]
+    api_tasks = []
+    for task_path in task_paths:
+        excluded = {'.genlab', '.yaml', '.yml', '.task'}
+        file_paths = [f for f in task_path.parent.glob(f"{task_path.stem}.*") if
+                      f.suffix.lower() not in excluded]
+        logging.debug(f"Found task sidecar possible video files: {file_paths}")
+        if not file_paths:
+
+            with open(task_path, 'r') as f:
+                task_id = f.readline().strip()
+                task_payload = yaml.safe_load(f)
+
+            logging.info(f"Found existing task to attach to {task_id}.")
+
+            api_task = api_task_factory(api, task_path.stem, path_converter_func)
+            if api_task and task_id and task_payload and api_task.prep_task_from_id(task_payload, task_id):
+                api_tasks.append(api_task)
+
+            else:
+                logging.error(f"prep_task failed for {payload} {task_id}.")
+
+    return api_tasks
 
 def create_tasks(genlab_path, api, type, model, generations=1, test=False, path_converter_func=lambda x: x):
     logging.info(f"create_tasks: {genlab_path.name}")
@@ -95,7 +104,7 @@ def create_tasks(genlab_path, api, type, model, generations=1, test=False, path_
     logging.info(f"Generation start index: {start_generation}.")
 
     # create a task for each generation
-    kies = []
+    api_tasks = []
     for generation in range(start_generation, start_generation+generations):
         logging.info(f"Generation: {generation}")
 
@@ -103,11 +112,11 @@ def create_tasks(genlab_path, api, type, model, generations=1, test=False, path_
         output_basepath = task_id_path.stem # remove the extension
 
         # model specific factory creation
-        kie = KieAIGen(output_basepath, path_converter_func=path_converter_func)
+        api_task = api_task_factory(api, output_basepath, path_converter_func)
 
         # start the video gen
-        if kie.prep_task(payload):
-            task_id = kie.submit_task(test=test)
+        if api_task and api_task.prep_task(payload):
+            task_id = api_task.submit_task(test=test)
             if not task_id:
                 logging.error(f"submit_task failed for {payload}.")
                 continue
@@ -115,12 +124,12 @@ def create_tasks(genlab_path, api, type, model, generations=1, test=False, path_
                 f.write(f"{task_id}\n")
                 yaml.dump(payload, f)
 
-            kies.append(kie)
+            api_tasks.append(api_task)
 
         else:
             logging.error(f"prep_task failed for {payload}.")
 
-    return kies
+    return api_tasks
 
         
 def main(path_converter_func=lambda x: x):
@@ -161,13 +170,11 @@ Example Usage:
     parser.add_argument(
         "-t", "--type",
         choices=config.all_types,
-        required = True,
         help="Gen AI type",
     )
     parser.add_argument(
         "-m", "--model",
         type=str,
-        required = True,
         help="Gen AI model config",
     )
     parser.add_argument(
@@ -178,7 +185,7 @@ Example Usage:
     parser.add_argument(
         "-d", "--download",
         action="store_true",
-        help="Download the result files of existing tasks/requests (do not create any new tasks, --generations is ignored)."
+        help="Download the result files of existing tasks/requests."
     )
     parser.add_argument(
         "--retry_wait_secs",
@@ -209,6 +216,8 @@ Example Usage:
 
     if args.download:
         logging.warning("Download mode - will only download videos of existing tasks, no new tasks will be created.")
+    elif not args.model or not args.type:
+        parser.error("--model and --type are required unless --download is specified")
 
     genlab_files = []
     for path_str in args.paths:
@@ -220,13 +229,6 @@ Example Usage:
             else:
                 logging.warning(f"Path '{path_str}' is not a valid file or directory. Ignoring.")
 
-    # # filter out known yamls
-    # check_yaml_files = genlab_files
-    # genlab_files = []
-    # for genlab_file in check_yaml_files:
-    #     if genlab_file.name not in [_CONFIG_FILENAME]:
-    #         genlab_files.append(genlab_file)
-
     if not genlab_files:
         logging.error("No .genlab files found in the specified paths.")
         sys.exit(1)
@@ -234,9 +236,11 @@ Example Usage:
     logging.info(f"Found {len(genlab_files)} genlab file(s) to process.")
     for genlab_path in genlab_files:
         if args.download:
-            kies = yaml_connect_to_existing_tasks(genlab_path, path_converter_func=path_converter_func)
+            api_tasks = connect_to_existing_tasks(genlab_path,
+                                api=args.api,
+                                path_converter_func=path_converter_func)
         else:
-            kies = create_tasks(genlab_path,
+            api_tasks = create_tasks(genlab_path,
                                 api=args.api,
                                 type=args.type,
                                 model=args.model,
@@ -244,10 +248,10 @@ Example Usage:
                                 test=args.dryrun,
                                 path_converter_func=path_converter_func)
 
-        if kies:
-            if len(kies) != args.generations:
+        if api_tasks:
+            if len(api_tasks) != args.generations:
                 logging.warning(f"{genlab_path.name} some generations did not start.")
-            _TASKS_WAITING_QUEUE.extend(kies)
+            _TASKS_WAITING_QUEUE.extend(api_tasks)
         else:
             logging.warning(f"{genlab_path} failed to start!")
 
@@ -262,19 +266,19 @@ Example Usage:
         
         # check each task
         completed_tasks = []
-        for kie in _TASKS_WAITING_QUEUE:
+        for api_task in _TASKS_WAITING_QUEUE:
 
-            (status, response) = kie.query_task()
-            if kie.is_finished(status):
+            (status, response) = api_task.query_task()
+            if api_task.is_finished(status):
                 if status == GenAPI.TASK_STATUS.completed:
-                    status = kie.download_result()
+                    status = api_task.download_result()
                 else:
                     logging.error(f"{genlab_path.name} completed but in a failed on unknown status. Check the log for details.")
-                completed_tasks.append(kie)
+                completed_tasks.append(api_task)
 
         # remove completed from the queue (outside loop to avoid corrupting the very list it is checking)
         #for id in completed_tasks: _TASKS_WAITING_QUEUE.pop(id, None)
-        _TASKS_WAITING_QUEUE = [kie for kie in _TASKS_WAITING_QUEUE if kie not in completed_tasks]
+        _TASKS_WAITING_QUEUE = [api_task for api_task in _TASKS_WAITING_QUEUE if api_task not in completed_tasks]
 
         # check if there are any left
         if not _TASKS_WAITING_QUEUE:
