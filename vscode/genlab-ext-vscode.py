@@ -9,8 +9,12 @@ import genlab.config
 
 BASE_DIR = Path(genlab.__file__).resolve().parent
 
+menu_def = {
+    "Increment version@genlab001": ("await processFileIncrement", "version"),
+    "Increment take@genlab001": ("await processFileIncrement", "take"),
+}
 
-def menu_definitaion() -> dict:
+def menu_definition_models() -> dict:
     config = genlab.config.Config()
     config.load(os.path.join(BASE_DIR, 'configs'))
 
@@ -23,13 +27,13 @@ def menu_definitaion() -> dict:
     #         for model in config.models(api, type):
     #             menu_definition[api][type][model] = f"--api {api} --type {type} --model {model}"
 
-    # flatter menu depth
-    menu_top_level_order = 0
+    # flatter menu depth (start at 10 for
+    menu_top_level_order = 10
 
     for api in config.apis:
 
         # create a download item per api
-        menu_definition[f"{api} task download@genlab{menu_top_level_order:02d}"] = f"--api {api} --download"
+        menu_definition[f"{api} task download@genlab{menu_top_level_order:02d}"] = ("runPythonScript", f"--api {api} --download")
 
         # now create the task/request items for each model and type
         for type in config.types(api):
@@ -45,7 +49,7 @@ def menu_definitaion() -> dict:
                     # assume video, 3 is probably max
                     seeds = [1, 2, 3]
                 for i, num_seeds in enumerate(seeds):
-                    menu_definition[sub_menu_name][model][f"x{num_seeds}@{i:02d}"] = f"--api {api} --type {type} --model {model} --generations {num_seeds}"
+                    menu_definition[sub_menu_name][model][f"x{num_seeds}@{i:02d}"] = ("runPythonScript", f"--api {api} --type {type} --model {model} --generations {num_seeds}")
 
 
     # from pprint import pprint
@@ -93,7 +97,7 @@ def process_node(node, parent_menu_id, path_prefix=""):
             # Recurse deeper
             process_node(value, submenu_id, f"{path_prefix}{safe_key}_")
             
-        else:
+        elif isinstance(value, tuple):
             # It is a command (leaf node)
             command_id = f"scriptRunner.cmd.{path_prefix}{safe_key}"
             
@@ -112,13 +116,16 @@ def process_node(node, parent_menu_id, path_prefix=""):
             
             # Generate the TypeScript registration code
             ts_registrations.append(
-                f"    context.subscriptions.push(vscode.commands.registerCommand('{command_id}', (uri: vscode.Uri) => {{\n"
-                f"        runPythonScript(uri, '{value}');\n"
-                f"    }}));" # Added the second parenthesis here
+                f"    context.subscriptions.push(vscode.commands.registerCommand('{command_id}', {"async " if "await" in value[0] else ""}(uri: vscode.Uri) => {{\n"
+                f"        {value[0]}(uri, '{value[1]}');\n"
+                f"    }}));"
             )
 
+        else:
+            raise Exception(f"Unknown type for menu {value} is {type(value)}")
+
 # Execute the parser
-process_node(menu_definitaion(), "explorer/context")
+process_node(menu_def | menu_definition_models(), "explorer/context")
 
 # Prepare the final JSON structure
 output_json = {

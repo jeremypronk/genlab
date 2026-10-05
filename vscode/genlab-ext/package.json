@@ -2,7 +2,7 @@
   "name": "genlab-ext",
   "displayName": "genlab-ext",
   "description": "GenLab vscode extension",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "engines": {
     "vscode": "^1.138.0"
   },
@@ -19,6 +19,14 @@
       }
     ],
     "commands": [
+      {
+        "command": "scriptRunner.cmd.Increment_version",
+        "title": "Increment version"
+      },
+      {
+        "command": "scriptRunner.cmd.Increment_take",
+        "title": "Increment take"
+      },
       {
         "command": "scriptRunner.cmd.kieai_task_download",
         "title": "kieai task download"
@@ -685,8 +693,16 @@
     "menus": {
       "explorer/context": [
         {
+          "command": "scriptRunner.cmd.Increment_version",
+          "group": "genlab001"
+        },
+        {
+          "command": "scriptRunner.cmd.Increment_take",
+          "group": "genlab001"
+        },
+        {
           "command": "scriptRunner.cmd.kieai_task_download",
-          "group": "genlab00"
+          "group": "genlab10"
         },
         {
           "submenu": "scriptRunner.menu.kieai_image"

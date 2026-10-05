@@ -24,6 +24,110 @@ function runPythonScript(uri: vscode.Uri, scriptArg: string) {
     terminal.sendText(commandToRun);
 }
 
+async function processFileIncrement(uri: vscode.Uri, mode: 'take' | 'version') {
+    if (!uri) {
+        vscode.window.showErrorMessage('No file selected.');
+        return;
+    }
+
+    // Isolate directory and filename
+    const filePath = uri.path;
+    const lastSlashIndex = filePath.lastIndexOf('/');
+    const dir = filePath.substring(0, lastSlashIndex);
+    const fileName = filePath.substring(lastSlashIndex + 1);
+
+    // Enforce .genlab file extension
+    if (!fileName.toLowerCase().endsWith('.genlab')) {
+        vscode.window.showWarningMessage('Increment commands only work on .genlab files.');
+        return;
+    }
+
+    const regex = /^(.*)(tk)(\d+)(.*?v)(\d+)(.*)$/i;
+    const match = fileName.match(regex);
+
+    if (!match) {
+        vscode.window.showErrorMessage('Filename does not match the expected tkXXXvYY format.');
+        return;
+    }
+
+    const [ , prefix, tkStr, takeNumStr, vSeparatorStr, versionNumStr, suffix ] = match;
+    const currentTakeNum = parseInt(takeNumStr, 10);
+
+    let maxTake = currentTakeNum;
+    let maxVersion = parseInt(versionNumStr, 10);
+
+    // Scan the directory for existing files to find the highest take/version
+    try {
+        const dirUri = uri.with({ path: dir });
+        const files = await vscode.workspace.fs.readDirectory(dirUri);
+
+        for (const [fName, fType] of files) {
+            // Only look at files (ignore folders)
+            if (fType === vscode.FileType.File) {
+                const fMatch = fName.match(regex);
+
+                if (fMatch) {
+                    const [ , fPrefix, , fTakeStr, , fVersionStr, fSuffix ] = fMatch;
+
+                    // Ensure the file belongs to the same asset/sequence family
+                    if (fPrefix === prefix && fSuffix.toLowerCase() === suffix.toLowerCase()) {
+                        const fTakeNum = parseInt(fTakeStr, 10);
+                        const fVersionNum = parseInt(fVersionStr, 10);
+
+                        if (mode === 'take') {
+                            // Track the highest take overall
+                            if (fTakeNum > maxTake) {
+                                maxTake = fTakeNum;
+                            }
+                        } else if (mode === 'version') {
+                            // Track the highest version ONLY within the current take
+                            if (fTakeNum === currentTakeNum && fVersionNum > maxVersion) {
+                                maxVersion = fVersionNum;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    } catch (error: any) {
+        vscode.window.showErrorMessage(`Failed to read directory: ${error.message}`);
+        return;
+    }
+
+    let nextTake: number;
+    let nextVersion: number;
+
+    if (mode === 'take') {
+        // Increment highest take found, reset version to 1
+        nextTake = maxTake + 1;
+        nextVersion = 1;
+    } else {
+        // Keep current take, increment highest version found
+        nextTake = currentTakeNum;
+        nextVersion = maxVersion + 1;
+    }
+
+    // Format new strings with original padding lengths
+    const newTakeNumStr = nextTake.toString().padStart(takeNumStr.length, '0');
+    const newVersionNumStr = nextVersion.toString().padStart(versionNumStr.length, '0');
+
+    // Construct new filename and URI
+    const newFileName = `${prefix}${tkStr}${newTakeNumStr}${vSeparatorStr}${newVersionNumStr}${suffix}`;
+    const newUri = uri.with({ path: `${dir}/${newFileName}` });
+
+    try {
+        // Copy the file
+        await vscode.workspace.fs.copy(uri, newUri, { overwrite: false });
+        vscode.window.showInformationMessage(`Created: ${newFileName}`);
+    } catch (error: any) {
+        if (error.code === 'EntryExists') {
+            vscode.window.showErrorMessage(`File ${newFileName} already exists!`);
+        } else {
+            vscode.window.showErrorMessage(`Failed to increment file: ${error.message}`);
+        }
+    }
+}
+
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
@@ -33,6 +137,12 @@ export function activate(context: vscode.ExtensionContext) {
 	// This line of code will only be executed once when your extension is activated
 	console.log('Congratulations, your extension "genlab-ext" is now active!');
 
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.Increment_version', async (uri: vscode.Uri) => {
+        await processFileIncrement(uri, 'version');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.Increment_take', async (uri: vscode.Uri) => {
+        await processFileIncrement(uri, 'take');
+    }));
     context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_task_download', (uri: vscode.Uri) => {
         runPythonScript(uri, '--api kieai --download');
     }));
