@@ -153,10 +153,10 @@ seedance:
     model: bytedance/seedance-2
     resolution: "720p"
 
-  "2.0-i2v-1080p":
-    <<: *seedance2-i2v
-    model: bytedance/seedance-2
-    resolution: "1080p"
+#  "2.0-i2v-1080p":
+#    <<: *seedance2-i2v
+#    model: bytedance/seedance-2
+#    resolution: "1080p"
 
   "2.0-fast-i2v-480p":
     <<: *seedance2-i2v
@@ -187,10 +187,10 @@ seedance:
     model: bytedance/seedance-2
     resolution: "720p"
 
-  "2.0-fflf-1080p":
-    <<: *seedance2-fflf
-    model: bytedance/seedance-2
-    resolution: "1080p"
+#  "2.0-fflf-1080p":
+#    <<: *seedance2-fflf
+#    model: bytedance/seedance-2
+#    resolution: "1080p"
 
   "2.0-fast-fflf-480p":
     <<: *seedance2-fflf
@@ -343,9 +343,9 @@ kling:
   "3.0-i2v-pro":
     <<: *kling3_0-i2v
     mode: pro
-  "3.0-i2v-4K":
-    <<: *kling3_0-i2v
-    mode: "4K"
+#  "3.0-i2v-4K":
+#    <<: *kling3_0-i2v
+#    mode: "4K"
 
 
   # kling 3.0 first frame and last frame
@@ -360,6 +360,51 @@ kling:
   "3.0-fflf-pro":
     <<: *kling3_0-fflf
     mode: pro
-  "3.0-fflf-4K":
-    <<: *kling3_0-fflf
-    mode: "4K"
+#  "3.0-fflf-4K":
+#    <<: *kling3_0-fflf
+#    mode: "4K"
+
+
+  # kling 3.0 omni
+
+  ".tmpl.3.0-omni": &kling3_0-omni
+    audio: false
+    ^prompt: ""
+    +reference_image_1: ""
+    +reference_image_2: ""
+    +reference_image_3: ""
+    +reference_image_4: ""
+    ?image_urls: ["@reference_image_1", "@reference_image_2", "@reference_image_3", "@reference_image_4"]
+    ^reference_video_1: ""
+    ?video_urls: ["@reference_video_1"]
+
+
+  ".tmpl.3.0-omni-transformation": &kling3_0-omni-transformation
+    <<: *kling3_0-omni
+    model: kling-3.0-omni/transformation
+
+  "3.0-omni-transformation-auto-720p":
+    <<: *kling3_0-omni-transformation
+    aspect_ratio: "auto"
+    resolution: "720p"
+
+  "3.0-omni-transformation-16_9-720p":
+    <<: *kling3_0-omni-transformation
+    aspect_ratio: "16:9"
+    resolution: "720p"
+
+
+  ".tmpl.3.0-omni-reference": &kling3_0-omni-reference
+    <<: *kling3_0-omni
+    model: kling-3.0-omni/reference-to-video
+    customize_multi_shots: false
+
+  "3.0-omni-reference-auto-720p":
+    <<: *kling3_0-omni-reference
+    aspect_ratio: "auto"
+    resolution: "720p"
+
+  "3.0-omni-reference-16_9-720p":
+    <<: *kling3_0-omni-reference
+    aspect_ratio: "16:9"
+    resolution: "720p"
