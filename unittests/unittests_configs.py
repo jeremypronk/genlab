@@ -132,11 +132,11 @@ class TestConfigs(BaseTestCase):
         }, )
 
     def test_nano(self):
-        payload = self.config.build_payload('kieai', 'image', 'nano-banana-pro-i2i-2K',
+        payload = self.config.build_payload('kieai', 'google-image', 'nano-banana-pro-i2i-2K',
                                             {"prompt": "into the black",
                                                       "image": "c:/first.png"}, include_extra_params=False)
         self.assertEqual(payload, {"model": "nano-banana-pro",
-                                   "image_input": "c:/first.png",
+                                   "image_input": ["c:/first.png"],
                                    "prompt": "into the black",
                                    "aspect_ratio": "auto",
                                    "resolution": "2K",
