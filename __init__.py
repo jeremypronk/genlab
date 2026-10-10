@@ -407,6 +407,8 @@ class GenAPI:
 
     JSON_HEADER = { "Content-Type": "application/json" }
 
+    ENABLE_UPLOAD_CACHE = False # enable this in the subclass if required
+
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
         # Automatically guarantees an isolated cache dict for each subclass
@@ -455,10 +457,22 @@ class GenAPI:
 
     # --- Base Upload & Download Functionality ---
 
+    def _upload_file(self, path: str | Path):
+        """
+        Upload the file at path.
+        Subclass must implement this method.
+        Args:
+            path: path to upload
+
+        Returns:
+            url of uploaded file
+        """
+        raise NotImplementedError
+
     @handle_http_exceptions
     def upload_file(self, path: str | Path) -> str | None:
         """
-        Uploads a file via http. Caches upload files to only upload once.
+        Uploads a file. Caches upload files to only upload once.
         If path is already a url, simply returns path.
         Args:
             path: path to upload
@@ -484,48 +498,26 @@ class GenAPI:
             self._error(f"File not found at path: {local_path}")
             return None
 
-        cache_key = str(local_path.resolve())
-
         # Subclass-isolated cache lookup
+        cache_key = str(local_path.resolve())
         if cache_key in self.UPLOAD_CACHE:
             self._debug(f"{cache_key} found in cache file URL: {self.UPLOAD_CACHE[cache_key]}")
             return self.UPLOAD_CACHE[cache_key]
 
-        if not self.UPLOAD_URL:
-            raise NotImplementedError(f"Subclass '{type(self).__name__}' must define 'UPLOAD_URL'.")
-
-        if not self.JSON_HEADER:
-            raise NotImplementedError(f"Subclass '{type(self).__name__}' must define 'JSON_HEADER'.")
-
         self._info(f"Preparing to upload '{local_path.name}'...")
+        file_id = self._upload_file(path)
 
-        # Using context manager to guarantee resource closure
-        with open(local_path, 'rb') as f:
-            files = {
-                'file': (local_path.name, f),
-                'uploadPath': (None, 'images/user-uploads'),
-                'fileName': (None, local_path.name)
-            }
-            response = requests.post(self.UPLOAD_URL, headers=self.HEADER, files=files)
+        if self.ENABLE_UPLOAD_CACHE:
+            self._debug(f"Adding {file_id} to upload cache")
+            self.UPLOAD_CACHE[cache_key] = file_id
 
-        response.raise_for_status()
-
-        # TODO: this response check looks kie.ai specific
-        if self._check_api_response(response):
-            response_data = response.json().get("data", {})
-            file_url = response_data.get("downloadUrl")
-            if file_url:
-                self._debug(f"File URL: {file_url}")
-                self.UPLOAD_CACHE[cache_key] = file_url
-                return file_url
-            self._error("URL not found in API response.")
-        return None
+        return file_id
 
     def upload_files(self, files: list | str | Path) -> list[str | None]:
         """
         Upload a list of files.
         Args:
-            files: list of file paths
+            files: list of file paths/ids
 
         Returns:
             list of urls of uploaded files
@@ -623,6 +615,35 @@ class GenAPI:
             self._error(f"Failed to download file: {e}")
             raise
 
+    def _download(self, query_task_response):
+        """
+        Download the result of the task.
+        Subclass must implement this method.
+        """
+        raise NotImplementedError
+
+    def download_result(self):
+        self._debug(f"GenAPI.download_result()")
+
+        (task_status, query_task_response) = self.query_task()
+        if task_status == GenAPI.TASK_STATUS.completed:
+            self._info("Generation task complete!")
+            self._download(query_task_response)
+
+        # generation did not complete...
+        elif task_status == None:
+            self._error(f"Task state returned None!")
+        elif task_status == GenAPI.TASK_STATUS.failed:
+            self._error("Attempting to download a failed generation!!")
+            self._log_failure_msg(query_task_response)
+        elif task_status == GenAPI.TASK_STATUS.unknown:
+            self._error(f"Unknown task status!")
+        else:
+            self._info(f"Task status: {task_status.name}")
+
+        return task_status
+
+    # TODO: this is kie specific, move it
     def _check_api_response(self, response) -> bool:
         """
         Basic api response check. Override this method in subclasses for more granular checking.

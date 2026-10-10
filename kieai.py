@@ -23,8 +23,11 @@ class KieAIGen(GenAPI):
 
     PLATFORM = "kieai"
 
+    ENABLE_UPLOAD_CACHE = True
+
     def __init__(self, output_basepath, api_key=None, path_converter_func=lambda x: x):
         super().__init__(output_basepath, path_converter_func=path_converter_func)
+        # TODO: api key stuff could move to the base class
         if not api_key:
             try:
                 KieAIGen.API_KEY = os.environ["KIE_API_KEY"]
@@ -59,8 +62,26 @@ class KieAIGen(GenAPI):
         else:
             return self.TASK_STATUS.unknown
 
-    def _attach_metadata(self, file, metadata):
-        pass
+    def _upload_file(self, path: str | Path):
+
+        # Using context manager to guarantee resource closure
+        with open(path, 'rb') as f:
+            files = {
+                'file': (path.name, f),
+                'uploadPath': (None, 'images/user-uploads'),
+                'fileName': (None, path.name)
+            }
+            response = requests.post(self.UPLOAD_URL, headers=self.HEADER, files=files)
+
+        response.raise_for_status()
+
+        if self._check_api_response(response):
+            response_data = response.json().get("data", {})
+            file_url = response_data.get("downloadUrl")
+            if file_url:
+                self._debug(f"File URL: {file_url}")
+                return file_url
+            self._error("URL not found in API response.")
 
     def _download(self, query_task_response):
         """
@@ -78,27 +99,6 @@ class KieAIGen(GenAPI):
 
             self._info(f"Downloading file: {url} --> {output_path}")
             self.download_file(url, output_path)
-
-    def download_result(self):
-        self._debug(f"KieAIGen.download_result()")
-
-        (task_status, query_task_response) = self.query_task()
-        if task_status == GenAPI.TASK_STATUS.completed:
-            self._info("Generation task complete!")
-            self._download(query_task_response)
-
-        # generation did not complete...
-        elif task_status == None:
-            self._error(f"Task state returned None!")
-        elif task_status == GenAPI.TASK_STATUS.failed:
-            self._error("Attempting to download a failed generation!!")
-            self._log_failure_msg(query_task_response)
-        elif task_status == GenAPI.TASK_STATUS.unknown:
-            self._error(f"Unknown task status!")
-        else:
-            self._info(f"Task status: {task_status.name}")
-
-        return task_status
 
     def prep_param(self, param, value) -> tuple:
         """

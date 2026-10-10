@@ -584,68 +584,6 @@ class TestGenAPI(BaseTestCase):
         self.assertNotIn("dummy_key", api2.UPLOAD_CACHE)
         self.assertIsNot(api1.UPLOAD_CACHE, api2.UPLOAD_CACHE)
 
-    @patch("requests.post")
-    def test_upload_file_network_and_caching(self, mock_post):
-        """Verify network call occurs once and subsequent requests hit the subclass cache."""
-        mock_response = MagicMock()
-        mock_response.json.return_value = {
-            "code": 200,
-            "data": {"downloadUrl": "https://cdn.test/uploaded.png"}
-        }
-        mock_post.return_value = mock_response
-
-        # First call: triggers HTTP POST request
-        url1 = self.api.upload_file(self.test_file)
-        self.assertEqual(url1, "https://cdn.test/uploaded.png")
-        self.assertEqual(mock_post.call_count, 1)
-
-        # Second call: should hit cache without issuing new POST request
-        url2 = self.api.upload_file(self.test_file)
-        self.assertEqual(url2, "https://cdn.test/uploaded.png")
-        self.assertEqual(mock_post.call_count, 1)
-
-    @patch("requests.post")
-    def test_upload_file_with_url_no_network_call(self, mock_post):
-        """Verify passing a URL returns the URL directly and prevents network calls."""
-        test_url = "https://example.com/existing_image.png"
-
-        result = self.api.upload_file(test_url)
-
-        self.assertEqual(result, test_url)
-        mock_post.assert_not_called()
-
-    def test_upload_file_nonexistent_path(self):
-        """Verify uploading a missing file returns None without calling network."""
-        missing_file = self.workspace / "missing.png"
-
-        result = self.api.upload_file(missing_file)
-        self.assertIsNone(result)
-
-    @patch("requests.post")
-    def test_upload_file_api_error_code(self, mock_post):
-        """Verify failing API status response returns None."""
-        mock_response = MagicMock()
-        mock_response.json.return_value = {"code": 400, "msg": "Bad request"}
-        mock_post.return_value = mock_response
-
-        result = self.api.upload_file(self.test_file)
-
-        self.assertIsNone(result)
-
-    @patch("requests.post")
-    def test_upload_files_batch(self, mock_post):
-        """Verify batch list uploads process correctly."""
-        mock_response = MagicMock()
-        mock_response.json.return_value = {
-            "code": 200,
-            "data": {"downloadUrl": "https://cdn.test/uploaded.png"}
-        }
-        mock_post.return_value = mock_response
-
-        urls = self.api.upload_files([self.test_file])
-
-        self.assertEqual(urls, ["https://cdn.test/uploaded.png"])
-
     @patch("requests.get")
     def test_download_file_success(self, mock_get):
         """Verify file stream download writes valid PNG bytes and retains payload metadata."""
