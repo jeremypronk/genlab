@@ -184,6 +184,6 @@ class KieAIGen(GenAPI):
         response.raise_for_status()
         if self._check_api_response(response):
             response_json = response.json()
-            return (self._get_task_status(response_json), response_json)
-        return (None, None)
+            return (self._get_task_status(response_json), response_json['data']['state'], response_json)
+        return (None, None, None)
 

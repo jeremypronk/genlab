@@ -505,7 +505,7 @@ class GenAPI:
             return self.UPLOAD_CACHE[cache_key]
 
         self._info(f"Preparing to upload '{local_path.name}'...")
-        file_id = self._upload_file(path)
+        file_id = self._upload_file(local_path)
 
         if self.ENABLE_UPLOAD_CACHE:
             self._debug(f"Adding {file_id} to upload cache")
@@ -625,7 +625,7 @@ class GenAPI:
     def download_result(self):
         self._debug(f"GenAPI.download_result()")
 
-        (task_status, query_task_response) = self.query_task()
+        (task_status, task_message, query_task_response) = self.query_task()
         if task_status == GenAPI.TASK_STATUS.completed:
             self._info("Generation task complete!")
             self._download(query_task_response)
@@ -752,6 +752,6 @@ class GenAPI:
         Query the status of the task/request.
         Subclass must implement this method.
         Returns:
-            tuple of (TASK_STATUS, response_json)
+            tuple of (TASK_STATUS, str of task human readable message status, response_json)
         """
         raise NotImplementedError

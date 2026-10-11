@@ -1,0 +1,4 @@
+input: genlab_billboard_video_00000.mp4
+filter01_prompt: Timelapse video of a bustling Melbourne city street in the early evening after a light rain. A large animated illuminated billboard with the logo "GenLab" dominates the frame.
+filter01_creativity: 0.5
+filter01_realism: 1.0

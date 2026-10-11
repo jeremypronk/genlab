@@ -1,6 +1,6 @@
 import os
 import requests
-import json
+import re
 from pathlib import Path
 import av
 
@@ -69,9 +69,11 @@ class TopazGen(GenAPI):
     You can pass your api key in the environment variable TOPAZ_API_KEY or to the class constructor
     """
     API_SERVER = "https://api.topazlabs.com/video/"
-    ACCEPT_URL = API_SERVER+"{REQUEST_ID}/accept"
-    COMPLETE_URL = API_SERVER+"{REQUEST_ID}/complete-upload/"
-    STATUS_URL = API_SERVER+"{REQUEST_ID}/status"
+    REQUEST_URL =   API_SERVER+"{REQUEST_ID}"
+    ACCEPT_URL =    REQUEST_URL+"/accept"
+    COMPLETE_URL =  REQUEST_URL+"/complete-upload/"
+    STATUS_URL =    REQUEST_URL+"/status"
+    HISTORY_URL =   API_SERVER+"history"
     API_KEY = None
 
     PLATFORM = "topaz"
@@ -96,6 +98,10 @@ class TopazGen(GenAPI):
         self.JSON_HEADER |= self.HEADER
         self.ACCEPT_HEADER = self.HEADER | {"Accept":"*/*"}
 
+    @property
+    def num_filters(self):
+        return len(self._video_request["filters"])
+
     def _download(self, query_task_response):
         """
         For details on the contents of the task response see,
@@ -112,26 +118,19 @@ class TopazGen(GenAPI):
         self._info(f"Downloading file: {url} --> {output_path}")
         self.download_file(url, output_path)
 
-    # def prep_param(self, param, value) -> tuple:
-    #     """
-    #     kie.ai legacy image payload params are named image_input and video payload image and video reference params
-    #     all end in _url (single ref) or _urls (list of refs).
-    #     Uploads url params if they contain a path to a local file, replacing path value with the new url.
-    #     (upload_file() handles input urls by simple returning the input path)
-    #     Args:
-    #         param task/request parameter
-    #         value task/request value
+    def _upload_file(self, path: str | Path):
 
-    #     Returns:
-    #         tuple of task ready param,value pair.
-    #     """
-    #     if param.endswith('url'):
-    #         value = self.upload_file(value) # returns a string
-    #     elif param.strip().lower() == 'image_input' or param.endswith('urls'):
-    #         value = self.upload_files(value) # returns a list of strings
-    #         if None in value: value = None # fail on any missing input path
+        if self._upload_urls:
 
-    #     return (param, value)
+            with open(path, "rb") as f:
+                put = requests.put(self._upload_urls[0], data=f.read())
+
+            put.raise_for_status()
+
+            # print(put.headers)
+            if "ETag" in put.headers:
+                self._etag = put.headers["ETag"].strip('"')
+                return self._etag
 
     def _check_api_response(self, response) -> bool:
         """
@@ -166,12 +165,61 @@ class TopazGen(GenAPI):
             return self.TASK_STATUS.failed
         elif "initializing" in task_response_status.lower() or "processing" in task_response_status.lower():
             return self.TASK_STATUS.generating
-        # elif "wait" in task_response_status.lower():
-        #     return self.TASK_STATUS.waiting
         elif "requested" in task_response_status.lower() or "accepted" in task_response_status.lower():
-            return self.TASK_STATUS.queuing
+            return self.TASK_STATUS.waiting
+            #return self.TASK_STATUS.queuing
         else:
             return self.TASK_STATUS.unknown
+
+    def _get_task_message(self, query_task_response):
+        self._debug(f"TopazGen._get_task_message({query_task_response})")
+        return query_task_response['message']
+
+    @handle_http_exceptions
+    def get_request_history(self):
+        """
+        Iterate over all current requests returning the request id and request stats in a tuple.
+        """
+        self._debug(f"TopazGen._get_request_history()")
+        response = requests.get(TopazGen.HISTORY_URL, headers=self.HEADER)
+        response.raise_for_status()
+        if self._check_api_response(response):
+            response_json = response.json()
+            for request in response_json["result"]:
+                yield(request["id"], request["status"], )
+
+    @handle_http_exceptions
+    def cancel_request(self, request_id):
+        """
+        Cancel the request with the given request_id.
+        """
+        response = requests.delete(TopazGen.REQUEST_URL.format(REQUEST_ID=request_id), headers=self.HEADER)
+        response.raise_for_status()
+        return response
+
+    def cancel_requests(self, cancel_status="accepted"):
+        """
+        Cancel all requests with status matching cancel_status.
+        Topaz reserves credits for accepted requests, this function cancels any found freeing up credits.
+        Args:
+            cancel_status: status to match for canceling requests
+
+        Returns:
+            Number of requests canceled.
+        """
+        self._debug(f"TopazGen._cancel_requests()")
+
+        canceled_requests = 0
+        for request_id, status in self.get_request_history():
+            if cancel_status in status:
+                self._info(f"Cancelling request {request_id} with status {status}")
+                self.cancel_request(request_id)
+                canceled_requests += 1
+
+        return canceled_requests
+
+
+
 
     @handle_http_exceptions
     def query_task(self) -> tuple:
@@ -184,47 +232,70 @@ class TopazGen(GenAPI):
         response.raise_for_status()
         if self._check_api_response(response):
             response_json = response.json()
-            return (self._get_task_status(response_json), response_json)
-        return (None, None)
-
-    def _upload_file(self, path: str | Path):
-
-        if self._upload_urls:
-
-            with open(path, "rb") as f:
-                put = requests.put(self._upload_urls[0], data=f.read())
-
-            put.raise_for_status()
-
-            # print(put.headers)
-            if "ETag" in put.headers:
-                self._etag = put.headers["ETag"].strip('"')
-                return self._etag
+            return (self._get_task_status(response_json), self._get_task_message(response_json), response_json)
+        return (None, None, None)
 
     @handle_http_exceptions
     def prep_task(self, input_payload) -> bool:
         self._debug(f"TopazGen.prep_task({input_payload})")
         super().prep_task(input_payload=input_payload)
 
-        source_ = get_video_source(input_payload['input'])
-        filters_ = [{"model": "slf-3"}]
+
+        filters = {}
+        source = None
+        output_width = -1
+        output_height = -1
+        for param in input_payload:
+
+            if param == "input":
+                source = get_video_source(input_payload['input'])
+
+            elif param == "output_width":
+                output_width = input_payload[param]
+
+            elif param == "output_height":
+                output_height = input_payload[param]
+
+            elif m := re.match(r"filter(\d+)_(.*)", param):
+                filter_id = int(m.group(1))
+                filter_param = m.group(2)
+                filters.setdefault(filter_id, {})[filter_param] = input_payload[param]
+
+            else:
+                self._warning(f"Orphan param found in the payload \"{param}\" - note that filter params need a filter prefix for Topaz")
+
+        if not source:
+            self._error(f"No input/source found in payload {input_payload}")
+            return
+
+        if not filters:
+            self._error(f"No filters found in payload {input_payload}")
+            return
+
+
+
         output_ = {
-            "resolution": { "width": 1920, "height": 1080 }, 
-            "frameRate": source_["frameRate"],
+            "resolution": {
+                "width": output_width if output_width > 0 else source["resolution"]["width"],
+                "height": output_height if output_height > 0 else source["resolution"]["height"],
+            },
+            "frameRate": source["frameRate"],
             "videoEncoder": "H265",
             "container": "mp4",
             "audioTransfer": "None",
         }
 
-        self._debug(f"prep_task source: {source_}")
-        self._debug(f"prep_task filters: {filters_}")
+        self._debug(f"prep_task source: {source}")
+        self._debug(f"prep_task filters dict: {filters}")
         self._debug(f"prep_task output: {output_}")
 
         self._video_request = {
-          "source": source_, 
-          "filters": filters_, 
+          "source": source,
+          "filters": [filters[fid] for fid in sorted(filters)], # order the filters based on their id
           "output": output_, 
         }
+
+        self._debug(f"prep_task filters list: {self._video_request["filters"]}")
 
         import pprint
         pprint.pprint(self._video_request)
@@ -260,21 +331,27 @@ class TopazGen(GenAPI):
             self._error(f"Upload failed for {input_payload['input']}")
             return None
 
+        self._debug(f"Upload etag: {self._etag}")
+
         return True
 
     @handle_http_exceptions
-    def submit_task(self) -> str:
+    def submit_task(self, test=False) -> str:
         self._debug(f"TopazGen.submit_task()")
 
         if super().submit_task(): # check we haven't already sub'd this task/request
             pass # not sure how pythonic this is
         else:
 
-            if self._etag:
+            if test:
+                # test run, cancel the request
+                self._debug(f"Test run canceling request {self._requestId}")
+                self.cancel_request(self._requestId)
 
+            elif self._etag:
+
+                # upload complete notification begins the task
                 complete = {"uploadResults": [{"partNum": 1, "eTag": self._etag}]}
-                print(complete)
-                print(TopazGen.COMPLETE_URL.format(REQUEST_ID=self._requestId))
                 response = requests.patch(
                     TopazGen.COMPLETE_URL.format(REQUEST_ID=self._requestId),
                     headers=self.HEADER,

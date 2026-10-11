@@ -17,6 +17,7 @@ from . import GenAPI
 from .config import Config
 
 from .kieai import KieAIGen
+from .topaz import TopazGen
 
 _TASKS_WAITING_QUEUE = []
 
@@ -39,6 +40,8 @@ def load_genlab(genlab_path: Path, api: str, type: str, model: str):
 def api_task_factory(api, output_basepath, path_converter_func=lambda x: x):
     if api == "kieai":
         return KieAIGen(output_basepath, path_converter_func=path_converter_func)
+    elif api == "topaz":
+        return TopazGen(output_basepath, path_converter_func=path_converter_func)
     else:
         logging.error(f"Unknown api task {api}.")
         return
@@ -278,7 +281,7 @@ Example Usage:
         completed_tasks = []
         for api_task in _TASKS_WAITING_QUEUE:
 
-            (status, response) = api_task.query_task()
+            (status, message, response) = api_task.query_task()
             if api_task.is_finished(status):
                 if status == GenAPI.TASK_STATUS.completed:
                     api_task.download_result()
@@ -286,6 +289,9 @@ Example Usage:
                 else:
                     logging.error(f"{genlab_path.name} completed but in a failed on unknown status. Check the log for details.")
                 completed_tasks.append(api_task)
+
+            else:
+                logging.info(f"API status: {message}")
 
         # remove completed from the queue (outside loop to avoid corrupting the very list it is checking)
         #for id in completed_tasks: _TASKS_WAITING_QUEUE.pop(id, None)

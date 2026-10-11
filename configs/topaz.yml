@@ -1,7 +1,126 @@
 
+#
+# Multiple filters can be chained in the "model", using the filter99_ prefix where 99 is the filter id
+
+
+defaults:
+
+  ".tmpl.topaz": &topaz
+    ^input: ""
+    +output_width: -1   # will match input if not specified
+    +output_height: -1  # will match input if not specified
+
+
+slomo:
+
+  aion: &aion_
+    <<: *topaz
+    filter01_model: "aion-1"
+    $filter01_slowmo: [2, 4, 8, 16]
+    +filter01_duplicate: false
+    +filter01_duplicateThreshold: 0.01
+
+  aion-2x:
+    <<: *aion_
+    filter01_slowmo: 2
+
+  aion-4x:
+    <<: *aion_
+    filter01_slowmo: 4
+
+  aion-8x:
+    <<: *aion_
+    filter01_slowmo: 8
+
 upres:
 
-  proteus:
+  # astra 2
 
-    ^input: ""
+  .tmpl.astra2: &astra2
+    <<: *topaz
+    filter01_model: "ast-2"
+    ^filter01_prompt: ""
+    ^filter01_creativity: 0.0
+    ^filter01_realism: 1.0
+    filter01_outputWidth: -1
+    filter01_outputHeight: -1
+
+  astra2-1080p:
+    <<: *astra2
+    output_width: 1920
+    output_height: 1080
+    filter01_outputWidth: 1920
+    filter01_outputHeight: 1080
+
+
+  # starlight precise 2.6
+
+  .tmpl.starlight: &starlight
+    <<: *topaz
+    filter01_model: "slp-2.6"
+    filter01_outputWidth: -1
+    filter01_outputHeight: -1
+
+  starlight-720p: &starlight-720p
+    <<: *starlight
+    output_width: 1280
+    output_height: 720
+    filter01_outputWidth: 1280
+    filter01_outputHeight: 720
+
+  starlight-sharpness1-720p:
+    <<: *starlight-720p
+    filter01_sharpness: 1.0
+
+  starlight-sharpness2-720p:
+    <<: *starlight-720p
+    filter01_sharpness: 2.0
+
+  starlight-sharpness3-720p:
+    <<: *starlight-720p
+    filter01_sharpness: 3.0
+
+  starlight-sharpness4-720p:
+    <<: *starlight-720p
+    filter01_sharpness: 4.0
+
+  starlight-sharpness5-720p:
+    <<: *starlight-720p
+    filter01_sharpness: 5.0
+
+  starlight-1080p: &starlight-1080p
+    <<: *starlight
+    output_width: 1920
+    output_height: 1080
+    filter01_outputWidth: 1920
+    filter01_outputHeight: 1080
+
+  starlight-sharpness1-1080p:
+    <<: *starlight-1080p
+    filter01_sharpness: 1.0
+
+  starlight-sharpness2-1080p:
+    <<: *starlight-1080p
+    filter01_sharpness: 2.0
+
+  starlight-sharpness3-1080p:
+    <<: *starlight-1080p
+    filter01_sharpness: 3.0
+
+  starlight-sharpness4-1080p:
+    <<: *starlight-1080p
+    filter01_sharpness: 4.0
+
+  starlight-sharpness5-1080p:
+    <<: *starlight-1080p
+    filter01_sharpness: 5.0
+
+
+
+hdr:
+
+  hyperion2-5:
+    <<: *topaz
+    filter01_model: "hyp-2.5"
+
 

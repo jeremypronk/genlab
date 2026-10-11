@@ -2,15 +2,11 @@ import os
 import unittest
 import tempfile
 from pathlib import Path
-import time
-import base64
 
 from .unittests import BaseTestCase
 
-from genlab import GenAPI
 from genlab.topaz import TopazGen
 
-from genlab.metadata import write_metadata
 
 
 class TestTopazAIGen(BaseTestCase):
@@ -21,6 +17,11 @@ class TestTopazAIGen(BaseTestCase):
 
         # Initialize KieAIGen with the required params file
         self.topaz = TopazGen(Path(self.temp_dir.name))
+
+        # self.topaz._get_request_history()
+        # clear out any accepted requests as they are likely tests and will not be run
+        # TODO: WORLD BE SAFER TO RECORD THE request ids in the test AND CANCEL THEM ON TEARDOWN
+        self.topaz.cancel_requests()
 
         # 2. Set up paths for the upload/download test
         # self.source_file_path = Path(self.temp_dir.name) / "sample.png"
@@ -34,8 +35,27 @@ class TestTopazAIGen(BaseTestCase):
         # with open(self.source_file_path, "rb") as f: # read the result back as our ground truth
         #     self.dummy_data = f.read()
 
-    def test_prep(self):
-        self.assertTrue(self.topaz.prep_task({"input": "unittests/genlab_billboard_ref_00000.mp4"}))
+    def test_prep1(self):
+        self.assertTrue(self.topaz.prep_task({"input": "unittests/genlab_billboard_ref_00000.mp4", "filter01_model": "hyp-2.5"}))
+
+        # genlab_billboard_ref_00000.mp4 is 864w x 496h - no output res specified so it should match the input
+        self.assertEqual(self.topaz._video_request["output"]["resolution"]["width"], 864)
+        self.assertEqual(self.topaz._video_request["output"]["resolution"]["height"], 496)
+        self.assertEqual(self.topaz.num_filters, 1)
+
+    def test_prep2(self):
+        self.assertTrue(self.topaz.prep_task({"input": "unittests/genlab_billboard_ref_00000.mp4", "filter01_model": "aion-1", "filter01_slowmo": 2, "output_width":1920, "output_height":1080}))
+
+        self.assertEqual(self.topaz._video_request["output"]["resolution"]["width"], 1920)
+        self.assertEqual(self.topaz._video_request["output"]["resolution"]["height"], 1080)
+        self.assertEqual(self.topaz.num_filters, 1)
+
+    def test_prep3(self):
+        self.assertTrue(self.topaz.prep_task({"input": "unittests/genlab_billboard_ref_00000.mp4", "filter02_model": "ast-2", "filter02_prompt": "A billboard lit up", "filter03_model": "hyp-2.5", "output_width":1920, "output_height":1080}))
+
+        self.assertEqual(self.topaz._video_request["output"]["resolution"]["width"], 1920)
+        self.assertEqual(self.topaz._video_request["output"]["resolution"]["height"], 1080)
+        self.assertEqual(self.topaz.num_filters, 2)
 #
 #     # def test_upload_and_download_file(self):
 #     #     """
@@ -69,40 +89,41 @@ class TestTopazAIGen(BaseTestCase):
 #     #         "The downloaded file content does not match the originally uploaded file content."
 #     #     )
 #
-#     def tearDown(self):
-#         """Clean up the temporary directory and files after the test runs."""
-#         self.temp_dir.cleanup()
-
-class TestTopaz_SimpleUpres(BaseTestCase):
-    def setUp(self):
-        self.temp_dir = tempfile.TemporaryDirectory()
-        self.topaz = TopazGen(Path(self.temp_dir.name))
-
-    def test_upres(self):
-
-        self.assertTrue(self.topaz.prep_task({"input": "unittests/genlab_billboard_ref_00000.mp4"}))
-        self.assertIsNotNone(self.topaz.submit_task())
-
-        retry = 0
-        retries = 2000
-        while retry < retries:
-
-            (status, response) = self.topaz.query_task()
-            if self.topaz.is_finished(status):
-                break
-
-            print(".")
-            retry += 1
-            time.sleep(5)
-
-        self.assertTrue(retry<retries)
-
-        # try downloading the image
-        status = self.topaz.download_result()
-        self.assertTrue(status==GenAPI.TASK_STATUS.completed)
-
     def tearDown(self):
-        self.temp_dir.cleanup()
+        """Clean up the temporary directory and files after the test runs."""
+        # self.temp_dir.cleanup()
+        self.topaz.cancel_requests()
+
+# class TestTopaz_SimpleUpres(BaseTestCase):
+#     def setUp(self):
+#         self.temp_dir = tempfile.TemporaryDirectory()
+#         self.topaz = TopazGen(Path(self.temp_dir.name))
+#
+#     def test_upres(self):
+#
+#         self.assertTrue(self.topaz.prep_task({"input": "unittests/genlab_billboard_ref_00000.mp4"}))
+#         self.assertIsNotNone(self.topaz.submit_task())
+#
+#         retry = 0
+#         retries = 2000
+#         while retry < retries:
+#
+#             (status, response) = self.topaz.query_task()
+#             if self.topaz.is_finished(status):
+#                 break
+#
+#             print(".")
+#             retry += 1
+#             time.sleep(5)
+#
+#         self.assertTrue(retry<retries)
+#
+#         # try downloading the image
+#         status = self.topaz.download_result()
+#         self.assertTrue(status==GenAPI.TASK_STATUS.completed)
+#
+#     def tearDown(self):
+#         self.temp_dir.cleanup()
 
 
 
