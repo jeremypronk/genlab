@@ -146,65 +146,95 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_task_download', (uri: vscode.Uri) => {
         runPythonScript(uri, '--api kieai --download');
     }));
-    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_image_nano_banana_pro_t2i_2K_x1', (uri: vscode.Uri) => {
-        runPythonScript(uri, '--api kieai --type image --model nano-banana-pro-t2i-2K --generations 1');
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_google_image_nano_banana_pro_t2i_2K_x1', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api kieai --type google-image --model nano-banana-pro-t2i-2K --generations 1');
     }));
-    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_image_nano_banana_pro_t2i_2K_x2', (uri: vscode.Uri) => {
-        runPythonScript(uri, '--api kieai --type image --model nano-banana-pro-t2i-2K --generations 2');
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_google_image_nano_banana_pro_t2i_2K_x2', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api kieai --type google-image --model nano-banana-pro-t2i-2K --generations 2');
     }));
-    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_image_nano_banana_pro_t2i_2K_x4', (uri: vscode.Uri) => {
-        runPythonScript(uri, '--api kieai --type image --model nano-banana-pro-t2i-2K --generations 4');
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_google_image_nano_banana_pro_t2i_2K_x4', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api kieai --type google-image --model nano-banana-pro-t2i-2K --generations 4');
     }));
-    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_image_nano_banana_pro_t2i_2K_x6', (uri: vscode.Uri) => {
-        runPythonScript(uri, '--api kieai --type image --model nano-banana-pro-t2i-2K --generations 6');
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_google_image_nano_banana_pro_t2i_2K_x6', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api kieai --type google-image --model nano-banana-pro-t2i-2K --generations 6');
     }));
-    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_image_nano_banana_pro_t2i_2K_x10', (uri: vscode.Uri) => {
-        runPythonScript(uri, '--api kieai --type image --model nano-banana-pro-t2i-2K --generations 10');
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_google_image_nano_banana_pro_t2i_2K_x10', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api kieai --type google-image --model nano-banana-pro-t2i-2K --generations 10');
     }));
-    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_image_nano_banana_pro_t2i_4K_x1', (uri: vscode.Uri) => {
-        runPythonScript(uri, '--api kieai --type image --model nano-banana-pro-t2i-4K --generations 1');
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_google_image_nano_banana_pro_t2i_4K_x1', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api kieai --type google-image --model nano-banana-pro-t2i-4K --generations 1');
     }));
-    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_image_nano_banana_pro_t2i_4K_x2', (uri: vscode.Uri) => {
-        runPythonScript(uri, '--api kieai --type image --model nano-banana-pro-t2i-4K --generations 2');
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_google_image_nano_banana_pro_t2i_4K_x2', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api kieai --type google-image --model nano-banana-pro-t2i-4K --generations 2');
     }));
-    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_image_nano_banana_pro_t2i_4K_x4', (uri: vscode.Uri) => {
-        runPythonScript(uri, '--api kieai --type image --model nano-banana-pro-t2i-4K --generations 4');
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_google_image_nano_banana_pro_t2i_4K_x4', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api kieai --type google-image --model nano-banana-pro-t2i-4K --generations 4');
     }));
-    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_image_nano_banana_pro_t2i_4K_x6', (uri: vscode.Uri) => {
-        runPythonScript(uri, '--api kieai --type image --model nano-banana-pro-t2i-4K --generations 6');
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_google_image_nano_banana_pro_t2i_4K_x6', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api kieai --type google-image --model nano-banana-pro-t2i-4K --generations 6');
     }));
-    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_image_nano_banana_pro_t2i_4K_x10', (uri: vscode.Uri) => {
-        runPythonScript(uri, '--api kieai --type image --model nano-banana-pro-t2i-4K --generations 10');
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_google_image_nano_banana_pro_t2i_4K_x10', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api kieai --type google-image --model nano-banana-pro-t2i-4K --generations 10');
     }));
-    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_image_nano_banana_pro_i2i_2K_x1', (uri: vscode.Uri) => {
-        runPythonScript(uri, '--api kieai --type image --model nano-banana-pro-i2i-2K --generations 1');
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_google_image_nano_banana_pro_i2i_2K_x1', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api kieai --type google-image --model nano-banana-pro-i2i-2K --generations 1');
     }));
-    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_image_nano_banana_pro_i2i_2K_x2', (uri: vscode.Uri) => {
-        runPythonScript(uri, '--api kieai --type image --model nano-banana-pro-i2i-2K --generations 2');
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_google_image_nano_banana_pro_i2i_2K_x2', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api kieai --type google-image --model nano-banana-pro-i2i-2K --generations 2');
     }));
-    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_image_nano_banana_pro_i2i_2K_x4', (uri: vscode.Uri) => {
-        runPythonScript(uri, '--api kieai --type image --model nano-banana-pro-i2i-2K --generations 4');
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_google_image_nano_banana_pro_i2i_2K_x4', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api kieai --type google-image --model nano-banana-pro-i2i-2K --generations 4');
     }));
-    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_image_nano_banana_pro_i2i_2K_x6', (uri: vscode.Uri) => {
-        runPythonScript(uri, '--api kieai --type image --model nano-banana-pro-i2i-2K --generations 6');
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_google_image_nano_banana_pro_i2i_2K_x6', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api kieai --type google-image --model nano-banana-pro-i2i-2K --generations 6');
     }));
-    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_image_nano_banana_pro_i2i_2K_x10', (uri: vscode.Uri) => {
-        runPythonScript(uri, '--api kieai --type image --model nano-banana-pro-i2i-2K --generations 10');
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_google_image_nano_banana_pro_i2i_2K_x10', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api kieai --type google-image --model nano-banana-pro-i2i-2K --generations 10');
     }));
-    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_image_nano_banana_pro_i2i_4K_x1', (uri: vscode.Uri) => {
-        runPythonScript(uri, '--api kieai --type image --model nano-banana-pro-i2i-4K --generations 1');
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_google_image_nano_banana_pro_i2i_4K_x1', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api kieai --type google-image --model nano-banana-pro-i2i-4K --generations 1');
     }));
-    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_image_nano_banana_pro_i2i_4K_x2', (uri: vscode.Uri) => {
-        runPythonScript(uri, '--api kieai --type image --model nano-banana-pro-i2i-4K --generations 2');
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_google_image_nano_banana_pro_i2i_4K_x2', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api kieai --type google-image --model nano-banana-pro-i2i-4K --generations 2');
     }));
-    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_image_nano_banana_pro_i2i_4K_x4', (uri: vscode.Uri) => {
-        runPythonScript(uri, '--api kieai --type image --model nano-banana-pro-i2i-4K --generations 4');
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_google_image_nano_banana_pro_i2i_4K_x4', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api kieai --type google-image --model nano-banana-pro-i2i-4K --generations 4');
     }));
-    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_image_nano_banana_pro_i2i_4K_x6', (uri: vscode.Uri) => {
-        runPythonScript(uri, '--api kieai --type image --model nano-banana-pro-i2i-4K --generations 6');
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_google_image_nano_banana_pro_i2i_4K_x6', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api kieai --type google-image --model nano-banana-pro-i2i-4K --generations 6');
     }));
-    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_image_nano_banana_pro_i2i_4K_x10', (uri: vscode.Uri) => {
-        runPythonScript(uri, '--api kieai --type image --model nano-banana-pro-i2i-4K --generations 10');
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_google_image_nano_banana_pro_i2i_4K_x10', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api kieai --type google-image --model nano-banana-pro-i2i-4K --generations 10');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_google_image_nano_banana_2_1_i2i_2K_x1', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api kieai --type google-image --model nano-banana-2-1-i2i-2K --generations 1');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_google_image_nano_banana_2_1_i2i_2K_x2', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api kieai --type google-image --model nano-banana-2-1-i2i-2K --generations 2');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_google_image_nano_banana_2_1_i2i_2K_x4', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api kieai --type google-image --model nano-banana-2-1-i2i-2K --generations 4');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_google_image_nano_banana_2_1_i2i_2K_x6', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api kieai --type google-image --model nano-banana-2-1-i2i-2K --generations 6');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_google_image_nano_banana_2_1_i2i_2K_x10', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api kieai --type google-image --model nano-banana-2-1-i2i-2K --generations 10');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_google_image_nano_banana_2_1_i2i_4K_x1', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api kieai --type google-image --model nano-banana-2-1-i2i-4K --generations 1');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_google_image_nano_banana_2_1_i2i_4K_x2', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api kieai --type google-image --model nano-banana-2-1-i2i-4K --generations 2');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_google_image_nano_banana_2_1_i2i_4K_x4', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api kieai --type google-image --model nano-banana-2-1-i2i-4K --generations 4');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_google_image_nano_banana_2_1_i2i_4K_x6', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api kieai --type google-image --model nano-banana-2-1-i2i-4K --generations 6');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_google_image_nano_banana_2_1_i2i_4K_x10', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api kieai --type google-image --model nano-banana-2-1-i2i-4K --generations 10');
     }));
     context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_gpt_image_2_5_sunburst_t2i_2K_x1', (uri: vscode.Uri) => {
         runPythonScript(uri, '--api kieai --type gpt-image --model 2.5-sunburst-t2i-2K --generations 1');
@@ -266,6 +296,24 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_gpt_image_2_5_sunburst_i2i_4K_x10', (uri: vscode.Uri) => {
         runPythonScript(uri, '--api kieai --type gpt-image --model 2.5-sunburst-i2i-4K --generations 10');
     }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_topaz_upscale_2x_x1', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api kieai --type topaz --model upscale-2x --generations 1');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_topaz_upscale_2x_x2', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api kieai --type topaz --model upscale-2x --generations 2');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_topaz_upscale_2x_x3', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api kieai --type topaz --model upscale-2x --generations 3');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_topaz_upscale_4x_x1', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api kieai --type topaz --model upscale-4x --generations 1');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_topaz_upscale_4x_x2', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api kieai --type topaz --model upscale-4x --generations 2');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_topaz_upscale_4x_x3', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api kieai --type topaz --model upscale-4x --generations 3');
+    }));
     context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_seedance_2_0_i2v_480p_x1', (uri: vscode.Uri) => {
         runPythonScript(uri, '--api kieai --type seedance --model 2.0-i2v-480p --generations 1');
     }));
@@ -283,15 +331,6 @@ export function activate(context: vscode.ExtensionContext) {
     }));
     context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_seedance_2_0_i2v_720p_x3', (uri: vscode.Uri) => {
         runPythonScript(uri, '--api kieai --type seedance --model 2.0-i2v-720p --generations 3');
-    }));
-    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_seedance_2_0_i2v_1080p_x1', (uri: vscode.Uri) => {
-        runPythonScript(uri, '--api kieai --type seedance --model 2.0-i2v-1080p --generations 1');
-    }));
-    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_seedance_2_0_i2v_1080p_x2', (uri: vscode.Uri) => {
-        runPythonScript(uri, '--api kieai --type seedance --model 2.0-i2v-1080p --generations 2');
-    }));
-    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_seedance_2_0_i2v_1080p_x3', (uri: vscode.Uri) => {
-        runPythonScript(uri, '--api kieai --type seedance --model 2.0-i2v-1080p --generations 3');
     }));
     context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_seedance_2_0_fast_i2v_480p_x1', (uri: vscode.Uri) => {
         runPythonScript(uri, '--api kieai --type seedance --model 2.0-fast-i2v-480p --generations 1');
@@ -328,15 +367,6 @@ export function activate(context: vscode.ExtensionContext) {
     }));
     context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_seedance_2_0_fflf_720p_x3', (uri: vscode.Uri) => {
         runPythonScript(uri, '--api kieai --type seedance --model 2.0-fflf-720p --generations 3');
-    }));
-    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_seedance_2_0_fflf_1080p_x1', (uri: vscode.Uri) => {
-        runPythonScript(uri, '--api kieai --type seedance --model 2.0-fflf-1080p --generations 1');
-    }));
-    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_seedance_2_0_fflf_1080p_x2', (uri: vscode.Uri) => {
-        runPythonScript(uri, '--api kieai --type seedance --model 2.0-fflf-1080p --generations 2');
-    }));
-    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_seedance_2_0_fflf_1080p_x3', (uri: vscode.Uri) => {
-        runPythonScript(uri, '--api kieai --type seedance --model 2.0-fflf-1080p --generations 3');
     }));
     context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_seedance_2_0_fast_fflf_480p_x1', (uri: vscode.Uri) => {
         runPythonScript(uri, '--api kieai --type seedance --model 2.0-fast-fflf-480p --generations 1');
@@ -446,6 +476,24 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_seedance_2_5_ref_720p_x3', (uri: vscode.Uri) => {
         runPythonScript(uri, '--api kieai --type seedance --model 2.5-ref-720p --generations 3');
     }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_wan_3_0_ref_480p_x1', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api kieai --type wan --model 3.0-ref-480p --generations 1');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_wan_3_0_ref_480p_x2', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api kieai --type wan --model 3.0-ref-480p --generations 2');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_wan_3_0_ref_480p_x3', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api kieai --type wan --model 3.0-ref-480p --generations 3');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_wan_3_0_ref_720p_x1', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api kieai --type wan --model 3.0-ref-720p --generations 1');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_wan_3_0_ref_720p_x2', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api kieai --type wan --model 3.0-ref-720p --generations 2');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_wan_3_0_ref_720p_x3', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api kieai --type wan --model 3.0-ref-720p --generations 3');
+    }));
     context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_kling_2_1_i2v_std_x1', (uri: vscode.Uri) => {
         runPythonScript(uri, '--api kieai --type kling --model 2.1-i2v-std --generations 1');
     }));
@@ -482,15 +530,6 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_kling_3_0_i2v_pro_x3', (uri: vscode.Uri) => {
         runPythonScript(uri, '--api kieai --type kling --model 3.0-i2v-pro --generations 3');
     }));
-    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_kling_3_0_i2v_4K_x1', (uri: vscode.Uri) => {
-        runPythonScript(uri, '--api kieai --type kling --model 3.0-i2v-4K --generations 1');
-    }));
-    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_kling_3_0_i2v_4K_x2', (uri: vscode.Uri) => {
-        runPythonScript(uri, '--api kieai --type kling --model 3.0-i2v-4K --generations 2');
-    }));
-    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_kling_3_0_i2v_4K_x3', (uri: vscode.Uri) => {
-        runPythonScript(uri, '--api kieai --type kling --model 3.0-i2v-4K --generations 3');
-    }));
     context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_kling_3_0_fflf_std_x1', (uri: vscode.Uri) => {
         runPythonScript(uri, '--api kieai --type kling --model 3.0-fflf-std --generations 1');
     }));
@@ -509,14 +548,206 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_kling_3_0_fflf_pro_x3', (uri: vscode.Uri) => {
         runPythonScript(uri, '--api kieai --type kling --model 3.0-fflf-pro --generations 3');
     }));
-    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_kling_3_0_fflf_4K_x1', (uri: vscode.Uri) => {
-        runPythonScript(uri, '--api kieai --type kling --model 3.0-fflf-4K --generations 1');
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_kling_3_0_omni_transformation_auto_720p_x1', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api kieai --type kling --model 3.0-omni-transformation-auto-720p --generations 1');
     }));
-    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_kling_3_0_fflf_4K_x2', (uri: vscode.Uri) => {
-        runPythonScript(uri, '--api kieai --type kling --model 3.0-fflf-4K --generations 2');
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_kling_3_0_omni_transformation_auto_720p_x2', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api kieai --type kling --model 3.0-omni-transformation-auto-720p --generations 2');
     }));
-    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_kling_3_0_fflf_4K_x3', (uri: vscode.Uri) => {
-        runPythonScript(uri, '--api kieai --type kling --model 3.0-fflf-4K --generations 3');
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_kling_3_0_omni_transformation_auto_720p_x3', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api kieai --type kling --model 3.0-omni-transformation-auto-720p --generations 3');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_kling_3_0_omni_transformation_16_9_720p_x1', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api kieai --type kling --model 3.0-omni-transformation-16_9-720p --generations 1');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_kling_3_0_omni_transformation_16_9_720p_x2', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api kieai --type kling --model 3.0-omni-transformation-16_9-720p --generations 2');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_kling_3_0_omni_transformation_16_9_720p_x3', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api kieai --type kling --model 3.0-omni-transformation-16_9-720p --generations 3');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_kling_3_0_omni_reference_auto_720p_x1', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api kieai --type kling --model 3.0-omni-reference-auto-720p --generations 1');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_kling_3_0_omni_reference_auto_720p_x2', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api kieai --type kling --model 3.0-omni-reference-auto-720p --generations 2');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_kling_3_0_omni_reference_auto_720p_x3', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api kieai --type kling --model 3.0-omni-reference-auto-720p --generations 3');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_kling_3_0_omni_reference_16_9_720p_x1', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api kieai --type kling --model 3.0-omni-reference-16_9-720p --generations 1');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_kling_3_0_omni_reference_16_9_720p_x2', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api kieai --type kling --model 3.0-omni-reference-16_9-720p --generations 2');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.kieai_kling_3_0_omni_reference_16_9_720p_x3', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api kieai --type kling --model 3.0-omni-reference-16_9-720p --generations 3');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.topaz_task_download', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api topaz --download');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.topaz_slomo_aion_x1', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api topaz --type slomo --model aion --generations 1');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.topaz_slomo_aion_x2', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api topaz --type slomo --model aion --generations 2');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.topaz_slomo_aion_x3', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api topaz --type slomo --model aion --generations 3');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.topaz_slomo_aion_2x_x1', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api topaz --type slomo --model aion-2x --generations 1');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.topaz_slomo_aion_2x_x2', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api topaz --type slomo --model aion-2x --generations 2');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.topaz_slomo_aion_2x_x3', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api topaz --type slomo --model aion-2x --generations 3');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.topaz_slomo_aion_4x_x1', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api topaz --type slomo --model aion-4x --generations 1');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.topaz_slomo_aion_4x_x2', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api topaz --type slomo --model aion-4x --generations 2');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.topaz_slomo_aion_4x_x3', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api topaz --type slomo --model aion-4x --generations 3');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.topaz_slomo_aion_8x_x1', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api topaz --type slomo --model aion-8x --generations 1');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.topaz_slomo_aion_8x_x2', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api topaz --type slomo --model aion-8x --generations 2');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.topaz_slomo_aion_8x_x3', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api topaz --type slomo --model aion-8x --generations 3');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.topaz_upres_astra2_1080p_x1', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api topaz --type upres --model astra2-1080p --generations 1');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.topaz_upres_astra2_1080p_x2', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api topaz --type upres --model astra2-1080p --generations 2');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.topaz_upres_astra2_1080p_x3', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api topaz --type upres --model astra2-1080p --generations 3');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.topaz_upres_starlight_720p_x1', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api topaz --type upres --model starlight-720p --generations 1');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.topaz_upres_starlight_720p_x2', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api topaz --type upres --model starlight-720p --generations 2');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.topaz_upres_starlight_720p_x3', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api topaz --type upres --model starlight-720p --generations 3');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.topaz_upres_starlight_sharpness1_720p_x1', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api topaz --type upres --model starlight-sharpness1-720p --generations 1');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.topaz_upres_starlight_sharpness1_720p_x2', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api topaz --type upres --model starlight-sharpness1-720p --generations 2');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.topaz_upres_starlight_sharpness1_720p_x3', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api topaz --type upres --model starlight-sharpness1-720p --generations 3');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.topaz_upres_starlight_sharpness2_720p_x1', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api topaz --type upres --model starlight-sharpness2-720p --generations 1');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.topaz_upres_starlight_sharpness2_720p_x2', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api topaz --type upres --model starlight-sharpness2-720p --generations 2');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.topaz_upres_starlight_sharpness2_720p_x3', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api topaz --type upres --model starlight-sharpness2-720p --generations 3');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.topaz_upres_starlight_sharpness3_720p_x1', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api topaz --type upres --model starlight-sharpness3-720p --generations 1');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.topaz_upres_starlight_sharpness3_720p_x2', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api topaz --type upres --model starlight-sharpness3-720p --generations 2');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.topaz_upres_starlight_sharpness3_720p_x3', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api topaz --type upres --model starlight-sharpness3-720p --generations 3');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.topaz_upres_starlight_sharpness4_720p_x1', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api topaz --type upres --model starlight-sharpness4-720p --generations 1');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.topaz_upres_starlight_sharpness4_720p_x2', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api topaz --type upres --model starlight-sharpness4-720p --generations 2');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.topaz_upres_starlight_sharpness4_720p_x3', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api topaz --type upres --model starlight-sharpness4-720p --generations 3');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.topaz_upres_starlight_sharpness5_720p_x1', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api topaz --type upres --model starlight-sharpness5-720p --generations 1');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.topaz_upres_starlight_sharpness5_720p_x2', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api topaz --type upres --model starlight-sharpness5-720p --generations 2');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.topaz_upres_starlight_sharpness5_720p_x3', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api topaz --type upres --model starlight-sharpness5-720p --generations 3');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.topaz_upres_starlight_1080p_x1', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api topaz --type upres --model starlight-1080p --generations 1');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.topaz_upres_starlight_1080p_x2', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api topaz --type upres --model starlight-1080p --generations 2');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.topaz_upres_starlight_1080p_x3', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api topaz --type upres --model starlight-1080p --generations 3');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.topaz_upres_starlight_sharpness1_1080p_x1', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api topaz --type upres --model starlight-sharpness1-1080p --generations 1');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.topaz_upres_starlight_sharpness1_1080p_x2', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api topaz --type upres --model starlight-sharpness1-1080p --generations 2');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.topaz_upres_starlight_sharpness1_1080p_x3', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api topaz --type upres --model starlight-sharpness1-1080p --generations 3');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.topaz_upres_starlight_sharpness2_1080p_x1', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api topaz --type upres --model starlight-sharpness2-1080p --generations 1');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.topaz_upres_starlight_sharpness2_1080p_x2', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api topaz --type upres --model starlight-sharpness2-1080p --generations 2');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.topaz_upres_starlight_sharpness2_1080p_x3', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api topaz --type upres --model starlight-sharpness2-1080p --generations 3');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.topaz_upres_starlight_sharpness3_1080p_x1', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api topaz --type upres --model starlight-sharpness3-1080p --generations 1');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.topaz_upres_starlight_sharpness3_1080p_x2', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api topaz --type upres --model starlight-sharpness3-1080p --generations 2');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.topaz_upres_starlight_sharpness3_1080p_x3', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api topaz --type upres --model starlight-sharpness3-1080p --generations 3');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.topaz_upres_starlight_sharpness4_1080p_x1', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api topaz --type upres --model starlight-sharpness4-1080p --generations 1');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.topaz_upres_starlight_sharpness4_1080p_x2', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api topaz --type upres --model starlight-sharpness4-1080p --generations 2');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.topaz_upres_starlight_sharpness4_1080p_x3', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api topaz --type upres --model starlight-sharpness4-1080p --generations 3');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.topaz_upres_starlight_sharpness5_1080p_x1', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api topaz --type upres --model starlight-sharpness5-1080p --generations 1');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.topaz_upres_starlight_sharpness5_1080p_x2', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api topaz --type upres --model starlight-sharpness5-1080p --generations 2');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.topaz_upres_starlight_sharpness5_1080p_x3', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api topaz --type upres --model starlight-sharpness5-1080p --generations 3');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.topaz_hdr_hyperion2_5_x1', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api topaz --type hdr --model hyperion2-5 --generations 1');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.topaz_hdr_hyperion2_5_x2', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api topaz --type hdr --model hyperion2-5 --generations 2');
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('scriptRunner.cmd.topaz_hdr_hyperion2_5_x3', (uri: vscode.Uri) => {
+        runPythonScript(uri, '--api topaz --type hdr --model hyperion2-5 --generations 3');
     }));
 
 }

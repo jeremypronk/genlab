@@ -27,7 +27,7 @@ config = Config()
 config.load(os.path.join(BASE_DIR, 'configs'))
 
 
-def load_genlab(genlab_path: Path, api: str, type: str, model: str):
+def load_genlab(genlab_path: Path, api: str, type: str, model: str, include_extra_params: bool):
     try:
         with open(genlab_path, 'r') as f:
             params = yaml.safe_load(f)
@@ -35,7 +35,7 @@ def load_genlab(genlab_path: Path, api: str, type: str, model: str):
         logging.error(f"SKIPPED: Could not read or parse genlab yaml file '{genlab_pathname}': {e}")
         return None
 
-    return config.build_payload(api, type, model, params)
+    return config.build_payload(api, type, model, params, include_extra_params)
 
 def api_task_factory(api, output_basepath, path_converter_func=lambda x: x):
     if api == "kieai":
@@ -78,14 +78,14 @@ def connect_to_existing_tasks(genlab_path, api, path_converter_func=lambda x: x)
     return api_tasks
 
 # TODO: possible race condition when starting multiple request from the same genlab - write the empty .task file first !?
-def create_tasks(genlab_path, api, type, model, generations=1, test=False, path_converter_func=lambda x: x):
+def create_tasks(genlab_path, api, type, model, include_extra_params, generations=1, test=False, path_converter_func=lambda x: x):
     logging.info(f"create_tasks: {genlab_path.name}")
 
     payload = None
 
     # read the payload from the genlab file (yaml)
     try:
-        payload = load_genlab(genlab_path, api=api, type=type, model=model)
+        payload = load_genlab(genlab_path, api=api, type=type, model=model, include_extra_params=include_extra_params)
     except (KeyError, ValueError) as e:
         logging.warning(f"SKIPPED: {genlab_path.name} - {e}")
     if not payload:
@@ -191,6 +191,11 @@ Example Usage:
         help="Gen AI model config",
     )
     parser.add_argument(
+        "-e", "--include_extra_params",
+        action="store_true",
+        help="Include extra genlab parameters (not in the config) in the payload task/request",
+    )
+    parser.add_argument(
         "-g", "--generations", "-s", "-seeds",
         type=int, default=1,
         help="Number of tasks/requests per genlab (also known as number of seeds)."
@@ -257,6 +262,7 @@ Example Usage:
                                 api=args.api,
                                 type=args.type,
                                 model=args.model,
+                                include_extra_params=args.include_extra_params,
                                 generations=args.generations,
                                 test=args.dryrun,
                                 path_converter_func=path_converter_func)

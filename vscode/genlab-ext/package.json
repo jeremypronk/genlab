@@ -2,7 +2,7 @@
   "name": "genlab-ext",
   "displayName": "genlab-ext",
   "description": "GenLab vscode extension",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "engines": {
     "vscode": "^1.138.0"
   },
@@ -32,83 +32,123 @@
         "title": "kieai task download"
       },
       {
-        "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_t2i_2K_x1",
+        "command": "scriptRunner.cmd.kieai_google_image_nano_banana_pro_t2i_2K_x1",
         "title": "x1"
       },
       {
-        "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_t2i_2K_x2",
+        "command": "scriptRunner.cmd.kieai_google_image_nano_banana_pro_t2i_2K_x2",
         "title": "x2"
       },
       {
-        "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_t2i_2K_x4",
+        "command": "scriptRunner.cmd.kieai_google_image_nano_banana_pro_t2i_2K_x4",
         "title": "x4"
       },
       {
-        "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_t2i_2K_x6",
+        "command": "scriptRunner.cmd.kieai_google_image_nano_banana_pro_t2i_2K_x6",
         "title": "x6"
       },
       {
-        "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_t2i_2K_x10",
+        "command": "scriptRunner.cmd.kieai_google_image_nano_banana_pro_t2i_2K_x10",
         "title": "x10"
       },
       {
-        "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_t2i_4K_x1",
+        "command": "scriptRunner.cmd.kieai_google_image_nano_banana_pro_t2i_4K_x1",
         "title": "x1"
       },
       {
-        "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_t2i_4K_x2",
+        "command": "scriptRunner.cmd.kieai_google_image_nano_banana_pro_t2i_4K_x2",
         "title": "x2"
       },
       {
-        "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_t2i_4K_x4",
+        "command": "scriptRunner.cmd.kieai_google_image_nano_banana_pro_t2i_4K_x4",
         "title": "x4"
       },
       {
-        "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_t2i_4K_x6",
+        "command": "scriptRunner.cmd.kieai_google_image_nano_banana_pro_t2i_4K_x6",
         "title": "x6"
       },
       {
-        "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_t2i_4K_x10",
+        "command": "scriptRunner.cmd.kieai_google_image_nano_banana_pro_t2i_4K_x10",
         "title": "x10"
       },
       {
-        "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_i2i_2K_x1",
+        "command": "scriptRunner.cmd.kieai_google_image_nano_banana_pro_i2i_2K_x1",
         "title": "x1"
       },
       {
-        "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_i2i_2K_x2",
+        "command": "scriptRunner.cmd.kieai_google_image_nano_banana_pro_i2i_2K_x2",
         "title": "x2"
       },
       {
-        "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_i2i_2K_x4",
+        "command": "scriptRunner.cmd.kieai_google_image_nano_banana_pro_i2i_2K_x4",
         "title": "x4"
       },
       {
-        "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_i2i_2K_x6",
+        "command": "scriptRunner.cmd.kieai_google_image_nano_banana_pro_i2i_2K_x6",
         "title": "x6"
       },
       {
-        "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_i2i_2K_x10",
+        "command": "scriptRunner.cmd.kieai_google_image_nano_banana_pro_i2i_2K_x10",
         "title": "x10"
       },
       {
-        "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_i2i_4K_x1",
+        "command": "scriptRunner.cmd.kieai_google_image_nano_banana_pro_i2i_4K_x1",
         "title": "x1"
       },
       {
-        "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_i2i_4K_x2",
+        "command": "scriptRunner.cmd.kieai_google_image_nano_banana_pro_i2i_4K_x2",
         "title": "x2"
       },
       {
-        "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_i2i_4K_x4",
+        "command": "scriptRunner.cmd.kieai_google_image_nano_banana_pro_i2i_4K_x4",
         "title": "x4"
       },
       {
-        "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_i2i_4K_x6",
+        "command": "scriptRunner.cmd.kieai_google_image_nano_banana_pro_i2i_4K_x6",
         "title": "x6"
       },
       {
-        "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_i2i_4K_x10",
+        "command": "scriptRunner.cmd.kieai_google_image_nano_banana_pro_i2i_4K_x10",
+        "title": "x10"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_google_image_nano_banana_2_1_i2i_2K_x1",
+        "title": "x1"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_google_image_nano_banana_2_1_i2i_2K_x2",
+        "title": "x2"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_google_image_nano_banana_2_1_i2i_2K_x4",
+        "title": "x4"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_google_image_nano_banana_2_1_i2i_2K_x6",
+        "title": "x6"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_google_image_nano_banana_2_1_i2i_2K_x10",
+        "title": "x10"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_google_image_nano_banana_2_1_i2i_4K_x1",
+        "title": "x1"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_google_image_nano_banana_2_1_i2i_4K_x2",
+        "title": "x2"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_google_image_nano_banana_2_1_i2i_4K_x4",
+        "title": "x4"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_google_image_nano_banana_2_1_i2i_4K_x6",
+        "title": "x6"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_google_image_nano_banana_2_1_i2i_4K_x10",
         "title": "x10"
       },
       {
@@ -192,6 +232,30 @@
         "title": "x10"
       },
       {
+        "command": "scriptRunner.cmd.kieai_topaz_upscale_2x_x1",
+        "title": "x1"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_topaz_upscale_2x_x2",
+        "title": "x2"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_topaz_upscale_2x_x3",
+        "title": "x3"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_topaz_upscale_4x_x1",
+        "title": "x1"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_topaz_upscale_4x_x2",
+        "title": "x2"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_topaz_upscale_4x_x3",
+        "title": "x3"
+      },
+      {
         "command": "scriptRunner.cmd.kieai_seedance_2_0_i2v_480p_x1",
         "title": "x1"
       },
@@ -213,18 +277,6 @@
       },
       {
         "command": "scriptRunner.cmd.kieai_seedance_2_0_i2v_720p_x3",
-        "title": "x3"
-      },
-      {
-        "command": "scriptRunner.cmd.kieai_seedance_2_0_i2v_1080p_x1",
-        "title": "x1"
-      },
-      {
-        "command": "scriptRunner.cmd.kieai_seedance_2_0_i2v_1080p_x2",
-        "title": "x2"
-      },
-      {
-        "command": "scriptRunner.cmd.kieai_seedance_2_0_i2v_1080p_x3",
         "title": "x3"
       },
       {
@@ -273,18 +325,6 @@
       },
       {
         "command": "scriptRunner.cmd.kieai_seedance_2_0_fflf_720p_x3",
-        "title": "x3"
-      },
-      {
-        "command": "scriptRunner.cmd.kieai_seedance_2_0_fflf_1080p_x1",
-        "title": "x1"
-      },
-      {
-        "command": "scriptRunner.cmd.kieai_seedance_2_0_fflf_1080p_x2",
-        "title": "x2"
-      },
-      {
-        "command": "scriptRunner.cmd.kieai_seedance_2_0_fflf_1080p_x3",
         "title": "x3"
       },
       {
@@ -432,6 +472,30 @@
         "title": "x3"
       },
       {
+        "command": "scriptRunner.cmd.kieai_wan_3_0_ref_480p_x1",
+        "title": "x1"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_wan_3_0_ref_480p_x2",
+        "title": "x2"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_wan_3_0_ref_480p_x3",
+        "title": "x3"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_wan_3_0_ref_720p_x1",
+        "title": "x1"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_wan_3_0_ref_720p_x2",
+        "title": "x2"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_wan_3_0_ref_720p_x3",
+        "title": "x3"
+      },
+      {
         "command": "scriptRunner.cmd.kieai_kling_2_1_i2v_std_x1",
         "title": "x1"
       },
@@ -480,18 +544,6 @@
         "title": "x3"
       },
       {
-        "command": "scriptRunner.cmd.kieai_kling_3_0_i2v_4K_x1",
-        "title": "x1"
-      },
-      {
-        "command": "scriptRunner.cmd.kieai_kling_3_0_i2v_4K_x2",
-        "title": "x2"
-      },
-      {
-        "command": "scriptRunner.cmd.kieai_kling_3_0_i2v_4K_x3",
-        "title": "x3"
-      },
-      {
         "command": "scriptRunner.cmd.kieai_kling_3_0_fflf_std_x1",
         "title": "x1"
       },
@@ -516,38 +568,302 @@
         "title": "x3"
       },
       {
-        "command": "scriptRunner.cmd.kieai_kling_3_0_fflf_4K_x1",
+        "command": "scriptRunner.cmd.kieai_kling_3_0_omni_transformation_auto_720p_x1",
         "title": "x1"
       },
       {
-        "command": "scriptRunner.cmd.kieai_kling_3_0_fflf_4K_x2",
+        "command": "scriptRunner.cmd.kieai_kling_3_0_omni_transformation_auto_720p_x2",
         "title": "x2"
       },
       {
-        "command": "scriptRunner.cmd.kieai_kling_3_0_fflf_4K_x3",
+        "command": "scriptRunner.cmd.kieai_kling_3_0_omni_transformation_auto_720p_x3",
+        "title": "x3"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_kling_3_0_omni_transformation_16_9_720p_x1",
+        "title": "x1"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_kling_3_0_omni_transformation_16_9_720p_x2",
+        "title": "x2"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_kling_3_0_omni_transformation_16_9_720p_x3",
+        "title": "x3"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_kling_3_0_omni_reference_auto_720p_x1",
+        "title": "x1"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_kling_3_0_omni_reference_auto_720p_x2",
+        "title": "x2"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_kling_3_0_omni_reference_auto_720p_x3",
+        "title": "x3"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_kling_3_0_omni_reference_16_9_720p_x1",
+        "title": "x1"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_kling_3_0_omni_reference_16_9_720p_x2",
+        "title": "x2"
+      },
+      {
+        "command": "scriptRunner.cmd.kieai_kling_3_0_omni_reference_16_9_720p_x3",
+        "title": "x3"
+      },
+      {
+        "command": "scriptRunner.cmd.topaz_task_download",
+        "title": "topaz task download"
+      },
+      {
+        "command": "scriptRunner.cmd.topaz_slomo_aion_x1",
+        "title": "x1"
+      },
+      {
+        "command": "scriptRunner.cmd.topaz_slomo_aion_x2",
+        "title": "x2"
+      },
+      {
+        "command": "scriptRunner.cmd.topaz_slomo_aion_x3",
+        "title": "x3"
+      },
+      {
+        "command": "scriptRunner.cmd.topaz_slomo_aion_2x_x1",
+        "title": "x1"
+      },
+      {
+        "command": "scriptRunner.cmd.topaz_slomo_aion_2x_x2",
+        "title": "x2"
+      },
+      {
+        "command": "scriptRunner.cmd.topaz_slomo_aion_2x_x3",
+        "title": "x3"
+      },
+      {
+        "command": "scriptRunner.cmd.topaz_slomo_aion_4x_x1",
+        "title": "x1"
+      },
+      {
+        "command": "scriptRunner.cmd.topaz_slomo_aion_4x_x2",
+        "title": "x2"
+      },
+      {
+        "command": "scriptRunner.cmd.topaz_slomo_aion_4x_x3",
+        "title": "x3"
+      },
+      {
+        "command": "scriptRunner.cmd.topaz_slomo_aion_8x_x1",
+        "title": "x1"
+      },
+      {
+        "command": "scriptRunner.cmd.topaz_slomo_aion_8x_x2",
+        "title": "x2"
+      },
+      {
+        "command": "scriptRunner.cmd.topaz_slomo_aion_8x_x3",
+        "title": "x3"
+      },
+      {
+        "command": "scriptRunner.cmd.topaz_upres_astra2_1080p_x1",
+        "title": "x1"
+      },
+      {
+        "command": "scriptRunner.cmd.topaz_upres_astra2_1080p_x2",
+        "title": "x2"
+      },
+      {
+        "command": "scriptRunner.cmd.topaz_upres_astra2_1080p_x3",
+        "title": "x3"
+      },
+      {
+        "command": "scriptRunner.cmd.topaz_upres_starlight_720p_x1",
+        "title": "x1"
+      },
+      {
+        "command": "scriptRunner.cmd.topaz_upres_starlight_720p_x2",
+        "title": "x2"
+      },
+      {
+        "command": "scriptRunner.cmd.topaz_upres_starlight_720p_x3",
+        "title": "x3"
+      },
+      {
+        "command": "scriptRunner.cmd.topaz_upres_starlight_sharpness1_720p_x1",
+        "title": "x1"
+      },
+      {
+        "command": "scriptRunner.cmd.topaz_upres_starlight_sharpness1_720p_x2",
+        "title": "x2"
+      },
+      {
+        "command": "scriptRunner.cmd.topaz_upres_starlight_sharpness1_720p_x3",
+        "title": "x3"
+      },
+      {
+        "command": "scriptRunner.cmd.topaz_upres_starlight_sharpness2_720p_x1",
+        "title": "x1"
+      },
+      {
+        "command": "scriptRunner.cmd.topaz_upres_starlight_sharpness2_720p_x2",
+        "title": "x2"
+      },
+      {
+        "command": "scriptRunner.cmd.topaz_upres_starlight_sharpness2_720p_x3",
+        "title": "x3"
+      },
+      {
+        "command": "scriptRunner.cmd.topaz_upres_starlight_sharpness3_720p_x1",
+        "title": "x1"
+      },
+      {
+        "command": "scriptRunner.cmd.topaz_upres_starlight_sharpness3_720p_x2",
+        "title": "x2"
+      },
+      {
+        "command": "scriptRunner.cmd.topaz_upres_starlight_sharpness3_720p_x3",
+        "title": "x3"
+      },
+      {
+        "command": "scriptRunner.cmd.topaz_upres_starlight_sharpness4_720p_x1",
+        "title": "x1"
+      },
+      {
+        "command": "scriptRunner.cmd.topaz_upres_starlight_sharpness4_720p_x2",
+        "title": "x2"
+      },
+      {
+        "command": "scriptRunner.cmd.topaz_upres_starlight_sharpness4_720p_x3",
+        "title": "x3"
+      },
+      {
+        "command": "scriptRunner.cmd.topaz_upres_starlight_sharpness5_720p_x1",
+        "title": "x1"
+      },
+      {
+        "command": "scriptRunner.cmd.topaz_upres_starlight_sharpness5_720p_x2",
+        "title": "x2"
+      },
+      {
+        "command": "scriptRunner.cmd.topaz_upres_starlight_sharpness5_720p_x3",
+        "title": "x3"
+      },
+      {
+        "command": "scriptRunner.cmd.topaz_upres_starlight_1080p_x1",
+        "title": "x1"
+      },
+      {
+        "command": "scriptRunner.cmd.topaz_upres_starlight_1080p_x2",
+        "title": "x2"
+      },
+      {
+        "command": "scriptRunner.cmd.topaz_upres_starlight_1080p_x3",
+        "title": "x3"
+      },
+      {
+        "command": "scriptRunner.cmd.topaz_upres_starlight_sharpness1_1080p_x1",
+        "title": "x1"
+      },
+      {
+        "command": "scriptRunner.cmd.topaz_upres_starlight_sharpness1_1080p_x2",
+        "title": "x2"
+      },
+      {
+        "command": "scriptRunner.cmd.topaz_upres_starlight_sharpness1_1080p_x3",
+        "title": "x3"
+      },
+      {
+        "command": "scriptRunner.cmd.topaz_upres_starlight_sharpness2_1080p_x1",
+        "title": "x1"
+      },
+      {
+        "command": "scriptRunner.cmd.topaz_upres_starlight_sharpness2_1080p_x2",
+        "title": "x2"
+      },
+      {
+        "command": "scriptRunner.cmd.topaz_upres_starlight_sharpness2_1080p_x3",
+        "title": "x3"
+      },
+      {
+        "command": "scriptRunner.cmd.topaz_upres_starlight_sharpness3_1080p_x1",
+        "title": "x1"
+      },
+      {
+        "command": "scriptRunner.cmd.topaz_upres_starlight_sharpness3_1080p_x2",
+        "title": "x2"
+      },
+      {
+        "command": "scriptRunner.cmd.topaz_upres_starlight_sharpness3_1080p_x3",
+        "title": "x3"
+      },
+      {
+        "command": "scriptRunner.cmd.topaz_upres_starlight_sharpness4_1080p_x1",
+        "title": "x1"
+      },
+      {
+        "command": "scriptRunner.cmd.topaz_upres_starlight_sharpness4_1080p_x2",
+        "title": "x2"
+      },
+      {
+        "command": "scriptRunner.cmd.topaz_upres_starlight_sharpness4_1080p_x3",
+        "title": "x3"
+      },
+      {
+        "command": "scriptRunner.cmd.topaz_upres_starlight_sharpness5_1080p_x1",
+        "title": "x1"
+      },
+      {
+        "command": "scriptRunner.cmd.topaz_upres_starlight_sharpness5_1080p_x2",
+        "title": "x2"
+      },
+      {
+        "command": "scriptRunner.cmd.topaz_upres_starlight_sharpness5_1080p_x3",
+        "title": "x3"
+      },
+      {
+        "command": "scriptRunner.cmd.topaz_hdr_hyperion2_5_x1",
+        "title": "x1"
+      },
+      {
+        "command": "scriptRunner.cmd.topaz_hdr_hyperion2_5_x2",
+        "title": "x2"
+      },
+      {
+        "command": "scriptRunner.cmd.topaz_hdr_hyperion2_5_x3",
         "title": "x3"
       }
     ],
     "submenus": [
       {
-        "id": "scriptRunner.menu.kieai_image",
-        "label": "kieai image"
+        "id": "scriptRunner.menu.kieai_google_image",
+        "label": "kieai google-image"
       },
       {
-        "id": "scriptRunner.menu.kieai_image_nano_banana_pro_t2i_2K",
+        "id": "scriptRunner.menu.kieai_google_image_nano_banana_pro_t2i_2K",
         "label": "nano-banana-pro-t2i-2K"
       },
       {
-        "id": "scriptRunner.menu.kieai_image_nano_banana_pro_t2i_4K",
+        "id": "scriptRunner.menu.kieai_google_image_nano_banana_pro_t2i_4K",
         "label": "nano-banana-pro-t2i-4K"
       },
       {
-        "id": "scriptRunner.menu.kieai_image_nano_banana_pro_i2i_2K",
+        "id": "scriptRunner.menu.kieai_google_image_nano_banana_pro_i2i_2K",
         "label": "nano-banana-pro-i2i-2K"
       },
       {
-        "id": "scriptRunner.menu.kieai_image_nano_banana_pro_i2i_4K",
+        "id": "scriptRunner.menu.kieai_google_image_nano_banana_pro_i2i_4K",
         "label": "nano-banana-pro-i2i-4K"
+      },
+      {
+        "id": "scriptRunner.menu.kieai_google_image_nano_banana_2_1_i2i_2K",
+        "label": "nano-banana-2-1-i2i-2K"
+      },
+      {
+        "id": "scriptRunner.menu.kieai_google_image_nano_banana_2_1_i2i_4K",
+        "label": "nano-banana-2-1-i2i-4K"
       },
       {
         "id": "scriptRunner.menu.kieai_gpt_image",
@@ -570,6 +886,18 @@
         "label": "2.5-sunburst-i2i-4K"
       },
       {
+        "id": "scriptRunner.menu.kieai_topaz",
+        "label": "kieai topaz"
+      },
+      {
+        "id": "scriptRunner.menu.kieai_topaz_upscale_2x",
+        "label": "upscale-2x"
+      },
+      {
+        "id": "scriptRunner.menu.kieai_topaz_upscale_4x",
+        "label": "upscale-4x"
+      },
+      {
         "id": "scriptRunner.menu.kieai_seedance",
         "label": "kieai seedance"
       },
@@ -580,10 +908,6 @@
       {
         "id": "scriptRunner.menu.kieai_seedance_2_0_i2v_720p",
         "label": "2.0-i2v-720p"
-      },
-      {
-        "id": "scriptRunner.menu.kieai_seedance_2_0_i2v_1080p",
-        "label": "2.0-i2v-1080p"
       },
       {
         "id": "scriptRunner.menu.kieai_seedance_2_0_fast_i2v_480p",
@@ -600,10 +924,6 @@
       {
         "id": "scriptRunner.menu.kieai_seedance_2_0_fflf_720p",
         "label": "2.0-fflf-720p"
-      },
-      {
-        "id": "scriptRunner.menu.kieai_seedance_2_0_fflf_1080p",
-        "label": "2.0-fflf-1080p"
       },
       {
         "id": "scriptRunner.menu.kieai_seedance_2_0_fast_fflf_480p",
@@ -654,6 +974,18 @@
         "label": "2.5-ref-720p"
       },
       {
+        "id": "scriptRunner.menu.kieai_wan",
+        "label": "kieai wan"
+      },
+      {
+        "id": "scriptRunner.menu.kieai_wan_3_0_ref_480p",
+        "label": "3.0-ref-480p"
+      },
+      {
+        "id": "scriptRunner.menu.kieai_wan_3_0_ref_720p",
+        "label": "3.0-ref-720p"
+      },
+      {
         "id": "scriptRunner.menu.kieai_kling",
         "label": "kieai kling"
       },
@@ -674,10 +1006,6 @@
         "label": "3.0-i2v-pro"
       },
       {
-        "id": "scriptRunner.menu.kieai_kling_3_0_i2v_4K",
-        "label": "3.0-i2v-4K"
-      },
-      {
         "id": "scriptRunner.menu.kieai_kling_3_0_fflf_std",
         "label": "3.0-fflf-std"
       },
@@ -686,8 +1014,104 @@
         "label": "3.0-fflf-pro"
       },
       {
-        "id": "scriptRunner.menu.kieai_kling_3_0_fflf_4K",
-        "label": "3.0-fflf-4K"
+        "id": "scriptRunner.menu.kieai_kling_3_0_omni_transformation_auto_720p",
+        "label": "3.0-omni-transformation-auto-720p"
+      },
+      {
+        "id": "scriptRunner.menu.kieai_kling_3_0_omni_transformation_16_9_720p",
+        "label": "3.0-omni-transformation-16_9-720p"
+      },
+      {
+        "id": "scriptRunner.menu.kieai_kling_3_0_omni_reference_auto_720p",
+        "label": "3.0-omni-reference-auto-720p"
+      },
+      {
+        "id": "scriptRunner.menu.kieai_kling_3_0_omni_reference_16_9_720p",
+        "label": "3.0-omni-reference-16_9-720p"
+      },
+      {
+        "id": "scriptRunner.menu.topaz_slomo",
+        "label": "topaz slomo"
+      },
+      {
+        "id": "scriptRunner.menu.topaz_slomo_aion",
+        "label": "aion"
+      },
+      {
+        "id": "scriptRunner.menu.topaz_slomo_aion_2x",
+        "label": "aion-2x"
+      },
+      {
+        "id": "scriptRunner.menu.topaz_slomo_aion_4x",
+        "label": "aion-4x"
+      },
+      {
+        "id": "scriptRunner.menu.topaz_slomo_aion_8x",
+        "label": "aion-8x"
+      },
+      {
+        "id": "scriptRunner.menu.topaz_upres",
+        "label": "topaz upres"
+      },
+      {
+        "id": "scriptRunner.menu.topaz_upres_astra2_1080p",
+        "label": "astra2-1080p"
+      },
+      {
+        "id": "scriptRunner.menu.topaz_upres_starlight_720p",
+        "label": "starlight-720p"
+      },
+      {
+        "id": "scriptRunner.menu.topaz_upres_starlight_sharpness1_720p",
+        "label": "starlight-sharpness1-720p"
+      },
+      {
+        "id": "scriptRunner.menu.topaz_upres_starlight_sharpness2_720p",
+        "label": "starlight-sharpness2-720p"
+      },
+      {
+        "id": "scriptRunner.menu.topaz_upres_starlight_sharpness3_720p",
+        "label": "starlight-sharpness3-720p"
+      },
+      {
+        "id": "scriptRunner.menu.topaz_upres_starlight_sharpness4_720p",
+        "label": "starlight-sharpness4-720p"
+      },
+      {
+        "id": "scriptRunner.menu.topaz_upres_starlight_sharpness5_720p",
+        "label": "starlight-sharpness5-720p"
+      },
+      {
+        "id": "scriptRunner.menu.topaz_upres_starlight_1080p",
+        "label": "starlight-1080p"
+      },
+      {
+        "id": "scriptRunner.menu.topaz_upres_starlight_sharpness1_1080p",
+        "label": "starlight-sharpness1-1080p"
+      },
+      {
+        "id": "scriptRunner.menu.topaz_upres_starlight_sharpness2_1080p",
+        "label": "starlight-sharpness2-1080p"
+      },
+      {
+        "id": "scriptRunner.menu.topaz_upres_starlight_sharpness3_1080p",
+        "label": "starlight-sharpness3-1080p"
+      },
+      {
+        "id": "scriptRunner.menu.topaz_upres_starlight_sharpness4_1080p",
+        "label": "starlight-sharpness4-1080p"
+      },
+      {
+        "id": "scriptRunner.menu.topaz_upres_starlight_sharpness5_1080p",
+        "label": "starlight-sharpness5-1080p"
+      },
+      {
+        "id": "scriptRunner.menu.topaz_hdr",
+        "label": "topaz hdr"
+      },
+      {
+        "id": "scriptRunner.menu.topaz_hdr_hyperion2_5",
+        "label": "hyperion2-5"
       }
     ],
     "menus": {
@@ -705,117 +1129,186 @@
           "group": "genlab10"
         },
         {
-          "submenu": "scriptRunner.menu.kieai_image"
+          "submenu": "scriptRunner.menu.kieai_google_image"
         },
         {
           "submenu": "scriptRunner.menu.kieai_gpt_image"
         },
         {
+          "submenu": "scriptRunner.menu.kieai_topaz"
+        },
+        {
           "submenu": "scriptRunner.menu.kieai_seedance"
         },
         {
+          "submenu": "scriptRunner.menu.kieai_wan"
+        },
+        {
           "submenu": "scriptRunner.menu.kieai_kling"
+        },
+        {
+          "command": "scriptRunner.cmd.topaz_task_download",
+          "group": "genlab16"
+        },
+        {
+          "submenu": "scriptRunner.menu.topaz_slomo"
+        },
+        {
+          "submenu": "scriptRunner.menu.topaz_upres"
+        },
+        {
+          "submenu": "scriptRunner.menu.topaz_hdr"
         }
       ],
-      "scriptRunner.menu.kieai_image": [
+      "scriptRunner.menu.kieai_google_image": [
         {
-          "submenu": "scriptRunner.menu.kieai_image_nano_banana_pro_t2i_2K"
+          "submenu": "scriptRunner.menu.kieai_google_image_nano_banana_pro_t2i_2K"
         },
         {
-          "submenu": "scriptRunner.menu.kieai_image_nano_banana_pro_t2i_4K"
+          "submenu": "scriptRunner.menu.kieai_google_image_nano_banana_pro_t2i_4K"
         },
         {
-          "submenu": "scriptRunner.menu.kieai_image_nano_banana_pro_i2i_2K"
+          "submenu": "scriptRunner.menu.kieai_google_image_nano_banana_pro_i2i_2K"
         },
         {
-          "submenu": "scriptRunner.menu.kieai_image_nano_banana_pro_i2i_4K"
+          "submenu": "scriptRunner.menu.kieai_google_image_nano_banana_pro_i2i_4K"
+        },
+        {
+          "submenu": "scriptRunner.menu.kieai_google_image_nano_banana_2_1_i2i_2K"
+        },
+        {
+          "submenu": "scriptRunner.menu.kieai_google_image_nano_banana_2_1_i2i_4K"
         }
       ],
-      "scriptRunner.menu.kieai_image_nano_banana_pro_t2i_2K": [
+      "scriptRunner.menu.kieai_google_image_nano_banana_pro_t2i_2K": [
         {
-          "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_t2i_2K_x1",
+          "command": "scriptRunner.cmd.kieai_google_image_nano_banana_pro_t2i_2K_x1",
           "group": "00"
         },
         {
-          "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_t2i_2K_x2",
+          "command": "scriptRunner.cmd.kieai_google_image_nano_banana_pro_t2i_2K_x2",
           "group": "01"
         },
         {
-          "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_t2i_2K_x4",
+          "command": "scriptRunner.cmd.kieai_google_image_nano_banana_pro_t2i_2K_x4",
           "group": "02"
         },
         {
-          "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_t2i_2K_x6",
+          "command": "scriptRunner.cmd.kieai_google_image_nano_banana_pro_t2i_2K_x6",
           "group": "03"
         },
         {
-          "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_t2i_2K_x10",
+          "command": "scriptRunner.cmd.kieai_google_image_nano_banana_pro_t2i_2K_x10",
           "group": "04"
         }
       ],
-      "scriptRunner.menu.kieai_image_nano_banana_pro_t2i_4K": [
+      "scriptRunner.menu.kieai_google_image_nano_banana_pro_t2i_4K": [
         {
-          "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_t2i_4K_x1",
+          "command": "scriptRunner.cmd.kieai_google_image_nano_banana_pro_t2i_4K_x1",
           "group": "00"
         },
         {
-          "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_t2i_4K_x2",
+          "command": "scriptRunner.cmd.kieai_google_image_nano_banana_pro_t2i_4K_x2",
           "group": "01"
         },
         {
-          "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_t2i_4K_x4",
+          "command": "scriptRunner.cmd.kieai_google_image_nano_banana_pro_t2i_4K_x4",
           "group": "02"
         },
         {
-          "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_t2i_4K_x6",
+          "command": "scriptRunner.cmd.kieai_google_image_nano_banana_pro_t2i_4K_x6",
           "group": "03"
         },
         {
-          "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_t2i_4K_x10",
+          "command": "scriptRunner.cmd.kieai_google_image_nano_banana_pro_t2i_4K_x10",
           "group": "04"
         }
       ],
-      "scriptRunner.menu.kieai_image_nano_banana_pro_i2i_2K": [
+      "scriptRunner.menu.kieai_google_image_nano_banana_pro_i2i_2K": [
         {
-          "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_i2i_2K_x1",
+          "command": "scriptRunner.cmd.kieai_google_image_nano_banana_pro_i2i_2K_x1",
           "group": "00"
         },
         {
-          "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_i2i_2K_x2",
+          "command": "scriptRunner.cmd.kieai_google_image_nano_banana_pro_i2i_2K_x2",
           "group": "01"
         },
         {
-          "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_i2i_2K_x4",
+          "command": "scriptRunner.cmd.kieai_google_image_nano_banana_pro_i2i_2K_x4",
           "group": "02"
         },
         {
-          "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_i2i_2K_x6",
+          "command": "scriptRunner.cmd.kieai_google_image_nano_banana_pro_i2i_2K_x6",
           "group": "03"
         },
         {
-          "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_i2i_2K_x10",
+          "command": "scriptRunner.cmd.kieai_google_image_nano_banana_pro_i2i_2K_x10",
           "group": "04"
         }
       ],
-      "scriptRunner.menu.kieai_image_nano_banana_pro_i2i_4K": [
+      "scriptRunner.menu.kieai_google_image_nano_banana_pro_i2i_4K": [
         {
-          "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_i2i_4K_x1",
+          "command": "scriptRunner.cmd.kieai_google_image_nano_banana_pro_i2i_4K_x1",
           "group": "00"
         },
         {
-          "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_i2i_4K_x2",
+          "command": "scriptRunner.cmd.kieai_google_image_nano_banana_pro_i2i_4K_x2",
           "group": "01"
         },
         {
-          "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_i2i_4K_x4",
+          "command": "scriptRunner.cmd.kieai_google_image_nano_banana_pro_i2i_4K_x4",
           "group": "02"
         },
         {
-          "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_i2i_4K_x6",
+          "command": "scriptRunner.cmd.kieai_google_image_nano_banana_pro_i2i_4K_x6",
           "group": "03"
         },
         {
-          "command": "scriptRunner.cmd.kieai_image_nano_banana_pro_i2i_4K_x10",
+          "command": "scriptRunner.cmd.kieai_google_image_nano_banana_pro_i2i_4K_x10",
+          "group": "04"
+        }
+      ],
+      "scriptRunner.menu.kieai_google_image_nano_banana_2_1_i2i_2K": [
+        {
+          "command": "scriptRunner.cmd.kieai_google_image_nano_banana_2_1_i2i_2K_x1",
+          "group": "00"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_google_image_nano_banana_2_1_i2i_2K_x2",
+          "group": "01"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_google_image_nano_banana_2_1_i2i_2K_x4",
+          "group": "02"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_google_image_nano_banana_2_1_i2i_2K_x6",
+          "group": "03"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_google_image_nano_banana_2_1_i2i_2K_x10",
+          "group": "04"
+        }
+      ],
+      "scriptRunner.menu.kieai_google_image_nano_banana_2_1_i2i_4K": [
+        {
+          "command": "scriptRunner.cmd.kieai_google_image_nano_banana_2_1_i2i_4K_x1",
+          "group": "00"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_google_image_nano_banana_2_1_i2i_4K_x2",
+          "group": "01"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_google_image_nano_banana_2_1_i2i_4K_x4",
+          "group": "02"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_google_image_nano_banana_2_1_i2i_4K_x6",
+          "group": "03"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_google_image_nano_banana_2_1_i2i_4K_x10",
           "group": "04"
         }
       ],
@@ -921,15 +1414,48 @@
           "group": "04"
         }
       ],
+      "scriptRunner.menu.kieai_topaz": [
+        {
+          "submenu": "scriptRunner.menu.kieai_topaz_upscale_2x"
+        },
+        {
+          "submenu": "scriptRunner.menu.kieai_topaz_upscale_4x"
+        }
+      ],
+      "scriptRunner.menu.kieai_topaz_upscale_2x": [
+        {
+          "command": "scriptRunner.cmd.kieai_topaz_upscale_2x_x1",
+          "group": "00"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_topaz_upscale_2x_x2",
+          "group": "01"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_topaz_upscale_2x_x3",
+          "group": "02"
+        }
+      ],
+      "scriptRunner.menu.kieai_topaz_upscale_4x": [
+        {
+          "command": "scriptRunner.cmd.kieai_topaz_upscale_4x_x1",
+          "group": "00"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_topaz_upscale_4x_x2",
+          "group": "01"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_topaz_upscale_4x_x3",
+          "group": "02"
+        }
+      ],
       "scriptRunner.menu.kieai_seedance": [
         {
           "submenu": "scriptRunner.menu.kieai_seedance_2_0_i2v_480p"
         },
         {
           "submenu": "scriptRunner.menu.kieai_seedance_2_0_i2v_720p"
-        },
-        {
-          "submenu": "scriptRunner.menu.kieai_seedance_2_0_i2v_1080p"
         },
         {
           "submenu": "scriptRunner.menu.kieai_seedance_2_0_fast_i2v_480p"
@@ -942,9 +1468,6 @@
         },
         {
           "submenu": "scriptRunner.menu.kieai_seedance_2_0_fflf_720p"
-        },
-        {
-          "submenu": "scriptRunner.menu.kieai_seedance_2_0_fflf_1080p"
         },
         {
           "submenu": "scriptRunner.menu.kieai_seedance_2_0_fast_fflf_480p"
@@ -1011,20 +1534,6 @@
           "group": "02"
         }
       ],
-      "scriptRunner.menu.kieai_seedance_2_0_i2v_1080p": [
-        {
-          "command": "scriptRunner.cmd.kieai_seedance_2_0_i2v_1080p_x1",
-          "group": "00"
-        },
-        {
-          "command": "scriptRunner.cmd.kieai_seedance_2_0_i2v_1080p_x2",
-          "group": "01"
-        },
-        {
-          "command": "scriptRunner.cmd.kieai_seedance_2_0_i2v_1080p_x3",
-          "group": "02"
-        }
-      ],
       "scriptRunner.menu.kieai_seedance_2_0_fast_i2v_480p": [
         {
           "command": "scriptRunner.cmd.kieai_seedance_2_0_fast_i2v_480p_x1",
@@ -1078,20 +1587,6 @@
         },
         {
           "command": "scriptRunner.cmd.kieai_seedance_2_0_fflf_720p_x3",
-          "group": "02"
-        }
-      ],
-      "scriptRunner.menu.kieai_seedance_2_0_fflf_1080p": [
-        {
-          "command": "scriptRunner.cmd.kieai_seedance_2_0_fflf_1080p_x1",
-          "group": "00"
-        },
-        {
-          "command": "scriptRunner.cmd.kieai_seedance_2_0_fflf_1080p_x2",
-          "group": "01"
-        },
-        {
-          "command": "scriptRunner.cmd.kieai_seedance_2_0_fflf_1080p_x3",
           "group": "02"
         }
       ],
@@ -1263,6 +1758,42 @@
           "group": "02"
         }
       ],
+      "scriptRunner.menu.kieai_wan": [
+        {
+          "submenu": "scriptRunner.menu.kieai_wan_3_0_ref_480p"
+        },
+        {
+          "submenu": "scriptRunner.menu.kieai_wan_3_0_ref_720p"
+        }
+      ],
+      "scriptRunner.menu.kieai_wan_3_0_ref_480p": [
+        {
+          "command": "scriptRunner.cmd.kieai_wan_3_0_ref_480p_x1",
+          "group": "00"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_wan_3_0_ref_480p_x2",
+          "group": "01"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_wan_3_0_ref_480p_x3",
+          "group": "02"
+        }
+      ],
+      "scriptRunner.menu.kieai_wan_3_0_ref_720p": [
+        {
+          "command": "scriptRunner.cmd.kieai_wan_3_0_ref_720p_x1",
+          "group": "00"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_wan_3_0_ref_720p_x2",
+          "group": "01"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_wan_3_0_ref_720p_x3",
+          "group": "02"
+        }
+      ],
       "scriptRunner.menu.kieai_kling": [
         {
           "submenu": "scriptRunner.menu.kieai_kling_2_1_i2v_std"
@@ -1277,16 +1808,22 @@
           "submenu": "scriptRunner.menu.kieai_kling_3_0_i2v_pro"
         },
         {
-          "submenu": "scriptRunner.menu.kieai_kling_3_0_i2v_4K"
-        },
-        {
           "submenu": "scriptRunner.menu.kieai_kling_3_0_fflf_std"
         },
         {
           "submenu": "scriptRunner.menu.kieai_kling_3_0_fflf_pro"
         },
         {
-          "submenu": "scriptRunner.menu.kieai_kling_3_0_fflf_4K"
+          "submenu": "scriptRunner.menu.kieai_kling_3_0_omni_transformation_auto_720p"
+        },
+        {
+          "submenu": "scriptRunner.menu.kieai_kling_3_0_omni_transformation_16_9_720p"
+        },
+        {
+          "submenu": "scriptRunner.menu.kieai_kling_3_0_omni_reference_auto_720p"
+        },
+        {
+          "submenu": "scriptRunner.menu.kieai_kling_3_0_omni_reference_16_9_720p"
         }
       ],
       "scriptRunner.menu.kieai_kling_2_1_i2v_std": [
@@ -1345,20 +1882,6 @@
           "group": "02"
         }
       ],
-      "scriptRunner.menu.kieai_kling_3_0_i2v_4K": [
-        {
-          "command": "scriptRunner.cmd.kieai_kling_3_0_i2v_4K_x1",
-          "group": "00"
-        },
-        {
-          "command": "scriptRunner.cmd.kieai_kling_3_0_i2v_4K_x2",
-          "group": "01"
-        },
-        {
-          "command": "scriptRunner.cmd.kieai_kling_3_0_i2v_4K_x3",
-          "group": "02"
-        }
-      ],
       "scriptRunner.menu.kieai_kling_3_0_fflf_std": [
         {
           "command": "scriptRunner.cmd.kieai_kling_3_0_fflf_std_x1",
@@ -1387,17 +1910,371 @@
           "group": "02"
         }
       ],
-      "scriptRunner.menu.kieai_kling_3_0_fflf_4K": [
+      "scriptRunner.menu.kieai_kling_3_0_omni_transformation_auto_720p": [
         {
-          "command": "scriptRunner.cmd.kieai_kling_3_0_fflf_4K_x1",
+          "command": "scriptRunner.cmd.kieai_kling_3_0_omni_transformation_auto_720p_x1",
           "group": "00"
         },
         {
-          "command": "scriptRunner.cmd.kieai_kling_3_0_fflf_4K_x2",
+          "command": "scriptRunner.cmd.kieai_kling_3_0_omni_transformation_auto_720p_x2",
           "group": "01"
         },
         {
-          "command": "scriptRunner.cmd.kieai_kling_3_0_fflf_4K_x3",
+          "command": "scriptRunner.cmd.kieai_kling_3_0_omni_transformation_auto_720p_x3",
+          "group": "02"
+        }
+      ],
+      "scriptRunner.menu.kieai_kling_3_0_omni_transformation_16_9_720p": [
+        {
+          "command": "scriptRunner.cmd.kieai_kling_3_0_omni_transformation_16_9_720p_x1",
+          "group": "00"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_kling_3_0_omni_transformation_16_9_720p_x2",
+          "group": "01"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_kling_3_0_omni_transformation_16_9_720p_x3",
+          "group": "02"
+        }
+      ],
+      "scriptRunner.menu.kieai_kling_3_0_omni_reference_auto_720p": [
+        {
+          "command": "scriptRunner.cmd.kieai_kling_3_0_omni_reference_auto_720p_x1",
+          "group": "00"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_kling_3_0_omni_reference_auto_720p_x2",
+          "group": "01"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_kling_3_0_omni_reference_auto_720p_x3",
+          "group": "02"
+        }
+      ],
+      "scriptRunner.menu.kieai_kling_3_0_omni_reference_16_9_720p": [
+        {
+          "command": "scriptRunner.cmd.kieai_kling_3_0_omni_reference_16_9_720p_x1",
+          "group": "00"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_kling_3_0_omni_reference_16_9_720p_x2",
+          "group": "01"
+        },
+        {
+          "command": "scriptRunner.cmd.kieai_kling_3_0_omni_reference_16_9_720p_x3",
+          "group": "02"
+        }
+      ],
+      "scriptRunner.menu.topaz_slomo": [
+        {
+          "submenu": "scriptRunner.menu.topaz_slomo_aion"
+        },
+        {
+          "submenu": "scriptRunner.menu.topaz_slomo_aion_2x"
+        },
+        {
+          "submenu": "scriptRunner.menu.topaz_slomo_aion_4x"
+        },
+        {
+          "submenu": "scriptRunner.menu.topaz_slomo_aion_8x"
+        }
+      ],
+      "scriptRunner.menu.topaz_slomo_aion": [
+        {
+          "command": "scriptRunner.cmd.topaz_slomo_aion_x1",
+          "group": "00"
+        },
+        {
+          "command": "scriptRunner.cmd.topaz_slomo_aion_x2",
+          "group": "01"
+        },
+        {
+          "command": "scriptRunner.cmd.topaz_slomo_aion_x3",
+          "group": "02"
+        }
+      ],
+      "scriptRunner.menu.topaz_slomo_aion_2x": [
+        {
+          "command": "scriptRunner.cmd.topaz_slomo_aion_2x_x1",
+          "group": "00"
+        },
+        {
+          "command": "scriptRunner.cmd.topaz_slomo_aion_2x_x2",
+          "group": "01"
+        },
+        {
+          "command": "scriptRunner.cmd.topaz_slomo_aion_2x_x3",
+          "group": "02"
+        }
+      ],
+      "scriptRunner.menu.topaz_slomo_aion_4x": [
+        {
+          "command": "scriptRunner.cmd.topaz_slomo_aion_4x_x1",
+          "group": "00"
+        },
+        {
+          "command": "scriptRunner.cmd.topaz_slomo_aion_4x_x2",
+          "group": "01"
+        },
+        {
+          "command": "scriptRunner.cmd.topaz_slomo_aion_4x_x3",
+          "group": "02"
+        }
+      ],
+      "scriptRunner.menu.topaz_slomo_aion_8x": [
+        {
+          "command": "scriptRunner.cmd.topaz_slomo_aion_8x_x1",
+          "group": "00"
+        },
+        {
+          "command": "scriptRunner.cmd.topaz_slomo_aion_8x_x2",
+          "group": "01"
+        },
+        {
+          "command": "scriptRunner.cmd.topaz_slomo_aion_8x_x3",
+          "group": "02"
+        }
+      ],
+      "scriptRunner.menu.topaz_upres": [
+        {
+          "submenu": "scriptRunner.menu.topaz_upres_astra2_1080p"
+        },
+        {
+          "submenu": "scriptRunner.menu.topaz_upres_starlight_720p"
+        },
+        {
+          "submenu": "scriptRunner.menu.topaz_upres_starlight_sharpness1_720p"
+        },
+        {
+          "submenu": "scriptRunner.menu.topaz_upres_starlight_sharpness2_720p"
+        },
+        {
+          "submenu": "scriptRunner.menu.topaz_upres_starlight_sharpness3_720p"
+        },
+        {
+          "submenu": "scriptRunner.menu.topaz_upres_starlight_sharpness4_720p"
+        },
+        {
+          "submenu": "scriptRunner.menu.topaz_upres_starlight_sharpness5_720p"
+        },
+        {
+          "submenu": "scriptRunner.menu.topaz_upres_starlight_1080p"
+        },
+        {
+          "submenu": "scriptRunner.menu.topaz_upres_starlight_sharpness1_1080p"
+        },
+        {
+          "submenu": "scriptRunner.menu.topaz_upres_starlight_sharpness2_1080p"
+        },
+        {
+          "submenu": "scriptRunner.menu.topaz_upres_starlight_sharpness3_1080p"
+        },
+        {
+          "submenu": "scriptRunner.menu.topaz_upres_starlight_sharpness4_1080p"
+        },
+        {
+          "submenu": "scriptRunner.menu.topaz_upres_starlight_sharpness5_1080p"
+        }
+      ],
+      "scriptRunner.menu.topaz_upres_astra2_1080p": [
+        {
+          "command": "scriptRunner.cmd.topaz_upres_astra2_1080p_x1",
+          "group": "00"
+        },
+        {
+          "command": "scriptRunner.cmd.topaz_upres_astra2_1080p_x2",
+          "group": "01"
+        },
+        {
+          "command": "scriptRunner.cmd.topaz_upres_astra2_1080p_x3",
+          "group": "02"
+        }
+      ],
+      "scriptRunner.menu.topaz_upres_starlight_720p": [
+        {
+          "command": "scriptRunner.cmd.topaz_upres_starlight_720p_x1",
+          "group": "00"
+        },
+        {
+          "command": "scriptRunner.cmd.topaz_upres_starlight_720p_x2",
+          "group": "01"
+        },
+        {
+          "command": "scriptRunner.cmd.topaz_upres_starlight_720p_x3",
+          "group": "02"
+        }
+      ],
+      "scriptRunner.menu.topaz_upres_starlight_sharpness1_720p": [
+        {
+          "command": "scriptRunner.cmd.topaz_upres_starlight_sharpness1_720p_x1",
+          "group": "00"
+        },
+        {
+          "command": "scriptRunner.cmd.topaz_upres_starlight_sharpness1_720p_x2",
+          "group": "01"
+        },
+        {
+          "command": "scriptRunner.cmd.topaz_upres_starlight_sharpness1_720p_x3",
+          "group": "02"
+        }
+      ],
+      "scriptRunner.menu.topaz_upres_starlight_sharpness2_720p": [
+        {
+          "command": "scriptRunner.cmd.topaz_upres_starlight_sharpness2_720p_x1",
+          "group": "00"
+        },
+        {
+          "command": "scriptRunner.cmd.topaz_upres_starlight_sharpness2_720p_x2",
+          "group": "01"
+        },
+        {
+          "command": "scriptRunner.cmd.topaz_upres_starlight_sharpness2_720p_x3",
+          "group": "02"
+        }
+      ],
+      "scriptRunner.menu.topaz_upres_starlight_sharpness3_720p": [
+        {
+          "command": "scriptRunner.cmd.topaz_upres_starlight_sharpness3_720p_x1",
+          "group": "00"
+        },
+        {
+          "command": "scriptRunner.cmd.topaz_upres_starlight_sharpness3_720p_x2",
+          "group": "01"
+        },
+        {
+          "command": "scriptRunner.cmd.topaz_upres_starlight_sharpness3_720p_x3",
+          "group": "02"
+        }
+      ],
+      "scriptRunner.menu.topaz_upres_starlight_sharpness4_720p": [
+        {
+          "command": "scriptRunner.cmd.topaz_upres_starlight_sharpness4_720p_x1",
+          "group": "00"
+        },
+        {
+          "command": "scriptRunner.cmd.topaz_upres_starlight_sharpness4_720p_x2",
+          "group": "01"
+        },
+        {
+          "command": "scriptRunner.cmd.topaz_upres_starlight_sharpness4_720p_x3",
+          "group": "02"
+        }
+      ],
+      "scriptRunner.menu.topaz_upres_starlight_sharpness5_720p": [
+        {
+          "command": "scriptRunner.cmd.topaz_upres_starlight_sharpness5_720p_x1",
+          "group": "00"
+        },
+        {
+          "command": "scriptRunner.cmd.topaz_upres_starlight_sharpness5_720p_x2",
+          "group": "01"
+        },
+        {
+          "command": "scriptRunner.cmd.topaz_upres_starlight_sharpness5_720p_x3",
+          "group": "02"
+        }
+      ],
+      "scriptRunner.menu.topaz_upres_starlight_1080p": [
+        {
+          "command": "scriptRunner.cmd.topaz_upres_starlight_1080p_x1",
+          "group": "00"
+        },
+        {
+          "command": "scriptRunner.cmd.topaz_upres_starlight_1080p_x2",
+          "group": "01"
+        },
+        {
+          "command": "scriptRunner.cmd.topaz_upres_starlight_1080p_x3",
+          "group": "02"
+        }
+      ],
+      "scriptRunner.menu.topaz_upres_starlight_sharpness1_1080p": [
+        {
+          "command": "scriptRunner.cmd.topaz_upres_starlight_sharpness1_1080p_x1",
+          "group": "00"
+        },
+        {
+          "command": "scriptRunner.cmd.topaz_upres_starlight_sharpness1_1080p_x2",
+          "group": "01"
+        },
+        {
+          "command": "scriptRunner.cmd.topaz_upres_starlight_sharpness1_1080p_x3",
+          "group": "02"
+        }
+      ],
+      "scriptRunner.menu.topaz_upres_starlight_sharpness2_1080p": [
+        {
+          "command": "scriptRunner.cmd.topaz_upres_starlight_sharpness2_1080p_x1",
+          "group": "00"
+        },
+        {
+          "command": "scriptRunner.cmd.topaz_upres_starlight_sharpness2_1080p_x2",
+          "group": "01"
+        },
+        {
+          "command": "scriptRunner.cmd.topaz_upres_starlight_sharpness2_1080p_x3",
+          "group": "02"
+        }
+      ],
+      "scriptRunner.menu.topaz_upres_starlight_sharpness3_1080p": [
+        {
+          "command": "scriptRunner.cmd.topaz_upres_starlight_sharpness3_1080p_x1",
+          "group": "00"
+        },
+        {
+          "command": "scriptRunner.cmd.topaz_upres_starlight_sharpness3_1080p_x2",
+          "group": "01"
+        },
+        {
+          "command": "scriptRunner.cmd.topaz_upres_starlight_sharpness3_1080p_x3",
+          "group": "02"
+        }
+      ],
+      "scriptRunner.menu.topaz_upres_starlight_sharpness4_1080p": [
+        {
+          "command": "scriptRunner.cmd.topaz_upres_starlight_sharpness4_1080p_x1",
+          "group": "00"
+        },
+        {
+          "command": "scriptRunner.cmd.topaz_upres_starlight_sharpness4_1080p_x2",
+          "group": "01"
+        },
+        {
+          "command": "scriptRunner.cmd.topaz_upres_starlight_sharpness4_1080p_x3",
+          "group": "02"
+        }
+      ],
+      "scriptRunner.menu.topaz_upres_starlight_sharpness5_1080p": [
+        {
+          "command": "scriptRunner.cmd.topaz_upres_starlight_sharpness5_1080p_x1",
+          "group": "00"
+        },
+        {
+          "command": "scriptRunner.cmd.topaz_upres_starlight_sharpness5_1080p_x2",
+          "group": "01"
+        },
+        {
+          "command": "scriptRunner.cmd.topaz_upres_starlight_sharpness5_1080p_x3",
+          "group": "02"
+        }
+      ],
+      "scriptRunner.menu.topaz_hdr": [
+        {
+          "submenu": "scriptRunner.menu.topaz_hdr_hyperion2_5"
+        }
+      ],
+      "scriptRunner.menu.topaz_hdr_hyperion2_5": [
+        {
+          "command": "scriptRunner.cmd.topaz_hdr_hyperion2_5_x1",
+          "group": "00"
+        },
+        {
+          "command": "scriptRunner.cmd.topaz_hdr_hyperion2_5_x2",
+          "group": "01"
+        },
+        {
+          "command": "scriptRunner.cmd.topaz_hdr_hyperion2_5_x3",
           "group": "02"
         }
       ]

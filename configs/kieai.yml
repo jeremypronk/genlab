@@ -139,12 +139,12 @@ defaults-video:
     ^last_frame: ""
 
   ".tmpl.ref": &ref
-    ^reference_image_1: ""
+    +reference_image_1: ""
     +reference_image_2: ""
     +reference_image_3: ""
     +reference_image_4: ""
     +reference_image_5: ""
-    ^reference_video_1: ""
+    +reference_video_1: ""
     +reference_video_2: ""
     +reference_video_3: ""
 
@@ -337,6 +337,32 @@ seedance:
     <<: *seedance2-5-ref
     resolution: "720p"
 
+
+wan:
+
+  # wan 3.0
+
+  ".tmpl.3.0": &wan3-0
+    model: wan/3-0-video
+    audio: false
+    nsfw_checker: false
+    ^prompt: ""
+
+  ".tmpl.3.0": &wan3-0-ref
+    <<: *wan3-0
+    <<: *ref
+    ?reference_image_urls: ["@reference_image_1", "@reference_image_2", "@reference_image_3", "@reference_image_4", "@reference_image_5"]
+    ?reference_video_urls: ["@reference_video_1", "@reference_video_2", "@reference_video_3"]
+    duration: -1 # smart duration
+    aspect_ratio: "adaptive"
+
+  "3.0-ref-480p":
+    <<: *wan3-0-ref
+    resolution: "480P"
+    
+  "3.0-ref-720p":
+    <<: *wan3-0-ref
+    resolution: "720P"
 
 
 kling:
