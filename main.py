@@ -297,7 +297,7 @@ Example Usage:
                 completed_tasks.append(api_task)
 
             else:
-                logging.info(f"API status: {message}")
+                logging.info(f"API status ({api_task._name()}): {message}")
 
         # remove completed from the queue (outside loop to avoid corrupting the very list it is checking)
         #for id in completed_tasks: _TASKS_WAITING_QUEUE.pop(id, None)
