@@ -381,6 +381,39 @@ wan:
     resolution: "720P"
 
 
+
+gemini:
+
+  # gemini omni flash 1.1
+
+  ".tmpl.1.1": &gemini1-1
+    model: google/gemini-omni-flash-1-1
+    ^prompt: ""
+    $duration: [4,6,8,10]
+    aspect_ratio: "16:9"
+
+  ".tmpl.1.1-fflf": &gemini1-1-fflf
+    <<: *gemini1-1
+    <<: *fflf
+    ?first_frame_url: "@first_frame"
+    ?last_frame_url: "@last_frame"
+
+  "1.1-fflf-360p":
+    <<: *gemini1-1-fflf
+    resolution: "360p"
+
+  "1.1-fflf-720p":
+    <<: *gemini1-1-fflf
+    resolution: "720p"
+
+  "1.1-ref-360p":
+    <<: *gemini1-1
+    <<: *ref
+    ?image_urls: ["@reference_image_1", "@reference_image_2", "@reference_image_3", "@reference_image_4", "@reference_image_5"]
+    ?video_list: ["@reference_video_1"]
+    resolution: "360p"
+
+
 kling:
 
   # kling 2.1
